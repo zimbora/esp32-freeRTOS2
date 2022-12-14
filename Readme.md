@@ -2,7 +2,7 @@
 
 ## IMPORTANT
   !! now() method cannot be called outside main process
-  
+
 ## SYSFILE
 
   On startup 3 directories are created:
@@ -89,4 +89,3 @@ sends the following topics with keepalive period:
 
 ## Clocksync
   Clock is synched when a ':prefix/status' msg is received
-# freeRTOS2

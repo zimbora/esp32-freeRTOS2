@@ -1,0 +1,50 @@
+#ifndef CALLS_H
+#define CALLS_H
+
+#include "modem-freeRTOS.hpp"
+#include "sysfile.hpp"
+#include "../fota/fota.h"
+#include "../settings/settings.h"
+
+#define NUMITEMS(arg) ((unsigned int) (sizeof (arg) / sizeof (arg [0])))
+
+#define MAX_RECORD_FILE_SIZE 512
+
+// CONTEXT
+#define CLIENTID 0
+#define CLIENTIDEXTERNAL 1
+#define SSLCLIENTID 0
+#define CONTEXTID 1
+
+class CALLS{
+
+public:
+  CALLS(){};
+
+  bool fw_fota(String url);
+  bool fw_settings_update(String url, String filename);
+  bool fw_settings_load(String filename, String version);
+  bool fw_reboot();
+  bool fw_reset();
+
+  bool init_filesystem(String directory[],uint8_t len);
+  bool check_filesystem_records(String dir, uint32_t timeout, bool (*callback)(String));
+  bool create_dir(String directory);
+  bool store_record(String filename, const char* data, uint16_t len);
+  bool remove_dir(String directory);
+  void clean_dir(String directory);
+  bool read_file(String filename, char* data, uint16_t* len);
+  bool delete_file(String filename);
+
+  void check_alarms();
+  void check_sensors();
+
+
+private:
+
+  String do_request(String protocol, String host, String path, String method, String header_key, String header_value, String body, bool json);
+  bool do_fota(String protocol, String host, String path, String method, String header_key, String header_value, String body, bool json);
+
+};
+
+#endif
