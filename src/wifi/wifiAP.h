@@ -2,6 +2,16 @@
 #ifndef WIFIAP_H
 #define WIFIAP_H
 
+
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <WiFiAP.h>
+
+#include "sysfile.hpp"
+#include "../settings/settings.h"
+#include "../../credentials.h"
+#include "../calls/calls.h"
+
 class WIFIAP{
 public:
   void setup();

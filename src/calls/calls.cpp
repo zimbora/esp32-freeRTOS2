@@ -128,6 +128,23 @@ bool CALLS::read_file(String filename, char* data, uint16_t* len){
 }
 
 /*
+* write file
+*/
+bool CALLS::write_file(String filename, const char* data, uint16_t len){
+
+  if(!xSemaphoreTake( spiffsMutex, 100)){
+     //xSemaphoreGive(spiffsMutex);
+     return false;
+  }
+
+  bool res = sysfile.write_file(filename.c_str(),data,len);
+
+  xSemaphoreGive(spiffsMutex);
+
+  return res;
+}
+
+/*
 * clean records
 */
 bool CALLS::delete_file(String filename){
@@ -265,6 +282,10 @@ bool CALLS::fw_reset(){
   xSemaphoreGive( spiffsMutex );
 
   return true;
+}
+
+bool CALLS::mqtt_send(uint8_t clientID, String topic, String data, uint8_t qos, bool retain){
+  return mRTOS.mqtt_pushMessage(clientID,topic,data,qos,retain);
 }
 
 void CALLS::check_alarms(){

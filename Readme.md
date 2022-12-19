@@ -89,3 +89,51 @@ sends the following topics with keepalive period:
 
 ## Clocksync
   Clock is synched when a ':prefix/status' msg is received
+
+## JS
+
+Built using open project https://github.com/cesanta/elk
+Check referred link for instructions
+
+### Functions
+
+Default:
+- gpio.mode(pin, mode) - set pin mode
+- gpio.write(pin, value) - set pin state
+- gpio.read(pin) - read pin state
+- timer.create(milli, func, null) - create timer
+- timer.delete(timerID) - delete timer
+- log(strval) - log a message
+
+Custom:
+- read.sensor(ref)
+- date.now()
+- date.millis()
+- mqtt.send(topic,payload,retain)
+
+### New function
+
+### Available Functions
+
+### MQTT Topic
+  esp32/freeRTOS2/uid:ac67b2e9d11c/fw/js/code/set
+
+### Example 1
+  ```
+  let led = { pin: 26, on: 0 };  // LED state
+  gpio.mode(led.pin, 2);         // Set LED pin to output mode
+
+  let timer_fn = function() {
+  led.on = led.on ? 0 : 1;
+  gpio.write(led.pin, led.on);
+  };
+
+  // Start a timer that toggles LED every 1000 milliseconds
+  // This timer is a C resource. It is cleaned automatically on JS code refresh
+  let timer_id = timer.create(1000, 'timer_fn');
+  ```
+
+### Example 2
+  ```
+  log("run"); let doIt = function(){mqtt.send("/sensor/uptime",date.now(),0);}; timer.create(2000,'doIt');
+  ```

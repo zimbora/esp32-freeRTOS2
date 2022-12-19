@@ -13,12 +13,14 @@
 #include "core.h"
 #include "modem-freeRTOS.hpp"
 #include "./src/app/app.h"
-//#include "./src/wifi/wifiAP.h"
-/*
+
+#ifdef ENABLE_AP
+#include "./src/wifi/wifiAP.h"
+#endif
 #ifdef ENABLE_BLE
 #include "./src/ble/ble_server.h"
 #endif
-*/
+
 String get_reset_reason(int reason);
 
 // MQTT
@@ -30,12 +32,14 @@ String mqtt_subscribe_topics[] = {
 
 extern MODEMfreeRTOS mRTOS;
 extern APP app;
-/*
+
+#ifdef ENABLE_AP
+WIFIAP ap;
+#endif
 #ifdef ENABLE_BLE
 BLE_SERVER ble;
 #endif
-*/
-//WIFIAP ap;
+
 
 void (*callback)(uint8_t);
 void mqttOnConnect(uint8_t clientID){
@@ -121,6 +125,20 @@ void network_lte_task(void *pvParameters){
 }
 #endif
 
+#ifdef ENABLE_AP
+void ap_task(void *pvParameters);
+void ap_task(void *pvParameters){
+  (void) pvParameters;
+
+  ap.setup();
+
+  for(;;){
+    //if(!mRTOS.isWifiConnected())
+      ap.loop();
+  }
+}
+#endif
+
 void core_task(void *pvParameters);
 void core_task(void *pvParameters){
   (void) pvParameters;
@@ -141,37 +159,63 @@ void setup() {
   DBGLEV(Debug);
   DBGLOG(Info,"Initing program..");
 
-
-  #ifdef ENABLE_LTE
   xTaskCreatePinnedToCore(
-      network_lte_task
-      ,  "network_lte_task"   // A name just for humans
-      ,  2048*4  // This stack size can be checked & adjusted by reading the Stack Highwater
-      ,  NULL
-      ,  2 // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest. !! do not edit priority
-      ,  NULL
-      ,  1);
-  #endif
-
-   xTaskCreatePinnedToCore(
-      core_task
-      ,  "core_task"   // A name just for humans
-      ,  2048*8  // This stack size can be checked & adjusted by reading the Stack Highwater
-      ,  NULL
-      ,  1 // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.  !! do not edit priority
-      ,  NULL
-      ,  1);
+    core_task
+    ,  "core_task"   // A name just for humans
+    ,  2048*8  // This stack size can be checked & adjusted by reading the Stack Highwater
+    ,  NULL
+    ,  1 // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.  !! do not edit priority
+    ,  NULL
+    ,  1);
 
   Serial.println("wait 5s for system to init..");
   delay(5000);
 
+  #ifdef ENABLE_LTE
+    xTaskCreatePinnedToCore(
+        network_lte_task
+        ,  "network_lte_task"   // A name just for humans
+        ,  2048*4  // This stack size can be checked & adjusted by reading the Stack Highwater
+        ,  NULL
+        ,  2 // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest. !! do not edit priority
+        ,  NULL
+        ,  1);
+  #else
+    while(!mRTOS.isWifiConnected()){
+
+      if(settings.wifi.ssid != ""){
+        Serial.printf("connecting wifi to %s \n",settings.wifi.ssid);
+        mRTOS.init(settings.wifi.ssid,settings.wifi.pwd);
+        uint32_t timeout = millis()+15000; // 15 seconds
+        while(timeout > millis() && !mRTOS.isWifiConnected()){
+          delay(1000);
+          Serial.print(".");
+        }
+      }
+
+      if(!mRTOS.isWifiConnected()){
+        ap.setup();
+        Serial.println(now());
+        uint32_t timeout = now() + 300;
+        for(;;){
+          ap.loop();
+
+          if(timeout < now()){
+            Serial.println("Timeout for Access Point, try WiFi client once again");
+            break;
+          }
+
+        }
+      }
+    }
+
+  #endif
+
   #ifndef ENABLE_LTE
+
     const char project[] = "esp32/freeRTOS2";
     uint16_t port = 1883;
 
-    mRTOS.init(WIFI_SSID,WIFI_PASSWORD);
-    //mRTOS.wifi_configure_ap();
-    Serial.println("wifi interface configured");
     mRTOS.mqtt_configure_connection(0,project,get_uid().c_str(),MQTT_HOST_1,port,MQTT_USER_1,MQTT_PASSWORD_1);
     Serial.println("mqtt client configured");
 
@@ -193,16 +237,14 @@ void setup() {
     }
 
   #endif
-  /*
+
   #ifdef ENABLE_BLE
   ble.init();
   ble.enable();
   #endif
-  */
+
   app.init();
 
-  //ble.disable();
-  //ap.setup();
 }
 
 
@@ -213,7 +255,6 @@ void loop() {
   #endif
 
   app.loop();
-  //ap.loop();
 }
 
 String get_reset_reason(int reason){

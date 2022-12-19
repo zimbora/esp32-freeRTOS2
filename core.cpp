@@ -16,9 +16,106 @@ String uid = "";
 
 #ifdef ENABLE_BLE
 BLE_SERVER ble;
-void bleCallback(String param, String value){
+void bleCallback(String uuid, String value){
+
+  String param = "";
+
+  switch(resolveOptionUUID(uuidTopics,uuid)){
+
+    case uuid_fw_reboot:
+      if(value == "1")
+        call.fw_reboot();
+      break;
+
+    case uuid_fw_reset:
+      if(value == "1"){
+        call.fw_reset();
+        call.fw_reboot();
+      }
+      break;
+
+    case uuid_wifi_mode:
+      param = "wifi_mode";
+      break;
+
+    case uuid_wifi_ssid:
+      param = "wifi_ssid";
+      break;
+
+    case uuid_wifi_pwd:
+      param = "wifi_pwd";
+      break;
+
+    case uuid_modem_apn:
+      param = "modem_apn";
+      break;
+
+    case uuid_modem_user:
+      param = "modem_user";
+      break;
+
+    case uuid_modem_pwd:
+      param = "modem_pwd";
+      break;
+
+    case uuid_modem_band:
+      param = "modem_band";
+      break;
+
+    case uuid_modem_cops:
+      param = "modem_cops";
+      break;
+
+    case uuid_mqtt_host:
+      param = "mqtt_host";
+      break;
+
+    case uuid_mqtt_user:
+      param = "mqtt_user";
+      break;
+
+    case uuid_mqtt_pass:
+      param = "mqtt_pass";
+      break;
+
+    case uuid_mqtt_prefix:
+      param = "mqtt_prefix";
+      break;
+
+    case uuid_mqtt_port:
+      param = "modem_port";
+      break;
+
+    case uuid_mqtt_active:
+      param = "modem_active";
+      break;
+
+    case uuid_log_active:
+      param = "log_active";
+      break;
+
+    case uuid_log_level:
+      param = "log_level";
+      break;
+
+    case uuid_keepalive_active:
+      param = "keepalive_active";
+      break;
+
+    case uuid_keepalive_period:
+      param = "keepalive_period";
+      break;
+  }
+
   Serial.println("param:"+param);
   Serial.println("value:"+value);
+  if(settings_set_param(param,value)){
+    settings_log();
+    if(!sysfile.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings)))
+      DBGLOG(Error,"failing writing file: "+String(FW_SETTINGS_FILENAME));
+  }
+
+
 }
 #endif
 
@@ -75,8 +172,10 @@ void core_init(){
   // log settings
   settings_log();
 
+  uid = get_uid();
+
   #ifdef ENABLE_BLE
-  ble.init();
+  ble.init(uid);
   ble.setCallback(&bleCallback);
   ble.enable();
   #endif
@@ -110,13 +209,44 @@ void core_init(){
   t4.enable();
   DBGLOG(Debug,"Enabled info logs");
 
-  uid = get_uid();
+  #ifdef ENABLE_JS
+  JS.begin();
 
+  char* code = (char*)malloc(1000);
+  if(code != nullptr){
+    uint16_t len = 1000;
+    if(call.read_file(FW_JS_FILENAME,code,&len)){
+      if(len != 0){
+        const char* res = JS.exec((const char*)code);
+        Serial.printf("%s\n", res);
+      }else DBGLOG(Info,"no JS script is empty..");
+    }else DBGLOG(Info,"no JS script found..");
+  }
+  free(code);
+  /*
+  const char* code = "let e = {onSensorRead: function(name,value){log(name); if(value === 1) mqtt.send(\"/sensor/\"+name,value,0); return true;}}; let timer_id = timer.create(2000,'sensor.read(\"asd\")');";
+  const char* res = JS.exec(code);
+  Serial.printf("%s\n", res);
+  */
+  #endif
 }
 
 void core_loop(){
 
   runner.execute();
+
+  #ifdef ENABLE_JS
+
+  JS.loop();
+  /*
+  if(now() % 15 == 0){
+    char* mem = (char*)malloc(200);
+    struct js *js = js_create(mem, sizeof(mem));  // Create JS instance
+    jsval_t v = js_eval(js, "event.onReadSensor(\"voltage\",230)", ~0);     // Execute JS code
+    printf("result: %s\n", js_str(js, v));        // result: 7
+  }
+  */
+  #endif
 
 }
 
@@ -136,15 +266,16 @@ void core_parse_mqtt_messages(){
   DBGLOG(Debug,"<< ["+String(msg->clientID)+"] "+String(msg->topic));
 
   bool set = false;
-  bool update = false;
   bool get = false;
+  bool store = false;
 
   uint8_t clientID = msg->clientID;
   String topic = String(msg->topic);
   String topic_get = "";
   topic.replace("\"","");
   String payload = String(msg->data);
-  payload = payload.substring(1,payload.length()-1);
+  if(payload.startsWith("\""))
+    payload = payload.substring(1,payload.length()-1);
 
   index = topic.indexOf(uid);
   if(index > -1)
@@ -159,12 +290,6 @@ void core_parse_mqtt_messages(){
       set = true;
       if(payload == "")
         return;
-    }
-
-    if(topic.endsWith("/update")){ // hack to receive messages from BLE
-      // finish it
-      update = true;
-
     }
 
     if(topic.endsWith("/get")){
@@ -209,6 +334,7 @@ void core_parse_mqtt_messages(){
         if(payload != "1")
           return;
         call.remove_dir(APP_PATH_RECORDS);
+        break;
       case fw_fota_update_:
         {
           DeserializationError error = deserializeJson(doc, payload);
@@ -241,6 +367,19 @@ void core_parse_mqtt_messages(){
 
         }
         break;
+      case fw_js_code_:
+        {
+          #ifdef ENABLE_JS
+          Serial.println(payload);
+          const char* res = JS.exec(payload.c_str());
+          Serial.printf("%s\n", res);
+          if(!call.write_file(FW_JS_FILENAME,payload.c_str(),payload.length()))
+            DBGLOG(Error,"Error storing js script");
+          #else
+          Serial.println("JS not enabled");
+          #endif
+        }
+        break;
       case fw_wifi_:
       {
         DeserializationError error = deserializeJson(doc, payload);
@@ -248,46 +387,27 @@ void core_parse_mqtt_messages(){
           DBGLOG(Error,"Not Json");
           return;
         }
-
+        store = true;
         if(doc.containsKey("mode")){
-          memset(settings.wifi.mode,0,sizeof(settings.wifi.mode));
-          String mode = doc["mode"];
-          memcpy(settings.wifi.mode,mode.c_str(),mode.length());
+          #ifndef UNITTEST
+            String mode = doc["mode"];
+          #else
+            String mode = "";
+            if(doc["mode"].is_string())
+              mode = doc["mode"];
+          #endif
+          settings_set_param("wifi_mode",mode);
         }
 
         if(doc.containsKey("ssid")){
-          memset(settings.wifi.ssid,0,sizeof(settings.wifi.ssid));
-          String ssid = doc["ssid"];
-          memcpy(settings.wifi.ssid,ssid.c_str(),ssid.length());
-        }
-
-        if(doc.containsKey("pwd")){
-          memset(settings.wifi.pwd,0,sizeof(settings.wifi.pwd));
-          String pwd = doc["pwd"];
-          memcpy(settings.wifi.pwd,pwd.c_str(),pwd.length());
-        }
-      }
-      break;
-      case fw_modem_:
-      {
-        DeserializationError error = deserializeJson(doc, payload);
-        if(error){
-          DBGLOG(Error,"Not Json");
-          return;
-        }
-
-        if(doc.containsKey("apn")){
           #ifndef UNITTEST
-            String apn = doc["apn"];
+            String ssid = doc["ssid"];
           #else
-            String apn = "";
-            if(doc["apn"].is_string())
-              apn = doc["apn"];
+            String ssid = "";
+            if(doc["ssid"].is_string())
+              ssid = doc["ssid"];
           #endif
-          if(apn.length() <= sizeof(settings.modem.apn)){
-            memset(settings.modem.apn,0,sizeof(settings.modem.apn));
-            memcpy(settings.modem.apn,apn.c_str(),apn.length());
-          }
+          settings_set_param("wifi_ssid",ssid);
         }
 
         if(doc.containsKey("pwd")){
@@ -298,10 +418,38 @@ void core_parse_mqtt_messages(){
             if(doc["pwd"].is_string())
               pwd = doc["pwd"];
           #endif
-          if(pwd.length() <= sizeof(settings.modem.pwd)){
-            memset(settings.modem.pwd,0,sizeof(settings.modem.pwd));
-            memcpy(settings.modem.pwd,pwd.c_str(),pwd.length());
-          }
+          settings_set_param("wifi_pwd",pwd);
+        }
+      }
+        break;
+      case fw_modem_:
+      {
+        DeserializationError error = deserializeJson(doc, payload);
+        if(error){
+          DBGLOG(Error,"Not Json");
+          return;
+        }
+        store = true;
+        if(doc.containsKey("apn")){
+          #ifndef UNITTEST
+            String apn = doc["apn"];
+          #else
+            String apn = "";
+            if(doc["apn"].is_string())
+              apn = doc["apn"];
+          #endif
+          settings_set_param("modem_apn",apn);
+        }
+
+        if(doc.containsKey("pwd")){
+          #ifndef UNITTEST
+            String pwd = doc["pwd"];
+          #else
+            String pwd = "";
+            if(doc["pwd"].is_string())
+              pwd = doc["pwd"];
+          #endif
+          settings_set_param("modem_pwd",pwd);
         }
 
         if(doc.containsKey("user")){
@@ -312,10 +460,7 @@ void core_parse_mqtt_messages(){
             if(doc["user"].is_string())
               user = doc["user"];
           #endif
-          if(user.length() <= sizeof(settings.modem.user)){
-            memset(settings.modem.user,0,sizeof(settings.modem.user));
-            memcpy(settings.modem.user,user.c_str(),user.length());
-          }
+          settings_set_param("modem_user",user);
         }
 
         if(doc.containsKey("band")){
@@ -326,8 +471,7 @@ void core_parse_mqtt_messages(){
           if(doc["band"].is_number())
             band = std::to_string((long)doc["band"]);
           #endif
-          if(band != "" && has_only_digits(band))
-            settings.modem.band = (uint8_t)stoLong(band);
+          settings_set_param("modem_band",band);
         }
 
         if(doc.containsKey("cops")){
@@ -338,12 +482,11 @@ void core_parse_mqtt_messages(){
         if(doc["cops"].is_number())
           cops = std::to_string((long)doc["cops"]);
         #endif
-        if(cops != "" && has_only_digits(cops))
-          settings.modem.cops = (uint16_t)stoLong(cops);
+        settings_set_param("modem_cops",cops);
       }
 
       }
-      break;
+        break;
       case fw_mqtt_:
       {
         DBGLOG(Debug,"updating mqtt");
@@ -355,7 +498,7 @@ void core_parse_mqtt_messages(){
         }
 
         //serializeJson(doc,Serial);
-
+        store = true;
         // checked
         if(doc.containsKey("host")){
           #ifndef UNITTEST
@@ -365,11 +508,7 @@ void core_parse_mqtt_messages(){
             if(doc["host"].is_string())
               host = doc["host"];
           #endif
-          if(host.length() <= sizeof(settings.mqtt.host)){
-            memset(settings.mqtt.host,0,sizeof(settings.mqtt.host));
-            memcpy(settings.mqtt.host,host.c_str(),host.length());
-          }
-          Serial.printf("host %s \n",settings.mqtt.host);
+          settings_set_param("mqtt_host",host);
         }
 
         if(doc.containsKey("user")){
@@ -380,10 +519,7 @@ void core_parse_mqtt_messages(){
             if(doc["user"].is_string())
               user = doc["user"];
           #endif
-          if(user != "" && user.length() <= sizeof(settings.mqtt.user)){
-            memset(settings.mqtt.user,0,sizeof(settings.mqtt.user));
-            memcpy(settings.mqtt.user,user.c_str(),user.length());
-          }
+          settings_set_param("mqtt_user",user);
         }
 
         if(doc.containsKey("pass")){
@@ -394,10 +530,7 @@ void core_parse_mqtt_messages(){
             if(doc["pass"].is_string())
               pass = doc["pass"];
           #endif
-          if( pass.length() <= sizeof(settings.mqtt.pass)){
-            memset(settings.mqtt.pass,0,sizeof(settings.mqtt.pass));
-            memcpy(settings.mqtt.pass,pass.c_str(),pass.length());
-          }
+          settings_set_param("mqtt_pass",pass);
         }
 
         if(doc.containsKey("prefix")){
@@ -408,10 +541,7 @@ void core_parse_mqtt_messages(){
             if(doc["prefix"].is_string())
               prefix = doc["prefix"];
           #endif
-          if(prefix != "" && prefix.length() <= sizeof(settings.mqtt.prefix)){
-            memset(settings.mqtt.prefix,0,sizeof(settings.mqtt.prefix));
-            memcpy(settings.mqtt.prefix,prefix.c_str(),prefix.length());
-          }
+          settings_set_param("mqtt_prefix",prefix);
         }
 
         if(doc.containsKey("port")){
@@ -422,10 +552,7 @@ void core_parse_mqtt_messages(){
           if(doc["port"].is_number())
             port = std::to_string((long)doc["port"]);
           #endif
-          if(port != "" && has_only_digits(port)){
-            long port_ = stoLong(port);
-            settings.mqtt.port = port_;
-          }
+          settings_set_param("mqtt_port",port);
         }
 
         if(doc.containsKey("active")){
@@ -436,14 +563,10 @@ void core_parse_mqtt_messages(){
           if(doc["active"].is_number())
             active = std::to_string((long)doc["active"]);
           #endif
-          if(active != "" && has_only_digits(active)){
-            long active_ = stoLong(active);
-            if(active_ == 0 || active_ == 1)
-              settings.mqtt.active = (bool)active_;
-          }
+          settings_set_param("mqtt_active",active);
         }
       }
-      break;
+        break;
       case fw_log_:
       {
         DeserializationError error = deserializeJson(doc, payload);
@@ -451,7 +574,7 @@ void core_parse_mqtt_messages(){
           DBGLOG(Error,"Not Json");
           return;
         }
-
+        store = true;
         if(doc.containsKey("active")){
           #ifndef UNITTEST
           String active = doc["active"];
@@ -460,11 +583,7 @@ void core_parse_mqtt_messages(){
           if(doc["active"].is_number())
             active = std::to_string((long)doc["active"]);
           #endif
-          if(active != "" && has_only_digits(active)){
-            long active_ = stoLong(active);
-            if(active_ == 0 || active_ == 1)
-              settings.log.active = (bool)active_;
-          }
+          settings_set_param("log_active",active);
         }
 
         if(doc.containsKey("level")){
@@ -475,14 +594,10 @@ void core_parse_mqtt_messages(){
           if(doc["level"].is_number())
             level = std::to_string((long)doc["level"]);
           #endif
-          if(level != "" && has_only_digits(level)){
-            long level_ = stoLong(level);
-            if(level_ >= 0 || level_ <= 5)
-              settings.log.level = level_;
-          }
+          settings_set_param("log_level",level);
         }
       }
-      break;
+        break;
       case fw_keepalive_:
       {
         DeserializationError error = deserializeJson(doc, payload);
@@ -499,11 +614,7 @@ void core_parse_mqtt_messages(){
           if(doc["active"].is_number())
             active = std::to_string((long)doc["active"]);
           #endif
-          if(active != "" && has_only_digits(active)){
-            long active_ = stoLong(active);
-            if(active_ == 0 || active_ == 1)
-              settings.keepalive.active = (bool)active_;
-          }
+          settings_set_param("keepalive_active",active);
         }
 
         if(doc.containsKey("period")){
@@ -515,28 +626,23 @@ void core_parse_mqtt_messages(){
             period = std::to_string((long)doc["period"]);
           #endif
           settings_set_param("keepalive_period",period);
-          /*
-          if(period != "" && has_only_digits(period))
-            settings.keepalive.period = stoLong(period);
-          */
         }
       }
-      break;
+        break;
       default:
         DBGLOG(Info,"topic not known by fw topics");
         break;
     }
     // store settings
-    if(set){
-      settings_log();
-      if(!sysfile.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings)))
-        DBGLOG(Error,"failing writing file: "+String(FW_SETTINGS_FILENAME));
-      core_send_mqtt_message(clientID,topic,"",0,true); // unpublish
-    }else if(update){
+    if(store){
       settings_log();
       if(!sysfile.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings)))
         DBGLOG(Error,"failing writing file: "+String(FW_SETTINGS_FILENAME));
     }
+
+    if(set)
+      core_send_mqtt_message(clientID,topic,"",0,true); // unpublish
+
   }else{
 
     app.parse_mqtt_messages(clientID,topic,payload);
@@ -547,7 +653,7 @@ void core_parse_mqtt_messages(){
 
 bool core_send_mqtt_message(uint8_t clientID, String topic, String data, uint8_t qos, bool retain){
 
-  return mRTOS.mqtt_pushMessage(clientID,topic,data,qos,retain);
+  call.mqtt_send(clientID,topic,data,qos,retain);
 }
 
 bool core_store_record(String filename, const char* data, uint16_t len){
@@ -619,7 +725,6 @@ bool core_send_record(String filename){
   return true;
 }
 
-
 uint8_t parse_float_array(float* arr, uint8_t len, String payload){
 
     int8_t index = 0, i = 0;
@@ -659,6 +764,22 @@ fwTopics_ resolveOption(std::map<long, fwTopics_> map, String topic) {
 
   return fw_not_found;
 }
+
+#ifdef ENABLE_BLE
+// find settings param
+uuidTopics_ resolveOptionUUID(std::map<long, uuidTopics_> map, String param) {
+
+  std::string param_ = std::string(param.c_str());
+  long str_hash = (long)std::hash<std::string>{}(param_);
+  std::map<long,uuidTopics_>::iterator it;
+
+  it = map.find(str_hash);
+  if(it != map.end())
+    return it->second;
+
+  return uuid_not_found;
+}
+#endif
 
 String get_uid() {
 

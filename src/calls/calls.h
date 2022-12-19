@@ -34,7 +34,10 @@ public:
   bool remove_dir(String directory);
   void clean_dir(String directory);
   bool read_file(String filename, char* data, uint16_t* len);
+  bool write_file(String filename, const char* data, uint16_t len);
   bool delete_file(String filename);
+
+  bool mqtt_send(uint8_t clientID, String topic, String data, uint8_t qos, bool retain);
 
   void check_alarms();
   void check_sensors();

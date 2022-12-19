@@ -9,6 +9,7 @@ void APP::init(){
 
 void APP::loop(){
 
+  /*
   if(now()%60 == 0 && now() > 1669632451){
     Serial.printf("timestamp: %lu \n",now());
     String filename = "/voltage.txt";
@@ -17,7 +18,7 @@ void APP::loop(){
       Serial.println("failure storing record file");
     delay(1000);
   }
-
+  */
 }
 
 /*

@@ -1,7 +1,8 @@
 
 #include "wifiAP.h"
 
-
+extern CALLS call;
+extern SYSFILE sysfile;
 /*
   WiFiAccessPoint.ino creates a WiFi access point and provides a web server on it.
 
@@ -15,14 +16,10 @@
   by Elochukwu Ifediora (fedy0)
 */
 
-#include <WiFi.h>
-#include <WiFiClient.h>
-#include <WebServer.h>
-#include <WiFiAP.h>
 
-//WiFiServer server(80);
-WebServer server(80);
-
+WiFiServer server(80);
+//WebServer server(80);
+/*
 void handleRoot() {
 
   char temp[400];
@@ -89,7 +86,7 @@ void drawGraph() {
 
   server.send(200, "image/svg+xml", out);
 }
-
+*/
 void WIFIAP::setup() {
 
   Serial.println();
@@ -100,19 +97,19 @@ void WIFIAP::setup() {
   IPAddress myIP = WiFi.softAPIP();
   Serial.print("AP IP address: ");
   Serial.println(myIP);
-
+  /*
   server.on("/",handleRoot);
   server.on("/test.svg", drawGraph);
   server.onNotFound(handleNotFound);
+  */
   server.begin();
-
   Serial.println("Server started");
 }
 
 void WIFIAP::loop() {
 
-  server.handleClient();
-  /*
+  //server.handleClient();
+
   WiFiClient client = server.available();   // listen for incoming clients
 
   if (client) {                             // if you get a client,
@@ -133,9 +130,32 @@ void WIFIAP::loop() {
             client.println("Content-type:text/html");
             client.println();
 
+            // body
+            const char* body = "<!DOCTYPE html><html>\
+                <head>\
+                  <meta content='5'/>\
+                  <title>ESP32 Demo</title>\
+                  <style>\
+                    body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
+                  </style>\
+                </head>\
+                <body>\
+                  <h1>Hello from ESP32!</h1>\
+                  <form action=\"/wifi\">\
+                    <label for=\"ssid\">SSID:</label><br>\
+                    <input type=\"text\" id=\"ssid\" name=\"ssid\"><br>\
+                    <label for=\"pass\">Password:</label><br>\
+                    <input type=\"text\" id=\"pass\" name=\"pass\">\
+                    <input type=\"submit\" value=\"Submit\">\
+                  </form>\
+                </body>\
+              </html>";
+
+            client.print(body);
+
             // the content of the HTTP response follows the header:
-            client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br>");
-            client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br>");
+            //client.print("Click <a href=\"/H\">here</a> to turn ON the LED.<br>");
+            //client.print("Click <a href=\"/L\">here</a> to turn OFF the LED.<br>");
 
             // The HTTP response ends with another blank line:
             client.println();
@@ -149,11 +169,57 @@ void WIFIAP::loop() {
         }
 
         // Check to see if the client request was "GET /H" or "GET /L":
-        if (currentLine.endsWith("GET /H")) {
-          digitalWrite(LED_BUILTIN, HIGH);               // GET /H turns the LED on
+        if (currentLine.endsWith("GET /wifi")) {
+          //digitalWrite(LED_BUILTIN, HIGH);               // GET /H turns the LED on
+          String request = "";
+          while(client.available()){
+            char r = client.read();
+            if(r == ' ')
+              break;
+            else request += r;
+          }
+          Serial.println();
+          Serial.println("request: "+request);
+
+          String ssid = "";
+          String pass = "";
+          uint8_t i = 0;
+          int16_t index_i = 0;
+          int16_t index_f = 0;
+          while(index_f != -1){
+
+            index_i = request.indexOf("=");
+            index_f = request.indexOf("&");
+            String param = "";
+            if(index_f == -1)
+              param = request.substring(index_i+1);
+            else
+              param = request.substring(index_i+1,index_f);
+            if(i == 0)
+              ssid = param;
+            else if(i==1)
+              pass = param;
+            i++;
+            request = request.substring(index_f+1);
+          }
+          Serial.println("ssid: "+ssid);
+          Serial.println("pass: "+pass);
+          settings_set_param("wifi_ssid",ssid);
+          settings_set_param("wifi_pwd",pass);
+
+          settings_log();
+          if(sysfile.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings))){
+            client.stop();
+            Serial.println("Client Disconnected.");
+            call.fw_reboot();
+          }else{
+            Serial.println("failing writing file: "+String(FW_SETTINGS_FILENAME));
+          }
+
+
         }
         if (currentLine.endsWith("GET /L")) {
-          digitalWrite(LED_BUILTIN, LOW);                // GET /L turns the LED off
+          //digitalWrite(LED_BUILTIN, LOW);                // GET /L turns the LED off
         }
       }
     }
@@ -161,5 +227,5 @@ void WIFIAP::loop() {
     client.stop();
     Serial.println("Client Disconnected.");
   }
-  */
+
 }

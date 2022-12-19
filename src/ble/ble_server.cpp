@@ -9,10 +9,6 @@
 // See the following for generating UUIDs:
 // https://www.uuidgenerator.net/
 
-#define WIFI_SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-#define SSID_CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
-#define PWD_CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a9"
-
 void (*callbackBLE)(String param, String text);
 void BLE_SERVER::setCallback(void (*fp)(String, String)){
   callbackBLE = fp;
@@ -35,31 +31,45 @@ void MyCallbacks::onWrite(BLECharacteristic *pCharacteristic) {
   }
 }
 
-void BLE_SERVER::init() {
+void BLE_SERVER::init(String uid) {
 
-  BLEDevice::init("ESP32 - device");
+  std::string uid_str(uid.c_str(), uid.length());
+  //std::string name = "ESP32-"+uid_str;
+  BLEDevice::init(uid_str);
   BLEServer *pServer = BLEDevice::createServer();
 
-  BLEService *pService = pServer->createService(WIFI_SERVICE_UUID);
-  BLECharacteristic *pCharacteristic1 = pService->createCharacteristic(
-                                         SSID_CHARACTERISTIC_UUID,
-                                         BLECharacteristic::PROPERTY_READ |
+  // FW COMMANDS
+  BLEService *pServiceFW = pServer->createService(FW_S_UUID);
+  BLECharacteristic *pCharacteristic1FW = pServiceFW->createCharacteristic(
+                                         FW_REBOOT_C_UUID,
+                                         BLECharacteristic::PROPERTY_WRITE
+                                       );
+  //pCharacteristic1FW->setValue(settings.wifi.ssid);
+  BLECharacteristic *pCharacteristic2FW = pServiceFW->createCharacteristic(
+                                         FW_RESET_C_UUID,
                                          BLECharacteristic::PROPERTY_WRITE
                                        );
 
-  pCharacteristic1->setValue("current ssid");
+  pServiceFW->start();
 
-
-  BLECharacteristic *pCharacteristic2 = pService->createCharacteristic(
-                                         PWD_CHARACTERISTIC_UUID,
+  // WIFI CONFIGURATION
+  BLEService *pServiceWiFi = pServer->createService(WIFI_S_UUID);
+  BLECharacteristic *pCharacteristic1WiFi = pServiceWiFi->createCharacteristic(
+                                         WIFI_SSID_C_UUID,
+                                         BLECharacteristic::PROPERTY_WRITE
+                                       );
+  //pCharacteristic1WiFi->setValue(settings.wifi.ssid);
+  BLECharacteristic *pCharacteristic2WiFi = pServiceWiFi->createCharacteristic(
+                                         WIFI_PWD_C_UUID,
                                          BLECharacteristic::PROPERTY_WRITE
                                        );
 
-  pService->start();
+  pServiceWiFi->start();
+
 
   // BLEAdvertising *pAdvertising = pServer->getAdvertising();  // this still is working for backward compatibility
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(WIFI_SERVICE_UUID);
+  pAdvertising->addServiceUUID(WIFI_S_UUID);
   pAdvertising->setScanResponse(true);
   pAdvertising->setMinPreferred(0x06);  // functions that help with iPhone connections issue
   pAdvertising->setMinPreferred(0x12);
@@ -67,8 +77,11 @@ void BLE_SERVER::init() {
   //BLEDevice::startAdvertising();
   Serial.println("Characteristic defined! Now you can read it in your phone!");
 
-  pCharacteristic1->setCallbacks(new MyCallbacks());
-  pCharacteristic2->setCallbacks(new MyCallbacks());
+  pCharacteristic1WiFi->setCallbacks(new MyCallbacks());
+  pCharacteristic2WiFi->setCallbacks(new MyCallbacks());
+
+  pCharacteristic1FW->setCallbacks(new MyCallbacks());
+  pCharacteristic2FW->setCallbacks(new MyCallbacks());
 
 }
 
