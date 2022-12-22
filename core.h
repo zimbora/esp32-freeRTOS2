@@ -12,11 +12,13 @@
 #include <TimeLib.h>
 
 #include "./src/calls/calls.h"
+#include "./src/sensors/sensors.h"
 #include "credentials.h"
 #include "sysfile.hpp"
 #include "./src/app/app.h"
 #include "./src/settings/settings.h"
 #include "./src/settings/package.h"
+#include "./src/wifi/wifiAP.h"
 
 #ifdef ENABLE_JS
 #include "JS.h"
@@ -41,6 +43,8 @@ enum fwTopics_ {
   fw_mqtt_,
   fw_log_,
   fw_keepalive_,
+  fw_ar_,
+  fw_alarm_,
   fw_not_found
 };
 
@@ -56,7 +60,9 @@ static const std::map<long, fwTopics_> fwTopics {
   { (long)std::hash<std::string>{}("/fw/modem/set"),                        fw_modem_ },
   { (long)std::hash<std::string>{}("/fw/mqtt/set"),                         fw_mqtt_ },
   { (long)std::hash<std::string>{}("/fw/log/set"),                          fw_log_ },
-  { (long)std::hash<std::string>{}("/fw/keepalive/set"),                    fw_keepalive_ }
+  { (long)std::hash<std::string>{}("/fw/keepalive/set"),                    fw_keepalive_ },
+  { (long)std::hash<std::string>{}("/fw/ar/set"),                           fw_ar_ },
+  { (long)std::hash<std::string>{}("/fw/alarm/set"),                        fw_alarm_ }
 };
 
 #ifdef ENABLE_BLE
@@ -108,6 +114,21 @@ static const std::map<long, uuidTopics_> uuidTopics {
 };
 #endif
 
+#ifdef ENABLE_AP
+class CALLBACKS_WIFI_AP : public WiFiCallbacks
+{
+  public:
+    void onWiFiSet(String ssid, String pass);
+};
+#endif
+
+class CALLBACKS_SENSORS : public SensorCallbacks
+{
+  public:
+    void onReadSensor(String ref, String value);
+    void onAlarmSensor(String ref, String value);
+    void onAlarmTrigger(String ref, String value);
+};
 
 void      core_init();
 void      core_loop();

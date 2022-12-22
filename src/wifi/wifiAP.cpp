@@ -1,8 +1,6 @@
 
 #include "wifiAP.h"
 
-extern CALLS call;
-extern SYSFILE sysfile;
 /*
   WiFiAccessPoint.ino creates a WiFi access point and provides a web server on it.
 
@@ -18,75 +16,7 @@ extern SYSFILE sysfile;
 
 
 WiFiServer server(80);
-//WebServer server(80);
-/*
-void handleRoot() {
 
-  char temp[400];
-  int sec = millis() / 1000;
-  int min = sec / 60;
-  int hr = min / 60;
-
-  snprintf(temp, 400,
-
-           "<html>\
-  <head>\
-    <meta http-equiv='refresh' content='5'/>\
-    <title>ESP32 Demo</title>\
-    <style>\
-      body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
-    </style>\
-  </head>\
-  <body>\
-    <h1>Hello from ESP32!</h1>\
-    <p>Uptime: %02d:%02d:%02d</p>\
-    <img src=\"/test.svg\" />\
-  </body>\
-</html>",
-
-           hr, min % 60, sec % 60
-          );
-  server.send(200, "text/html", temp);
-
-}
-
-void handleNotFound() {
-
-  String message = "File Not Found\n\n";
-  message += "URI: ";
-  message += server.uri();
-  message += "\nMethod: ";
-  message += (server.method() == HTTP_GET) ? "GET" : "POST";
-  message += "\nArguments: ";
-  message += server.args();
-  message += "\n";
-
-  for (uint8_t i = 0; i < server.args(); i++) {
-    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
-  }
-
-  server.send(404, "text/plain", message);
-
-}
-
-void drawGraph() {
-  String out = "";
-  char temp[100];
-  out += "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"400\" height=\"150\">\n";
-  out += "<rect width=\"400\" height=\"150\" fill=\"rgb(250, 230, 210)\" stroke-width=\"1\" stroke=\"rgb(0, 0, 0)\" />\n";
-  out += "<g stroke=\"black\">\n";
-  int y = rand() % 130;
-  for (int x = 10; x < 390; x += 10) {
-    int y2 = rand() % 130;
-    sprintf(temp, "<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke-width=\"1\" />\n", x, 140 - y, x + 10, 140 - y2);
-    out += temp;
-    y = y2;
-  }
-  out += "</g>\n</svg>\n";
-
-  server.send(200, "image/svg+xml", out);
-}
-*/
 void WIFIAP::setup() {
 
   Serial.println();
@@ -97,18 +27,12 @@ void WIFIAP::setup() {
   IPAddress myIP = WiFi.softAPIP();
   Serial.print("AP IP address: ");
   Serial.println(myIP);
-  /*
-  server.on("/",handleRoot);
-  server.on("/test.svg", drawGraph);
-  server.onNotFound(handleNotFound);
-  */
+
   server.begin();
   Serial.println("Server started");
 }
 
 void WIFIAP::loop() {
-
-  //server.handleClient();
 
   WiFiClient client = server.available();   // listen for incoming clients
 
@@ -141,11 +65,11 @@ void WIFIAP::loop() {
                 </head>\
                 <body>\
                   <h1>Hello from ESP32!</h1>\
-                  <form action=\"/wifi\">\
+                  <form action=\"/wifi\" method=\"post\">\
                     <label for=\"ssid\">SSID:</label><br>\
                     <input type=\"text\" id=\"ssid\" name=\"ssid\"><br>\
                     <label for=\"pass\">Password:</label><br>\
-                    <input type=\"text\" id=\"pass\" name=\"pass\">\
+                    <input type=\"text\" id=\"pass\" name=\"pass\"><br><br>\
                     <input type=\"submit\" value=\"Submit\">\
                   </form>\
                 </body>\
@@ -202,25 +126,64 @@ void WIFIAP::loop() {
             i++;
             request = request.substring(index_f+1);
           }
+
           Serial.println("ssid: "+ssid);
           Serial.println("pass: "+pass);
-          settings_set_param("wifi_ssid",ssid);
-          settings_set_param("wifi_pwd",pass);
-
-          settings_log();
-          if(sysfile.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings))){
+          if(ssid != "" && pass != ""){
             client.stop();
-            Serial.println("Client Disconnected.");
-            call.fw_reboot();
-          }else{
-            Serial.println("failing writing file: "+String(FW_SETTINGS_FILENAME));
+            pWiFiCallbacks->onWiFiSet(ssid,pass);
           }
 
+        }
+        else if (currentLine.endsWith("POST /wifi")) {
+          //digitalWrite(LED_BUILTIN, HIGH);               // GET /H turns the LED on
+          String body = "";
+          while(client.available() && body == ""){
+            char r = client.read();
 
+            if(r == '\n' && currentLine == "\r"){
+              while(client.available()){
+                body += (char)client.read();
+                if(body.endsWith("\r\n\r\n"))
+                  break;
+              }
+            }else if(r == '\n'){
+              Serial.println(currentLine);
+              currentLine = "";
+            }else currentLine += r;
+          }
+          Serial.println();
+          Serial.println("body: "+body);
+
+          String ssid = "";
+          String pass = "";
+          uint8_t i = 0;
+          int16_t index_i = 0;
+          int16_t index_f = 0;
+          while(index_f != -1){
+
+            index_i = body.indexOf("=");
+            index_f = body.indexOf("&");
+            String param = "";
+            if(index_f == -1)
+              param = body.substring(index_i+1);
+            else
+              param = body.substring(index_i+1,index_f);
+            if(i == 0)
+              ssid = param;
+            else if(i==1)
+              pass = param;
+            i++;
+            body = body.substring(index_f+1);
+          }
+          Serial.println("ssid: "+ssid);
+          Serial.println("pass: "+pass);
+          if(ssid != "" && pass != ""){
+            client.stop();
+            pWiFiCallbacks->onWiFiSet(ssid,pass);
+          }
         }
-        if (currentLine.endsWith("GET /L")) {
-          //digitalWrite(LED_BUILTIN, LOW);                // GET /L turns the LED off
-        }
+
       }
     }
     // close the connection:

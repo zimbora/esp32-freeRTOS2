@@ -13,6 +13,7 @@
 #include "core.h"
 #include "modem-freeRTOS.hpp"
 #include "./src/app/app.h"
+#include "./src/sensors/sensors.h"
 
 #ifdef ENABLE_AP
 #include "./src/wifi/wifiAP.h"
@@ -39,6 +40,7 @@ WIFIAP ap;
 #ifdef ENABLE_BLE
 BLE_SERVER ble;
 #endif
+
 
 
 void (*callback)(uint8_t);
@@ -181,6 +183,7 @@ void setup() {
         ,  NULL
         ,  1);
   #else
+    ap.setCallbacks(new CALLBACKS_WIFI_AP());
     while(!mRTOS.isWifiConnected()){
 
       if(settings.wifi.ssid != ""){
@@ -213,7 +216,7 @@ void setup() {
 
   #ifndef ENABLE_LTE
 
-    const char project[] = "esp32/freeRTOS2";
+    const char project[] = MQTT_PROJECT;
     uint16_t port = 1883;
 
     mRTOS.mqtt_configure_connection(0,project,get_uid().c_str(),MQTT_HOST_1,port,MQTT_USER_1,MQTT_PASSWORD_1);

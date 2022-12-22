@@ -215,7 +215,7 @@ static struct js *jsinit(void *mem, size_t size) {
   js_set(js, js_glob(js), "date", date);
   js_set(js, date, "now", js_mkfun(date_now));
   js_set(js, date, "millis", js_mkfun(date_millis));
-  
+
   jsval_t mqtt = js_mkobj(js);
   js_set(js, js_glob(js), "mqtt", mqtt);
   js_set(js, mqtt, "send", js_mkfun(js_mqtt_send));
@@ -256,6 +256,16 @@ class JS {
       // Deallocate all resources
       while (s_rhead != NULL) delresource(s_rhead->cleanup, s_rhead->data);
       s_js = jsinit(s_js, JS_MEM_SIZE);
+      jsval_t v = js_eval(s_js, code, ~0U);
+      //free(code);
+      return mg_mprintf("%Q", js_str(s_js, v));
+    } else {
+      return mg_mprintf("%Q", "missing code");
+    }
+  }
+
+  const char* call(const char* code){
+    if (code) {
       jsval_t v = js_eval(s_js, code, ~0U);
       //free(code);
       return mg_mprintf("%Q", js_str(s_js, v));

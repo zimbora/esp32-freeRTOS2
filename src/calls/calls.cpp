@@ -13,6 +13,7 @@ HTTP_HEADER_MSG* msg_header;
 HTTP_BODY_MSG* msg_body;
 
 FOTA fota;
+MD5Builder md5_;
 
 bool CALLS::fw_fota(String url){
 
@@ -95,7 +96,8 @@ bool CALLS::fw_settings_load(String filename, String version){
   if(data != nullptr){
     sysfile.read_file(filename.c_str(),data,&len);
     memcpy(settings.fw.version,data,sizeof(settings.fw.version));
-    if(String(settings.fw.version) == version)
+    String version = String(settings.fw.version);
+    if(version.startsWith("0.") || version.startsWith("1.") || version.startsWith("2."))
       memcpy(settings.fw.version,data,sizeof(settings));
     else{
       memset(settings.fw.version,0,sizeof(settings.fw.version));
@@ -284,6 +286,13 @@ bool CALLS::fw_reset(){
   return true;
 }
 
+bool CALLS::mqtt_send(String topic, String data, uint8_t qos, bool retain){
+  if(mRTOS.mqtt_isConnected(CLIENTIDEXTERNAL))
+    return mqtt_send(CLIENTIDEXTERNAL,topic,data,qos,retain);
+  else
+    return mqtt_send(CLIENTID,topic,data,qos,retain);
+}
+
 bool CALLS::mqtt_send(uint8_t clientID, String topic, String data, uint8_t qos, bool retain){
   return mRTOS.mqtt_pushMessage(clientID,topic,data,qos,retain);
 }
@@ -362,10 +371,11 @@ bool CALLS::do_fota(String protocol, String host, String path, String method, St
     msg_header = mRTOS.http_header_getNextMessage(msg_header);
     if(msg_header != NULL){
       Serial.printf("client [%d] %s \n",msg_header->clientID,msg_header->http_response.c_str());
-      if(msg_header->http_response.indexOf("200") > 0){
-        Serial.printf("http body len %d \n",msg_header->body_len);
+      if(msg_header->http_response.indexOf("200") >= 0){
+        Serial.printf("http body len %lu \n",msg_header->body_len);
         fota.start(msg_header->body_len);
         fota_size = msg_header->body_len;
+        md5_.begin();
         uint32_t len = 0;
 
         while(fota_size != len && timeout > millis()){
@@ -373,7 +383,7 @@ bool CALLS::do_fota(String protocol, String host, String path, String method, St
 
           if(msg_body != NULL){
             timeout = millis()+10000;
-            //md5_.add((uint8_t*)body_rx->data,body_rx->len);
+            md5_.add((uint8_t*)msg_body->data,msg_body->data_len);
             int8_t tries = 3;
             while(!fota.write_block((uint8_t*)msg_body->data,msg_body->data_len)){
               delay(300);
@@ -388,12 +398,15 @@ bool CALLS::do_fota(String protocol, String host, String path, String method, St
           delay(100); // use delay to moderate concurrency access to queues
         }
         Serial.println("http all data was read");
-        /*
+
         md5_.calculate();
         String md5_calculated = md5_.toString();
-        log("md5 calculated: "+md5_calculated);
-        log("md5 header: "+md5_http);
-        */
+        Serial.println("md5 calculated: "+md5_calculated);
+        Serial.println("md5 header: "+msg_header->md5);
+        if(msg_header->md5 == md5_calculated){
+          Serial.println("md5 checked");
+        }else Serial.println("md5 check has failed");
+
         if(fota.has_finished()){
           Serial.println("new fw uploaded");
           Serial.println("rebooting");
@@ -401,7 +414,8 @@ bool CALLS::do_fota(String protocol, String host, String path, String method, St
         }
 
         return true;
-      }
+
+      }else Serial.println("fota request has failed");
     }
     delay(100); // use delay to moderate concurrency access to queues
   }

@@ -107,23 +107,4 @@ bool has_only_digits(String value_str);
 long stoLong(String s);
 
 
-/*
-#ifndef UNITTEST
-  extern global_settings settings;
-  extern DynamicJsonDocument doc;
-#else
-  extern nlohmann::json doc;
-#endif
-
-
-#ifndef UNITTEST
-  bool settings_clean();
-
-  void jsonListKeys(JsonObject documentRoot, String topic, JsonVariant payload);
-
-  bool settings_update(char* data, int16_t len);
-
-  uint32_t align_time_with(uint32_t period);
-#endif
-*/
 #endif

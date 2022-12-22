@@ -4,15 +4,31 @@
 
 Scheduler runner;
 CALLS call;
-SYSFILE sysfile;
 SemaphoreHandle_t spiffsMutex;
+SYSFILE sysfile;
+extern SENSORS sensors;
 APP app;
 
 MODEMfreeRTOS mRTOS; // freeRTOS modem
-MQTT_MSG* msg; // mqtt
-DynamicJsonDocument doc(2048); // json
+MQTT_MSG_RX* msg; // mqtt
+extern DynamicJsonDocument doc; // json
 
 String uid = "";
+
+#ifdef ENABLE_AP
+void CALLBACKS_WIFI_AP::onWiFiSet(String ssid, String pass){
+  settings_set_param("wifi_ssid",ssid);
+  settings_set_param("wifi_pwd",pass);
+
+  settings_log();
+  if(sysfile.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings))){
+    Serial.println("Client Disconnected.");
+    call.fw_reboot();
+  }else{
+    Serial.println("failing writing file: "+String(FW_SETTINGS_FILENAME));
+  }
+}
+#endif
 
 #ifdef ENABLE_BLE
 BLE_SERVER ble;
@@ -120,7 +136,7 @@ void bleCallback(String uuid, String value){
 #endif
 
 void tRecords(){
-
+  sensors.loop();
   core_check_records();
   String directory = APP_PATH_RECORDS;
   call.clean_dir(directory);
@@ -143,7 +159,6 @@ void tInfo(){
   DBGLOG(Info,date());
   mRTOS.log_modem_status();
   Serial.printf("--- ----- --- \n\n");
-
 }
 
 Task t1(100, TASK_FOREVER, &core_parse_mqtt_messages); // call it outside functions
@@ -157,6 +172,39 @@ String directory[] = {
   APP_PATH_RECORDS,
 };
 
+void CALLBACKS_SENSORS::onReadSensor(String ref, String value){
+  Serial.println("onReadSensor callback called");
+  Serial.println("ref: "+ref);
+  Serial.println("value: "+value);
+  #ifdef ENABLE_JS
+  String code = "event.onReadSensor(\""+ref+"\","+value+")";
+  const char* res = JS.call(code.c_str());     // Execute JS code
+  Serial.println(res);
+  #endif
+};
+
+void CALLBACKS_SENSORS::onAlarmSensor(String ref, String value){
+  Serial.println("onAlarmSensor callback called");
+  Serial.println("ref: "+ref);
+  Serial.println("value: "+value);
+  #ifdef ENABLE_JS
+  String code = "event.onAlarmSensor(\""+ref+"\","+value+")";
+  const char* res = JS.call(code.c_str());     // Execute JS code
+  Serial.println(res);
+  #endif
+};
+
+void CALLBACKS_SENSORS::onAlarmTrigger(String ref, String value){
+  Serial.println("onAlarmTrigger callback called");
+  Serial.println("ref: "+ref);
+  Serial.println("value: "+value);
+  #ifdef ENABLE_JS
+  String code = "event.onAlarmTrigger(\""+ref+"\","+value+")";
+  const char* res = JS.call(code.c_str());     // Execute JS code
+  Serial.println(res);
+  #endif
+
+};
 
 void core_init(){
 
@@ -208,6 +256,31 @@ void core_init(){
 
   t4.enable();
   DBGLOG(Debug,"Enabled info logs");
+
+  sensors.init();
+  sensors.init_rs485(&Serial1,RS485_GPIO_RX,RS485_GPIO_TX,RS485_GPIO_RTS);
+
+  sensors.setCallbacks(new CALLBACKS_SENSORS());
+
+  uint16_t len = 2048;
+  char* data = (char*)malloc(len);
+  if(data != nullptr){
+    call.read_file(FW_AR_FILENAME,data,&len);
+    String file = String(data);
+    if(!sensors.init_ar(data)){
+      DBGLOG(Error,"Autorequests not running !!");
+    }
+
+    len = 2048;
+    memset(data,0,len);
+
+    call.read_file(FW_ALARM_FILENAME,data,&len);
+    file = String(data);
+    if(!sensors.init_alarm(data)){
+      DBGLOG(Error,"Alarms not running !!");
+    }
+    free(data);
+  }
 
   #ifdef ENABLE_JS
   JS.begin();
@@ -345,7 +418,7 @@ void core_parse_mqtt_messages(){
 
           if(doc.containsKey("url")){
             String url = doc["url"];
-            DBGLOG(Info,"updating settings from "+url);
+            DBGLOG(Info,"fota from "+url);
             call.fw_fota(url);
           }
 
@@ -629,8 +702,17 @@ void core_parse_mqtt_messages(){
         }
       }
         break;
+      case fw_ar_:
+        if(!call.write_file(FW_AR_FILENAME,payload.c_str(),payload.length()))
+          DBGLOG(Error,"Error storing js script");
+        break;
+      case fw_alarm_:
+        if(!call.write_file(FW_ALARM_FILENAME,payload.c_str(),payload.length()))
+          DBGLOG(Error,"Error storing js script");
+        break;
       default:
         DBGLOG(Info,"topic not known by fw topics");
+        Serial.println(payload);
         break;
     }
     // store settings

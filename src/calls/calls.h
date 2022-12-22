@@ -1,6 +1,8 @@
 #ifndef CALLS_H
 #define CALLS_H
 
+#include <MD5Builder.h>
+
 #include "modem-freeRTOS.hpp"
 #include "sysfile.hpp"
 #include "../fota/fota.h"
@@ -37,6 +39,7 @@ public:
   bool write_file(String filename, const char* data, uint16_t len);
   bool delete_file(String filename);
 
+  bool mqtt_send(String topic, String data, uint8_t qos, bool retain);
   bool mqtt_send(uint8_t clientID, String topic, String data, uint8_t qos, bool retain);
 
   void check_alarms();
