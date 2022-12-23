@@ -174,19 +174,17 @@ String directory[] = {
 
 void CALLBACKS_SENSORS::onReadSensor(String ref, String value){
   Serial.println("onReadSensor callback called");
-  Serial.println("ref: "+ref);
-  Serial.println("value: "+value);
   #ifdef ENABLE_JS
   String code = "event.onReadSensor(\""+ref+"\","+value+")";
   const char* res = JS.call(code.c_str());     // Execute JS code
   Serial.println(res);
+  #else
+  call.mqtt_send("/"+ref,value,2,0);
   #endif
 };
 
 void CALLBACKS_SENSORS::onAlarmSensor(String ref, String value){
   Serial.println("onAlarmSensor callback called");
-  Serial.println("ref: "+ref);
-  Serial.println("value: "+value);
   #ifdef ENABLE_JS
   String code = "event.onAlarmSensor(\""+ref+"\","+value+")";
   const char* res = JS.call(code.c_str());     // Execute JS code
@@ -196,15 +194,47 @@ void CALLBACKS_SENSORS::onAlarmSensor(String ref, String value){
 
 void CALLBACKS_SENSORS::onAlarmTrigger(String ref, String value){
   Serial.println("onAlarmTrigger callback called");
-  Serial.println("ref: "+ref);
-  Serial.println("value: "+value);
   #ifdef ENABLE_JS
   String code = "event.onAlarmTrigger(\""+ref+"\","+value+")";
   const char* res = JS.call(code.c_str());     // Execute JS code
   Serial.println(res);
+  #else
+  call.mqtt_send("/"+ref,value,2,0);
   #endif
 
 };
+
+void CALLBACKS_SENSORS::onRS485ReadAll(String data_json){
+  Serial.println("onRS485ReadAll callback called");
+  Serial.println("core: "+data_json);
+  String filename = ".txt";
+  core_store_record(filename,data_json.c_str(),data_json.length());
+
+};
+
+/*
+* load settings
+*/
+void core_load_settings(){
+
+  uint16_t len = sizeof(settings);
+  char* data = (char*)malloc(len);
+  if(data != nullptr){
+    call.read_file(FW_SETTINGS_FILENAME,data,&len);
+    memcpy(settings.fw.version,data,sizeof(settings.fw.version));
+    String version = String(settings.fw.version);
+    if(version.startsWith("0.") || version.startsWith("1.") || version.startsWith("2."))
+      memcpy(settings.fw.version,data,sizeof(settings));
+    else{
+      call.fw_reset();
+      memset(settings.fw.version,0,sizeof(settings.fw.version));
+      memcpy(settings.fw.version,version.c_str(),version.length());
+      sysfile.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings));
+    }
+    free(data);
+  }
+
+}
 
 void core_init(){
 
@@ -215,7 +245,7 @@ void core_init(){
 
   call.init_filesystem(directory,NUMITEMS(directory));
 
-  call.fw_settings_load(FW_SETTINGS_FILENAME, FW_VERSION);
+  core_load_settings();
 
   // log settings
   settings_log();
@@ -735,7 +765,7 @@ void core_parse_mqtt_messages(){
 
 bool core_send_mqtt_message(uint8_t clientID, String topic, String data, uint8_t qos, bool retain){
 
-  call.mqtt_send(clientID,topic,data,qos,retain);
+  return call.mqtt_send(clientID,topic,data,qos,retain);
 }
 
 bool core_store_record(String filename, const char* data, uint16_t len){
@@ -745,7 +775,7 @@ bool core_store_record(String filename, const char* data, uint16_t len){
   if(!call.create_dir(path))
     return false;
   path += filename;
-  if(!call.store_record(path,data,sizeof(data)))
+  if(!call.store_record(path,data,len))
     return false;
   return true;
 }

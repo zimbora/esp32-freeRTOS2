@@ -128,6 +128,7 @@ class CALLBACKS_SENSORS : public SensorCallbacks
     void onReadSensor(String ref, String value);
     void onAlarmSensor(String ref, String value);
     void onAlarmTrigger(String ref, String value);
+    void onRS485ReadAll(String data);
 };
 
 void      core_init();

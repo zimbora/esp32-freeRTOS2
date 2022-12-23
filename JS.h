@@ -5,12 +5,14 @@
 #include "./src/js/elk.h"
 #include "./src/js/mongoose.h"
 #include "./src/calls/calls.h"
+#include "./src/sensors/sensors.h"
 #include <iostream>
 #include <string>
 
 #define JS_MEM_SIZE 8192
 
 extern CALLS call;
+extern SENSORS sensors;
 
 static struct js *s_js;      // JS instance
 static struct mg_mgr s_mgr;  // Mongoose event manager
@@ -128,7 +130,8 @@ static jsval_t js_log(struct js *js, jsval_t *args, int nargs) {
                      js_str(js, args[i]));
   }
   buf[sizeof(buf) - 1] = '\0';
-  MG_INFO(("JS-> %s", buf));
+  call.mqtt_send(0,"/js/console",String(buf),1,0);
+  Serial.printf("\nJS->log: %s", buf);
   return js_mkundef();
 }
 
@@ -141,7 +144,7 @@ static jsval_t js_delay(struct js *js, jsval_t *args, int nargs) {
   return js_mkundef();
 }
 
-static jsval_t read_sensor(struct js *js, jsval_t *args, int nargs){
+static jsval_t js_read_sensor(struct js *js, jsval_t *args, int nargs){
 
   if (!js_chkargs(args, nargs, "s")) return js_mkerr(js, "bad args");
 
@@ -153,6 +156,107 @@ static jsval_t read_sensor(struct js *js, jsval_t *args, int nargs){
   jsval_t v = js_eval(s_js, run, ~0);     // Execute JS code
   MG_INFO(("%s -> %s\n",run, js_str(js, v)));        // result: 7
   return js_mkundef();
+}
+
+static jsval_t js_read_rs485_all(struct js *js, jsval_t *args, int nargs){
+
+  #ifdef ENABLE_RS485
+  MG_INFO(("read all rs485 sensors"));
+  sensors.rs485_read_all();
+  return js_mktrue();
+  #else
+  MG_INFO(("rs485 not available"));
+  return js_mkfalse();
+  #endif
+}
+
+static jsval_t js_read_rs485(struct js *js, jsval_t *args, int nargs){
+
+  if(nargs != 4) return js_mkerr(js, "read rs485 invalid number of args");
+  //if (!js_chkargs(args, nargs, "sdd")) return js_mkerr(js, "mqtt bad args");
+  uint16_t unit_id = 0, fc = 0, addr = 0, len = 0;
+
+  if(js_type(args[0] == JS_NUM)){
+    unit_id = (uint16_t)js_getnum(args[0]);
+  }else return js_mkerr(js, "arg 0 is not a number");
+  if(js_type(args[1] == JS_NUM)){
+    fc = (uint16_t)js_getnum(args[1]);
+  }else return js_mkerr(js, "arg 1 is not a number");
+  if(js_type(args[2] == JS_NUM)){
+    addr = (uint16_t)js_getnum(args[2]);
+  }else return js_mkerr(js, "arg 2 is not a number");
+  if(js_type(args[3] == JS_NUM)){
+    len = (uint16_t)js_getnum(args[3]);
+  }else return js_mkerr(js, "arg 3 is not a number");
+
+  String res = "";
+  uint16_t size = 200;
+  uint8_t* data = (uint8_t*)malloc(size);
+  if(data != nullptr){
+    uint8_t error = sensors.rs485_read(unit_id,fc,addr,len,data,&size);
+    if(error){
+      res = "error: "+String(error);
+    }else{
+      res += "0x";
+      for(uint8_t i=0; i<size; i++){
+        res += String(data[i],HEX);
+      }
+    }
+    free(data);
+  }
+
+  return js_mkstr(js,res.c_str(),res.length());
+}
+
+// test it..
+static jsval_t js_write_rs485(struct js *js, jsval_t *args, int nargs){
+
+  if(nargs != 5) return js_mkerr(js, "write rs485 invalid number of args");
+  //if (!js_chkargs(args, nargs, "sdd")) return js_mkerr(js, "mqtt bad args");
+  uint16_t unit_id = 0, fc = 0, addr = 0, len = 0;
+  String data_str = "";
+  if(js_type(args[0] == JS_NUM)){
+    unit_id = (uint16_t)js_getnum(args[0]);
+  }else return js_mkerr(js, "arg 1 is not a number");
+  if(js_type(args[1] == JS_NUM)){
+    fc = (uint16_t)js_getnum(args[1]);
+  }else return js_mkerr(js, "arg 2 is not a number");
+  if(js_type(args[2] == JS_NUM)){
+    addr = (uint16_t)js_getnum(args[2]);
+  }else return js_mkerr(js, "arg 3 is not a number");
+  if(js_type(args[3] == JS_NUM)){
+    len = (uint16_t)js_getnum(args[3]);
+  }else return js_mkerr(js, "arg 4 is not a number");
+  if(js_type(args[3] == JS_STR)){
+    const char *data = js_getstr(js, args[4], NULL);
+    data_str = String(data);
+  }else return js_mkerr(js, "arg 5 is not a string");
+  String res = "";
+  char* charBuf = (char*)malloc(data_str.length());
+  data_str.toCharArray(charBuf, data_str.length());
+  uint8_t* data = (uint8_t*)malloc(data_str.length()/2);
+  if(data != nullptr && charBuf != nullptr){
+    uint8_t j = 0;
+    for(int i=0;i+2;i<data_str.length()){
+      char b1 = charBuf[i];
+      char b2 = charBuf[i+1];
+      data[j++] = (b1 - '0')<<4 | b2 - '0';
+    }
+    uint16_t size = j;
+    uint8_t error = sensors.rs485_write(unit_id,fc,addr,len,data,size);
+    if(error){
+      res = "error: "+String(error);
+    }else{
+      res += "0x";
+      for(uint8_t i=0; i<size; i++){
+        res += String(data[i],HEX);
+      }
+    }
+    free(data);
+    free(charBuf);
+  }
+
+  return js_mkstr(js,res.c_str(),res.length());
 }
 
 static jsval_t date_millis(struct js *js, jsval_t *args, int nargs){
@@ -167,7 +271,7 @@ static jsval_t date_now(struct js *js, jsval_t *args, int nargs){
 
 static jsval_t js_mqtt_send(struct js *js, jsval_t *args, int nargs){
 
-  if(nargs != 3) return js_mkerr(js, "mqtt few args");
+  if(nargs != 3) return js_mkerr(js, "mqtt invalid number args");
   //if (!js_chkargs(args, nargs, "sdd")) return js_mkerr(js, "mqtt bad args");
 
 
@@ -209,7 +313,10 @@ static struct js *jsinit(void *mem, size_t size) {
 
   jsval_t sensor = js_mkobj(js);
   js_set(js, js_glob(js), "sensor", sensor);
-  js_set(js, sensor, "read", js_mkfun(read_sensor));
+  js_set(js, sensor, "read", js_mkfun(js_read_sensor));
+  js_set(js, sensor, "read_rs485_all", js_mkfun(js_read_rs485_all));
+  js_set(js, sensor, "read_rs485", js_mkfun(js_read_rs485));
+  //js_set(js, sensor, "rs485_write", js_mkfun(js_rs485_write));
 
   jsval_t date = js_mkobj(js);
   js_set(js, js_glob(js), "date", date);
@@ -224,17 +331,14 @@ static struct js *jsinit(void *mem, size_t size) {
 }
 
 static void log_cb(uint8_t ch) {
+
   static char buf[256];
   static size_t len;
   buf[len++] = ch;
   if (ch == '\n' || len >= sizeof(buf)) {
     fwrite(buf, 1, len, stdout);
-    char *data = mg_mprintf("{%Q:%Q,%Q:%V}", "name", "log", "data", len, buf);
-    for (struct mg_connection *c = s_mgr.conns; c != NULL; c = c->next) {
-      if (!c->is_websocket) continue;
-      mg_ws_send(c, data, strlen(data), WEBSOCKET_OP_TEXT);
-    }
-    free(data);
+    buf[len] = '\0';
+    call.mqtt_send(0,"/js/debug",String(buf),1,0);
     len = 0;
   }
 }
@@ -257,7 +361,9 @@ class JS {
       while (s_rhead != NULL) delresource(s_rhead->cleanup, s_rhead->data);
       s_js = jsinit(s_js, JS_MEM_SIZE);
       jsval_t v = js_eval(s_js, code, ~0U);
-      //free(code);
+      String log = js_str(s_js, v);
+      Serial.println("res:"+log);
+      MG_INFO(("%s", (char *)log.c_str()));
       return mg_mprintf("%Q", js_str(s_js, v));
     } else {
       return mg_mprintf("%Q", "missing code");
@@ -267,7 +373,9 @@ class JS {
   const char* call(const char* code){
     if (code) {
       jsval_t v = js_eval(s_js, code, ~0U);
-      //free(code);
+      String log = js_str(s_js, v);
+      Serial.println("res:"+log);;
+      MG_INFO(("%s", (char *)log.c_str()));
       return mg_mprintf("%Q", js_str(s_js, v));
     } else {
       return mg_mprintf("%Q", "missing code");

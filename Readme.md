@@ -254,3 +254,21 @@ let event = {
   }
 };
   ```
+
+### Example 4
+
+Read all rs485 autorequests, stores on eeprom and sends to mqtt broker as soon as connection is available
+  ```
+let timer_fn = function() {
+  sensor.read_rs485_all();
+};
+let timer_id = timer.create(60000, 'timer_fn');
+  ```
+
+### Example 5
+
+Read rs485
+  ```
+let res = sensor.read_rs485(1,4,0,2);
+log(res);
+  ```

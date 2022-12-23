@@ -81,38 +81,6 @@ bool CALLS::fw_settings_update(String url, String filename){
 }
 
 /*
-* load settings
-*/
-bool CALLS::fw_settings_load(String filename, String version){
-
-  if(!xSemaphoreTake( spiffsMutex, 5000)){
-    //xSemaphoreGive(spiffsMutex);
-    return false;
-  }
-
-  // read settings
-  uint16_t len = sizeof(settings);
-  char* data = (char*)malloc(len);
-  if(data != nullptr){
-    sysfile.read_file(filename.c_str(),data,&len);
-    memcpy(settings.fw.version,data,sizeof(settings.fw.version));
-    String version = String(settings.fw.version);
-    if(version.startsWith("0.") || version.startsWith("1.") || version.startsWith("2."))
-      memcpy(settings.fw.version,data,sizeof(settings));
-    else{
-      memset(settings.fw.version,0,sizeof(settings.fw.version));
-      memcpy(settings.fw.version,version.c_str(),version.length());
-      sysfile.write_file(filename.c_str(),settings.fw.version,sizeof(settings));
-    }
-    free(data);
-  }
-
-  xSemaphoreGive(spiffsMutex);
-
-  return true;
-}
-
-/*
 * read file
 */
 bool CALLS::read_file(String filename, char* data, uint16_t* len){

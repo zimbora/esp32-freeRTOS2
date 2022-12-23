@@ -276,10 +276,10 @@ bool SENSORS::rs485_read_all(){
 
   char content[255];
   memset(content,0,255);
-  serializeJson(doc, content);
+  serializeJson(table, content);
   Serial.println(content);
-
-  pSensorCallbacks->onRS485ReadAll(content,255);
+  String data = String(content);
+  pSensorCallbacks->onRS485ReadAll(data);
 
   return true;
 }

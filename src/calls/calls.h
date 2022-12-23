@@ -1,12 +1,12 @@
 #ifndef CALLS_H
 #define CALLS_H
 
+#include <ESP32Logger.h>
 #include <MD5Builder.h>
 
 #include "modem-freeRTOS.hpp"
 #include "sysfile.hpp"
 #include "../fota/fota.h"
-#include "../settings/settings.h"
 
 #define NUMITEMS(arg) ((unsigned int) (sizeof (arg) / sizeof (arg [0])))
 
@@ -25,7 +25,6 @@ public:
 
   bool fw_fota(String url);
   bool fw_settings_update(String url, String filename);
-  bool fw_settings_load(String filename, String version);
   bool fw_reboot();
   bool fw_reset();
 

@@ -109,7 +109,7 @@ class SensorCallbacks{
     virtual void onReadSensor(String ref, String value){}; // called after autorequest be executed
     virtual void onAlarmSensor(String ref, String value){}; // called if sensor is in alarm state
     virtual void onAlarmTrigger(String ref, String value){}; // called if sensor has entered or exited from alarm
-    virtual void onRS485ReadAll(const char* content, uint16_t size){}; // called after call rs485_read_all function
+    virtual void onRS485ReadAll(String data){}; // called after call rs485_read_all function
 };
 
 class SENSORS {
