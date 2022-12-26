@@ -369,26 +369,18 @@ uint8_t SENSORS::rs485_read(uint8_t unit_id, uint8_t fc, uint16_t address, uint1
   return error;
 }
 
-uint8_t SENSORS::rs485_write(uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* data, uint16_t size){
+uint8_t SENSORS::rs485_write(uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* data, uint16_t* size){
 
   Serial.println("Writing rs485..");
-  uint8_t error = modbus.rs485_write(unit_id,fc,address,len,data,&size);
+  uint8_t error = modbus.rs485_write(unit_id,fc,address,len,data,size);
   if(error == 0){
-    Serial.print("res: ");
-    uint8_t i = 0;
-    while(i<size){
-      Serial.printf("0x%x ",data[i++]);
-    }
-    Serial.println();
+    Serial.println("packet written successfully");
   }else{
     Serial.printf("error: 0x%x \n",error);
     String error_msg = modbus.getLastError();
     if(error_msg != "")
       Serial.println("error msg: "+error_msg);
   }
-
-  // do something
-  free(data);
 
   return error;
 }

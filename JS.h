@@ -227,30 +227,38 @@ static jsval_t js_write_rs485(struct js *js, jsval_t *args, int nargs){
   if(js_type(args[3] == JS_NUM)){
     len = (uint16_t)js_getnum(args[3]);
   }else return js_mkerr(js, "arg 4 is not a number");
-  if(js_type(args[3] == JS_STR)){
+  if(js_type(args[4] == JS_STR)){
     const char *data = js_getstr(js, args[4], NULL);
     data_str = String(data);
   }else return js_mkerr(js, "arg 5 is not a string");
   String res = "";
+
   char* charBuf = (char*)malloc(data_str.length());
-  data_str.toCharArray(charBuf, data_str.length());
   uint8_t* data = (uint8_t*)malloc(data_str.length()/2);
+  /*
+  if(data_str.length() > 64)
+    return js_mkerr(js, "payload exceeds 32 bytes");
+  char charBuf[64];
+  uint8_t data[32];
+  */
+  Serial.println();
+  data_str.toCharArray(charBuf, data_str.length());
   if(data != nullptr && charBuf != nullptr){
     uint8_t j = 0;
-    for(int i=0;i+2;i<data_str.length()){
-      char b1 = charBuf[i];
-      char b2 = charBuf[i+1];
-      data[j++] = (b1 - '0')<<4 | b2 - '0';
+    for(int i=0;i<data_str.length();i+=2){
+      char hex[2];
+      hex[0] = charBuf[i];
+      hex[1] = charBuf[i+1];
+      int num = (int)strtol(hex, NULL, 16);
+      data[j++] = num;
+      Serial.printf("data: 0x%x \n",data[j-1]);
     }
     uint16_t size = j;
-    uint8_t error = sensors.rs485_write(unit_id,fc,addr,len,data,size);
+    uint8_t error = sensors.rs485_write(unit_id,fc,addr,len,data,&size);
     if(error){
       res = "error: "+String(error);
     }else{
-      res += "0x";
-      for(uint8_t i=0; i<size; i++){
-        res += String(data[i],HEX);
-      }
+      res += "packet written successfully";
     }
     free(data);
     free(charBuf);
@@ -316,7 +324,7 @@ static struct js *jsinit(void *mem, size_t size) {
   js_set(js, sensor, "read", js_mkfun(js_read_sensor));
   js_set(js, sensor, "read_rs485_all", js_mkfun(js_read_rs485_all));
   js_set(js, sensor, "read_rs485", js_mkfun(js_read_rs485));
-  //js_set(js, sensor, "rs485_write", js_mkfun(js_rs485_write));
+  js_set(js, sensor, "write_rs485", js_mkfun(js_write_rs485));
 
   jsval_t date = js_mkobj(js);
   js_set(js, js_glob(js), "date", date);

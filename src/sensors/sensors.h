@@ -133,7 +133,7 @@ class SENSORS {
     uint8_t rs485_read(String ref);
     uint8_t rs485_read(uint8_t index);
     uint8_t rs485_read(uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* data, uint16_t* size);
-    uint8_t rs485_write(uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* data, uint16_t size);
+    uint8_t rs485_write(uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* data, uint16_t* size);
     bool rs485_add(uint8_t index, String ref_str, String modbus, String type_str);
     bool rs485_add(uint8_t index, String ref_str, uint8_t type, uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* value);
     int get_type(String type);

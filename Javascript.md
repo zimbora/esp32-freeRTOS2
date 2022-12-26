@@ -1,6 +1,16 @@
 
+#Javascript
 
+Built using open project https://github.com/cesanta/elk
+Check referred link for instructions
 
+Javascript code is uploaded using the mqtt topic described below.
+The payload should contain the script to be runned. However, that script
+have to follow the rules described in this file.
+Some examples are shown in the end of this document
+
+## MQTT Topic
+  esp32/freeRTOS2/uid:ac67b2e9d11c/fw/js/code/set
 
 ## Supported features
 
@@ -45,11 +55,86 @@ C API imported to JS (Default):
 C API imported to JS (Proprietary):
 - sensor.read(ref) // get last value of sensor mapped with ref id string
 - sensor.read_rs485(unit_id,fc,address,len) // real time reads directly from bus
+- sensor.write_rs485(unit_id,fc,address,len,data_str) // real time reads directly from bus
 - sensor.read_rs485_all() // read all registered rs485 sensors
 - date.now() // unix timestamp
 - date.millis() // millis()
-- mqtt.send() // send messages to mqtt broker
+- mqtt.send(topic,payload,retain) // send messages to mqtt broker
 
 Note:
 - log method send all data to mqtt broker with topic /js/log
 - topic /js/debug will display all debug messages from runtime js code
+
+#Examples
+
+
+### Example 1
+  ```
+let led = { pin: 26, on: 0 };  // LED state
+gpio.mode(led.pin, 2);         // Set LED pin to output mode
+
+let timer_fn = function() {
+led.on = led.on ? 0 : 1;
+gpio.write(led.pin, led.on);
+};
+
+// Start a timer that toggles LED every 1000 milliseconds
+// This timer is a C resource. It is cleaned automatically on JS code refresh
+let timer_id = timer.create(1000, 'timer_fn');
+  ```
+
+### Example 2
+  ```
+log("run");
+let doIt = function(){
+  mqtt.send("/sensor/uptime",date.now(),0);
+};
+timer.create(2000,'doIt');
+  ```
+
+### Example 3
+  ```
+let event = {
+  onReadSensor : function(ref,value){
+    log("js sensor: "+ref);
+    log(value);
+    if(typeof(value) === 'number'){
+      if(value < 300.0)
+        log("value is safe");
+    }else{
+      log("invalid value");
+    }
+  },
+  onAlarmSensor : function(ref,value){
+    log("js alarm: "+ref);
+  },
+  onAlarmTrigger : function(ref,value){
+    log("js alarm state changed: "+ref);
+  }
+};
+  ```
+
+### Example 4
+
+Read all rs485 autorequests, stores on eeprom and sends to mqtt broker as soon as connection is available
+  ```
+let timer_fn = function() {
+  sensor.read_rs485_all();
+};
+let timer_id = timer.create(60000, 'timer_fn');
+  ```
+
+### Example 5
+
+Read rs485
+  ```
+let res = sensor.read_rs485(1,4,0,2);
+log(res);
+  ```
+
+### Example 6
+
+Write rs485
+```
+sensor.write_rs485(1,16,22,2,"043F800000");
+```
