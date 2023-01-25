@@ -44,15 +44,6 @@ void SENSORS::init(){
 
 }
 
-void SENSORS::init_rs485(HardwareSerial* port, uint8_t rx, uint8_t tx, uint8_t rts){
-
-  #ifdef ENABLE_RS485
-    DBGLOG(Debug,"initing rs485");
-    modbus.setup(port,rx,tx,rts);
-  #endif
-
-}
-
 // pass json data as ar
 bool SENSORS::init_ar(String data){
 
@@ -220,6 +211,17 @@ void SENSORS::loop(){
 }
 
 #ifdef ENABLE_RS485
+void SENSORS::rs485_init(HardwareSerial* port, uint8_t rx, uint8_t tx, uint8_t rts){
+
+  DBGLOG(Debug,"initing rs485");
+  modbus.setup(port,rx,tx,rts);
+}
+
+void SENSORS::rs485_set_config(uint8_t mode, uint32_t baudrate, uint32_t config, uint8_t retries){
+
+  modbus.begin(mode,baudrate,config,retries);
+}
+
 bool SENSORS::rs485_add(uint8_t index, String ref_str, String modbus, String type_str){
 
   uint8_t type = get_type(type_str);

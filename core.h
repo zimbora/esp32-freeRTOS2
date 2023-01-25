@@ -13,12 +13,24 @@
 
 #include "./src/calls/calls.h"
 #include "./src/sensors/sensors.h"
-#include "credentials.h"
 #include "sysfile.hpp"
-#include "./src/app/app.h"
 #include "./src/settings/settings.h"
-#include "./src/settings/package.h"
+#include "./package.h"
 #include "./src/wifi/wifiAP.h"
+/*
+class APPVOID{
+public:
+  virtual ~APPVOID(){};
+  virtual void init() = 0; //{Serial.println("init app core module");};
+  virtual void loop(){};
+  virtual void parse_mqtt_messages(uint8_t clientID, String topic, String payload){};
+};
+*/
+#ifdef DEMO
+#include "./src/app/demo/app.h"
+#elif defined SLIM_GW_WIFI
+#include "./src/app/SlimGW/app.h"
+#endif
 
 #ifdef ENABLE_JS
 #include "JS.h"
@@ -39,10 +51,15 @@ enum fwTopics_ {
   fw_settings_update_,
   fw_js_code_,
   fw_wifi_,
+  fw_wifi_get_,
   fw_modem_,
+  fw_modem_get_,
   fw_mqtt_,
+  fw_mqtt_get_,
   fw_log_,
+  fw_log_get_,
   fw_keepalive_,
+  fw_keepalive_get_,
   fw_ar_,
   fw_alarm_,
   fw_not_found
@@ -57,10 +74,15 @@ static const std::map<long, fwTopics_> fwTopics {
   { (long)std::hash<std::string>{}("/fw/fota/update/set"),                  fw_fota_update_ },
   { (long)std::hash<std::string>{}("/fw/js/code/set"),                      fw_js_code_ },
   { (long)std::hash<std::string>{}("/fw/wifi/set"),                         fw_wifi_ },
+  { (long)std::hash<std::string>{}("/fw/wifi/get"),                         fw_wifi_get_ },
   { (long)std::hash<std::string>{}("/fw/modem/set"),                        fw_modem_ },
+  { (long)std::hash<std::string>{}("/fw/modem/get"),                        fw_modem_get_ },
   { (long)std::hash<std::string>{}("/fw/mqtt/set"),                         fw_mqtt_ },
+  { (long)std::hash<std::string>{}("/fw/mqtt/get"),                         fw_mqtt_get_ },
   { (long)std::hash<std::string>{}("/fw/log/set"),                          fw_log_ },
+  { (long)std::hash<std::string>{}("/fw/log/get"),                          fw_log_get_ },
   { (long)std::hash<std::string>{}("/fw/keepalive/set"),                    fw_keepalive_ },
+  { (long)std::hash<std::string>{}("/fw/keepalive/get"),                    fw_keepalive_get_ },
   { (long)std::hash<std::string>{}("/fw/ar/set"),                           fw_ar_ },
   { (long)std::hash<std::string>{}("/fw/alarm/set"),                        fw_alarm_ }
 };
@@ -121,6 +143,7 @@ class CALLBACKS_WIFI_AP : public WiFiCallbacks
     void onWiFiSet(String ssid, String pass);
 };
 #endif
+
 
 class CALLBACKS_SENSORS : public SensorCallbacks
 {

@@ -13,7 +13,6 @@
 //#define ENABLE_BLE // BLE for device configuration
 #define ENABLE_AP // Access Point for wifi configuration
 #define ENABLE_JS // JavaScript for user runtime code
-#define ENABLE_RS485 // enable rs485 module
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
@@ -21,7 +20,8 @@
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
-#define FW_VERSION        			 	"0.1.2"
+#define FW_VERSION        			 	"1.0.1"
+#define APP_VERSION        			 	"1.0.0"
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
@@ -29,17 +29,18 @@
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
-//#define TEST
-#define SLIM_GW
+//#define DEMO
+#define SLIM_GW_WIFI
 
-
-
-
-#ifdef TEST
-#define FW_MODEL "TEST"
-#elif defined SLIM_GW
-#define FW_MODEL "SLIM_GW"
+#ifdef DEMO
+#define FW_MODEL "DEMO"
+#define ENABLE_RS485 // enable rs485 module
+#elif defined SLIM_GW_WIFI
+#define ENABLE_RS485 // enable rs485 module
+#define FW_MODEL "SLIM_GW_WIFI"
 #endif
+
+
 //#define FW_MODEL "M5STACK"
 //#define FW_MODEL "FIAMMA" 										// - NA
 //#define FW_MODEL "MODULE_IO" 								// - NA
@@ -56,7 +57,13 @@
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
-#ifdef SLIM_GW
+#ifdef DEMO
+#define RS485_GPIO_RX 27
+#define RS485_GPIO_TX 14
+#define RS485_GPIO_RTS 13
+#endif
+
+#ifdef SLIM_GW_WIFI
 #define RS485_GPIO_RX 27
 #define RS485_GPIO_TX 14
 #define RS485_GPIO_RTS 13

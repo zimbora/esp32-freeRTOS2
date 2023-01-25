@@ -38,8 +38,8 @@ user_settings settings = {
   },
 
   .keepalive = {
-    /* active */      true,
-    /* period */      900
+    /* active */      false,
+    /* period */      0 // in seconds
   }
 };
 

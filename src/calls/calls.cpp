@@ -102,7 +102,7 @@ bool CALLS::read_file(String filename, char* data, uint16_t* len){
 */
 bool CALLS::write_file(String filename, const char* data, uint16_t len){
 
-  if(!xSemaphoreTake( spiffsMutex, 100)){
+  if(!xSemaphoreTake( spiffsMutex, 2000)){
      //xSemaphoreGive(spiffsMutex);
      return false;
   }

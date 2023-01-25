@@ -162,14 +162,14 @@ void tInfo(){
 }
 
 Task t1(100, TASK_FOREVER, &core_parse_mqtt_messages); // call it outside functions
-Task t2(settings.keepalive.period*1000, TASK_FOREVER, &tKeepalive); // call it outside functions
+Task t2; //15*1000, TASK_FOREVER, &tKeepalive); // call it outside functions
 Task t3(1000, TASK_FOREVER, &tRecords); // call it outside functions
 Task t4(60000, TASK_FOREVER, &tInfo); // call it outside functions
 
 String directory[] = {
   SYS_PATH_SETTINGS,
   APP_PATH_SETTINGS,
-  APP_PATH_RECORDS,
+  APP_PATH_RECORDS
 };
 
 void CALLBACKS_SENSORS::onReadSensor(String ref, String value){
@@ -223,13 +223,19 @@ void core_load_settings(){
     call.read_file(FW_SETTINGS_FILENAME,data,&len);
     memcpy(settings.fw.version,data,sizeof(settings.fw.version));
     String version = String(settings.fw.version);
+    DBGLOG(Info,"fw version: "+version);
     if(version.startsWith("0.") || version.startsWith("1.") || version.startsWith("2."))
       memcpy(settings.fw.version,data,sizeof(settings));
     else{
       call.fw_reset();
+      call.init_filesystem(directory,NUMITEMS(directory));
       memset(settings.fw.version,0,sizeof(settings.fw.version));
+      version = FW_VERSION;
       memcpy(settings.fw.version,version.c_str(),version.length());
-      sysfile.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings));
+      settings.log.active = true;
+      settings.keepalive.active = true;
+      settings.keepalive.period = 15;
+      call.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings));
     }
     free(data);
   }
@@ -268,6 +274,9 @@ void core_init(){
   DBGLOG(Debug,"Enabled parse mqtt messages");
 
   if(settings.keepalive.active){
+
+    t2.set(settings.keepalive.period*1000, TASK_FOREVER, &tKeepalive);
+
     runner.addTask(t2);
     DBGLOG(Debug,"added t2");
 
@@ -288,7 +297,6 @@ void core_init(){
   DBGLOG(Debug,"Enabled info logs");
 
   sensors.init();
-  sensors.init_rs485(&Serial1,RS485_GPIO_RX,RS485_GPIO_TX,RS485_GPIO_RTS);
 
   sensors.setCallbacks(new CALLBACKS_SENSORS());
 
@@ -332,6 +340,8 @@ void core_init(){
   Serial.printf("%s\n", res);
   */
   #endif
+
+  app.init();
 }
 
 void core_loop(){
@@ -339,17 +349,10 @@ void core_loop(){
   runner.execute();
 
   #ifdef ENABLE_JS
-
   JS.loop();
-  /*
-  if(now() % 15 == 0){
-    char* mem = (char*)malloc(200);
-    struct js *js = js_create(mem, sizeof(mem));  // Create JS instance
-    jsval_t v = js_eval(js, "event.onReadSensor(\"voltage\",230)", ~0);     // Execute JS code
-    printf("result: %s\n", js_str(js, v));        // result: 7
-  }
-  */
   #endif
+
+  app.loop();
 
 }
 
@@ -448,8 +451,12 @@ void core_parse_mqtt_messages(){
 
           if(doc.containsKey("url")){
             String url = doc["url"];
-            DBGLOG(Info,"fota from "+url);
-            call.fw_fota(url);
+            if(doc.containsKey("token")){
+              String token = doc["token"];
+            }else{
+              DBGLOG(Info,"fota from "+url);
+              call.fw_fota(url);
+            }
           }
 
         }
@@ -483,6 +490,13 @@ void core_parse_mqtt_messages(){
           #endif
         }
         break;
+      case fw_wifi_get_:
+      {
+        String ssid = String(settings.wifi.ssid);
+        String pwd = String(settings.wifi.pwd);
+        String payload = "{\"ssid\":\""+ssid+"\",\"pwd\":\""+pwd+"\"}";
+        core_send_mqtt_message(clientID,topic_get,payload,1,false);
+      }
       case fw_wifi_:
       {
         DeserializationError error = deserializeJson(doc, payload);
@@ -525,6 +539,17 @@ void core_parse_mqtt_messages(){
         }
       }
         break;
+      case fw_modem_get_:
+      {
+        String apn = String(settings.modem.apn);
+        String user = String(settings.modem.user);
+        String pwd = String(settings.modem.pwd);
+        String band = String(settings.modem.band);
+        String cops = String(settings.modem.cops);
+
+        String payload = "{\"apn\":\""+apn+"\",\"user\":\""+user+"\",\"pwd\":\""+pwd+"\",\"band\":"+band+",\"cops\":"+cops+"}";
+        core_send_mqtt_message(clientID,topic_get,payload,1,false);
+      }
       case fw_modem_:
       {
         DeserializationError error = deserializeJson(doc, payload);
@@ -590,6 +615,17 @@ void core_parse_mqtt_messages(){
 
       }
         break;
+      case fw_mqtt_get_:
+      {
+        String host = String(settings.mqtt.host);
+        String user = String(settings.mqtt.user);
+        String pass = String(settings.mqtt.pass);
+        String prefix = String(settings.mqtt.prefix);
+        String port = String(settings.mqtt.port);
+        String active = String(settings.mqtt.active);
+        String payload = "{\"host\":\""+host+"\",\"user\":\""+user+"\",\"pass\":\""+pass+"\",\"prefix\":\""+prefix+"\",\"port\":"+port+",\"active\":"+active+"}";
+        core_send_mqtt_message(clientID,topic_get,payload,1,false);
+      }
       case fw_mqtt_:
       {
         DBGLOG(Debug,"updating mqtt");
@@ -670,6 +706,13 @@ void core_parse_mqtt_messages(){
         }
       }
         break;
+      case fw_log_get_:
+      {
+        String level = String(settings.log.level);
+        String payload = "{\"level\":"+level+"}";
+        core_send_mqtt_message(clientID,topic_get,payload,1,false);
+        break;
+      }
       case fw_log_:
       {
         DeserializationError error = deserializeJson(doc, payload);
@@ -701,6 +744,13 @@ void core_parse_mqtt_messages(){
         }
       }
         break;
+      case fw_keepalive_get_:
+      {
+        String period = String(settings.keepalive.period);
+        String payload = "{\"period\":"+period+"}";
+        core_send_mqtt_message(clientID,topic_get,payload,1,false);
+        break;
+      }
       case fw_keepalive_:
       {
         DeserializationError error = deserializeJson(doc, payload);

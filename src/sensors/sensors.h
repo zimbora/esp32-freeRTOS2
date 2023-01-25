@@ -121,14 +121,15 @@ class SENSORS {
     SENSORS();
 
     void init();
-    void init_rs485(HardwareSerial* port, uint8_t rx, uint8_t tx, uint8_t rts);
     bool init_ar(String data);
     bool init_alarm(String filename);
 
     void loop();
 
     void alarmTrigger(String ref, String value);
-
+    #ifdef ENABLE_RS485
+    void rs485_init(HardwareSerial* port, uint8_t rx, uint8_t tx, uint8_t rts);
+    void rs485_set_config(uint8_t mode=1, uint32_t baudrate=9600, uint32_t config=SERIAL_8N1, uint8_t retries=3);
     bool rs485_read_all();
     uint8_t rs485_read(String ref);
     uint8_t rs485_read(uint8_t index);
@@ -136,6 +137,7 @@ class SENSORS {
     uint8_t rs485_write(uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* data, uint16_t* size);
     bool rs485_add(uint8_t index, String ref_str, String modbus, String type_str);
     bool rs485_add(uint8_t index, String ref_str, uint8_t type, uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* value);
+    #endif
     int get_type(String type);
 
     // callbacks
@@ -144,13 +146,14 @@ class SENSORS {
     };
     //bool calledInRS485Autorequest(String ref);
 
+    bool parseArray(String array, uint16_t* arr, int16_t* len);
+    bool has_only_digits(String value_str);
   private:
 
     void rs485_table_refresh(uint8_t index);
     void rs485_log(uint8_t index);
     float truncate(float val, byte dec);
-    bool parseArray(String array, uint16_t* arr, int16_t* len);
-    bool has_only_digits(String value_str);
+
 
     SensorCallbacks* pSensorCallbacks = nullptr;
 };

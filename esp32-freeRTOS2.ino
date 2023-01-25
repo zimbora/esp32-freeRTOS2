@@ -9,10 +9,8 @@
 
 #include <rom/rtc.h>
 
-#include "credentials.h"
 #include "core.h"
 #include "modem-freeRTOS.hpp"
-#include "./src/app/app.h"
 #include "./src/sensors/sensors.h"
 
 #ifdef ENABLE_AP
@@ -32,7 +30,6 @@ String mqtt_subscribe_topics[] = {
 };
 
 extern MODEMfreeRTOS mRTOS;
-extern APP app;
 
 #ifdef ENABLE_AP
 WIFIAP ap;
@@ -48,7 +45,7 @@ void mqttOnConnect(uint8_t clientID){
   DBGLOG(Debug,"mqtt with clientID: "+String(clientID)+" is connected - sending first message");
   mRTOS.mqtt_pushMessage(clientID,"/status","online",2,true);
   mRTOS.mqtt_pushMessage(clientID,"/model",String(FW_MODEL),2,true);
-  mRTOS.mqtt_pushMessage(clientID,"/version",String(FW_VERSION),2,true);
+  mRTOS.mqtt_pushMessage(clientID,"/fw_version",String(FW_VERSION),2,true);
   mRTOS.mqtt_pushMessage(clientID,"/uptime",String(millis()/1000),2,true);
   mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu0",get_reset_reason(rtc_get_reset_reason(0)),2,true);
   mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu1",get_reset_reason(rtc_get_reset_reason(1)),2,true);
@@ -64,7 +61,7 @@ void onConnectionEstablished(){
 
   mRTOS.mqtt_pushMessage(0,"/status","online",2,true);
   mRTOS.mqtt_pushMessage(0,"/model",String(FW_MODEL),2,true);
-  mRTOS.mqtt_pushMessage(0,"/version",String(FW_VERSION),2,true);
+  mRTOS.mqtt_pushMessage(0,"/fw_version",String(FW_VERSION),2,true);
   mRTOS.mqtt_pushMessage(0,"/uptime",String(millis()/1000),2,true);
   mRTOS.mqtt_pushMessage(0,"/reboot_cause_cpu0",get_reset_reason(rtc_get_reset_reason(0)),2,true);
   mRTOS.mqtt_pushMessage(0,"/reboot_cause_cpu1",get_reset_reason(rtc_get_reset_reason(1)),2,true);
@@ -124,20 +121,6 @@ void network_lte_task(void *pvParameters){
     mRTOS.loop();
   }
 
-}
-#endif
-
-#ifdef ENABLE_AP
-void ap_task(void *pvParameters);
-void ap_task(void *pvParameters){
-  (void) pvParameters;
-
-  ap.setup();
-
-  for(;;){
-    //if(!mRTOS.isWifiConnected())
-      ap.loop();
-  }
 }
 #endif
 
@@ -219,8 +202,10 @@ void setup() {
     const char project[] = MQTT_PROJECT;
     uint16_t port = 1883;
 
+    mRTOS.mqtt_set_will_topic(CLIENTID,MQTT_WILL_SUBTOPIC,MQTT_WILL_PAYLOAD);
     mRTOS.mqtt_configure_connection(0,project,get_uid().c_str(),MQTT_HOST_1,port,MQTT_USER_1,MQTT_PASSWORD_1);
     Serial.println("mqtt client configured");
+
 
     for(uint8_t i=0;i<NUMITEMS(mqtt_subscribe_topics);i++){
       mRTOS.mqtt_add_subscribe_topic(0,i,mqtt_subscribe_topics[i]);
@@ -231,13 +216,14 @@ void setup() {
       String host = String(settings.mqtt.host);
       String user = String(settings.mqtt.user);
       String pass = String(settings.mqtt.pass);
+      mRTOS.mqtt_set_will_topic(CLIENTIDEXTERNAL,MQTT_WILL_SUBTOPIC,MQTT_WILL_PAYLOAD);
       mRTOS.mqtt_configure_connection(1,project,get_uid().c_str(),host.c_str(),settings.mqtt.port,user.c_str(),pass.c_str());
       Serial.println("mqtt client configured");
       for(uint8_t i=0;i<NUMITEMS(mqtt_subscribe_topics);i++){
         mRTOS.mqtt_add_subscribe_topic(1,i,mqtt_subscribe_topics[i]);
       }
-      mRTOS.mqtt_wifi_setup(onConnectionEstablished2);
     }
+    mRTOS.mqtt_wifi_setup(onConnectionEstablished2);
 
   #endif
 
@@ -246,7 +232,7 @@ void setup() {
   ble.enable();
   #endif
 
-  app.init();
+  //app.init();
 
 }
 
@@ -257,7 +243,7 @@ void loop() {
   mRTOS.loop();
   #endif
 
-  app.loop();
+  //app.loop();
 }
 
 String get_reset_reason(int reason){
