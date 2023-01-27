@@ -603,15 +603,15 @@ void core_parse_mqtt_messages(){
         }
 
         if(doc.containsKey("cops")){
-        #ifndef UNITTEST
-        String cops = doc["cops"];
-        #else
-        String cops = "";
-        if(doc["cops"].is_number())
-          cops = std::to_string((long)doc["cops"]);
-        #endif
-        settings_set_param("modem_cops",cops);
-      }
+          #ifndef UNITTEST
+          String cops = doc["cops"];
+          #else
+          String cops = "";
+          if(doc["cops"].is_number())
+            cops = std::to_string((long)doc["cops"]);
+          #endif
+          settings_set_param("modem_cops",cops);
+        }
 
       }
         break;
@@ -798,7 +798,7 @@ void core_parse_mqtt_messages(){
     // store settings
     if(store){
       settings_log();
-      if(!sysfile.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings)))
+      if(!call.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings)))
         DBGLOG(Error,"failing writing file: "+String(FW_SETTINGS_FILENAME));
     }
 
@@ -806,7 +806,6 @@ void core_parse_mqtt_messages(){
       core_send_mqtt_message(clientID,topic,"",0,true); // unpublish
 
   }else{
-
     app.parse_mqtt_messages(clientID,topic,payload);
   }
 

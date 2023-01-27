@@ -10,6 +10,8 @@
 // Enabled modules																						 		 //
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
+// !!To use LTE modem, ENABLE_LTE must also be defined in modem_freeRTOS library
+//#define ENABLE_LTE // Use LTE modem radio
 //#define ENABLE_BLE // BLE for device configuration
 #define ENABLE_AP // Access Point for wifi configuration
 #define ENABLE_JS // JavaScript for user runtime code
@@ -21,7 +23,6 @@
 /////////////////////////////////////////////////////////////////////
 
 #define FW_VERSION        			 	"1.0.1"
-#define APP_VERSION        			 	"1.0.0"
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
@@ -30,16 +31,7 @@
 /////////////////////////////////////////////////////////////////////
 
 //#define DEMO
-#define SLIM_GW_WIFI
-
-#ifdef DEMO
-#define FW_MODEL "DEMO"
-#define ENABLE_RS485 // enable rs485 module
-#elif defined SLIM_GW_WIFI
-#define ENABLE_RS485 // enable rs485 module
-#define FW_MODEL "SLIM_GW_WIFI"
-#endif
-
+#define SLIM_GW
 
 //#define FW_MODEL "M5STACK"
 //#define FW_MODEL "FIAMMA" 										// - NA

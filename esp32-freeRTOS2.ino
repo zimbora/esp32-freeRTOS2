@@ -9,6 +9,7 @@
 
 #include <rom/rtc.h>
 
+#include "./package.h"
 #include "core.h"
 #include "modem-freeRTOS.hpp"
 #include "./src/sensors/sensors.h"
@@ -46,9 +47,10 @@ void mqttOnConnect(uint8_t clientID){
   mRTOS.mqtt_pushMessage(clientID,"/status","online",2,true);
   mRTOS.mqtt_pushMessage(clientID,"/model",String(FW_MODEL),2,true);
   mRTOS.mqtt_pushMessage(clientID,"/fw_version",String(FW_VERSION),2,true);
+  mRTOS.mqtt_pushMessage(clientID,"/app_version",String(APP_VERSION),2,true);
   mRTOS.mqtt_pushMessage(clientID,"/uptime",String(millis()/1000),2,true);
   mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu0",get_reset_reason(rtc_get_reset_reason(0)),2,true);
-  mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu1",get_reset_reason(rtc_get_reset_reason(1)),2,true);
+  //mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu1",get_reset_reason(rtc_get_reset_reason(1)),2,true);
 
   mRTOS.mqtt_subscribeTopics(clientID);
   return;
@@ -62,6 +64,7 @@ void onConnectionEstablished(){
   mRTOS.mqtt_pushMessage(0,"/status","online",2,true);
   mRTOS.mqtt_pushMessage(0,"/model",String(FW_MODEL),2,true);
   mRTOS.mqtt_pushMessage(0,"/fw_version",String(FW_VERSION),2,true);
+  mRTOS.mqtt_pushMessage(0,"/app_version",String(APP_VERSION),2,true);
   mRTOS.mqtt_pushMessage(0,"/uptime",String(millis()/1000),2,true);
   mRTOS.mqtt_pushMessage(0,"/reboot_cause_cpu0",get_reset_reason(rtc_get_reset_reason(0)),2,true);
   mRTOS.mqtt_pushMessage(0,"/reboot_cause_cpu1",get_reset_reason(rtc_get_reset_reason(1)),2,true);
@@ -82,6 +85,7 @@ void network_lte_task(void *pvParameters);
 void network_lte_task(void *pvParameters){
   (void) pvParameters;
 
+  DBGLOG(Info,"Preparing LTE modem..");
   // radio
   mRTOS.init(SETTINGS_NB_COPS,GPRS,PWKEY); // initialize modem
 
@@ -144,6 +148,7 @@ void setup() {
   DBGLEV(Debug);
   DBGLOG(Info,"Initing program..");
 
+  /*
   xTaskCreatePinnedToCore(
     core_task
     ,  "core_task"   // A name just for humans
@@ -152,6 +157,8 @@ void setup() {
     ,  1 // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.  !! do not edit priority
     ,  NULL
     ,  1);
+  */
+  core_init();
 
   Serial.println("wait 5s for system to init..");
   delay(5000);
@@ -244,6 +251,7 @@ void loop() {
   #endif
 
   //app.loop();
+  core_loop();
 }
 
 String get_reset_reason(int reason){

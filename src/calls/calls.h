@@ -38,8 +38,8 @@ public:
   bool write_file(String filename, const char* data, uint16_t len);
   bool delete_file(String filename);
 
-  bool mqtt_send(String topic, String data, uint8_t qos, bool retain);
-  bool mqtt_send(uint8_t clientID, String topic, String data, uint8_t qos, bool retain);
+  bool mqtt_send(String topic, String data, uint8_t qos = 0, bool retain = 0);
+  bool mqtt_send(uint8_t clientID, String topic, String data, uint8_t qos = 0, bool retain = 0);
 
   void check_alarms();
   void check_sensors();

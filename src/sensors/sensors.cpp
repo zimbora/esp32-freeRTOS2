@@ -222,6 +222,12 @@ void SENSORS::rs485_set_config(uint8_t mode, uint32_t baudrate, uint32_t config,
   modbus.begin(mode,baudrate,config,retries);
 }
 
+void SENSORS::rs485_change_config(uint8_t mode, uint32_t baudrate, uint32_t config, uint8_t retries){
+
+  modbus.change_config(mode,baudrate,config,retries);
+}
+
+
 bool SENSORS::rs485_add(uint8_t index, String ref_str, String modbus, String type_str){
 
   uint8_t type = get_type(type_str);

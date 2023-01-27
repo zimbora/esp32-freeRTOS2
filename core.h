@@ -17,18 +17,10 @@
 #include "./src/settings/settings.h"
 #include "./package.h"
 #include "./src/wifi/wifiAP.h"
-/*
-class APPVOID{
-public:
-  virtual ~APPVOID(){};
-  virtual void init() = 0; //{Serial.println("init app core module");};
-  virtual void loop(){};
-  virtual void parse_mqtt_messages(uint8_t clientID, String topic, String payload){};
-};
-*/
+
 #ifdef DEMO
 #include "./src/app/demo/app.h"
-#elif defined SLIM_GW_WIFI
+#elif defined SLIM_GW
 #include "./src/app/SlimGW/app.h"
 #endif
 
@@ -39,7 +31,6 @@ public:
 #ifdef ENABLE_BLE
 #include "./src/ble/ble_server.h"
 #endif
-
 
 enum fwTopics_ {
   fw_,
@@ -70,7 +61,7 @@ static const std::map<long, fwTopics_> fwTopics {
   { (long)std::hash<std::string>{}("/fw/reboot/set"),                       fw_reboot_ },
   { (long)std::hash<std::string>{}("/fw/reset/set"),                        fw_reset_ },
   { (long)std::hash<std::string>{}("/fw/info/get"),                         fw_info_ },
-  { (long)std::hash<std::string>{}("/fw/clean/records/set"),                fw_info_ },
+  { (long)std::hash<std::string>{}("/fw/clean/records/set"),                fw_clean_records_ },
   { (long)std::hash<std::string>{}("/fw/fota/update/set"),                  fw_fota_update_ },
   { (long)std::hash<std::string>{}("/fw/js/code/set"),                      fw_js_code_ },
   { (long)std::hash<std::string>{}("/fw/wifi/set"),                         fw_wifi_ },

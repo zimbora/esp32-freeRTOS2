@@ -130,6 +130,7 @@ class SENSORS {
     #ifdef ENABLE_RS485
     void rs485_init(HardwareSerial* port, uint8_t rx, uint8_t tx, uint8_t rts);
     void rs485_set_config(uint8_t mode=1, uint32_t baudrate=9600, uint32_t config=SERIAL_8N1, uint8_t retries=3);
+    void rs485_change_config(uint8_t mode=1, uint32_t baudrate=9600, uint32_t config=SERIAL_8N1, uint8_t retries=3);
     bool rs485_read_all();
     uint8_t rs485_read(String ref);
     uint8_t rs485_read(uint8_t index);
