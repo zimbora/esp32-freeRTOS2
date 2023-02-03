@@ -212,6 +212,13 @@ void CALLBACKS_SENSORS::onRS485ReadAll(String data_json){
 
 };
 
+
+bool CALLBACKS_SENSORS::getAppValue(JsonObject& obj, String ref){
+
+  return app.getValue(obj,ref);
+}
+
+
 /*
 * load settings
 */
@@ -784,11 +791,11 @@ void core_parse_mqtt_messages(){
         break;
       case fw_ar_:
         if(!call.write_file(FW_AR_FILENAME,payload.c_str(),payload.length()))
-          DBGLOG(Error,"Error storing js script");
+          DBGLOG(Error,"Error storing Autorequests file");
         break;
       case fw_alarm_:
         if(!call.write_file(FW_ALARM_FILENAME,payload.c_str(),payload.length()))
-          DBGLOG(Error,"Error storing js script");
+          DBGLOG(Error,"Error storing Alarms file");
         break;
       default:
         DBGLOG(Info,"topic not known by fw topics");

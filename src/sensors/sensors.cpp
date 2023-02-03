@@ -4,8 +4,10 @@
 IT it_map[MAX_IT_SENSORS];
 IO io_map[MAX_IOS_SENSORS];
 RS485 rs485_map[MAX_RS485_SENSORS];
+APP_SENSORS app_map[MAX_APP_SENSORS];
 
 uint8_t rs485_map_len = 0;
+uint8_t app_map_len = 0;
 
 AUTOREQUEST Ar(&Serial);
 ALARM Alarm(&Serial);
@@ -64,67 +66,84 @@ bool SENSORS::init_ar(String data){
     return false;
   }
 
-  if(!doc["autorequests"].containsKey("rs485")){
-    DBGLOG(Error,"rs485 key not present");
-    return false;
-  }
-
+  if(doc["autorequests"].containsKey("rs485")){
     // extract the values
-  #ifndef UNITTEST
-  JsonArray array = doc["autorequests"]["rs485"].as<JsonArray>();
+    #ifndef UNITTEST
+    JsonArray array = doc["autorequests"]["rs485"].as<JsonArray>();
 
-  for(JsonVariant v : array) {
-    //Serial.println(v.as<char*>());
-    JsonObject sensor = v.as<JsonObject>();
+    for(JsonVariant v : array) {
+      //Serial.println(v.as<char*>());
+      JsonObject sensor = v.as<JsonObject>();
 
-    if(sensor.containsKey("ref") && sensor.containsKey("type") && sensor.containsKey("modbus") && sensor.containsKey("period")){
-      String ref = sensor["ref"];
-      String type_str = sensor["type"];
-      String modbus = sensor["modbus"];
-      int16_t period = sensor["period"];
-      #ifdef ENABLE_RS485
-      rs485_add(index++,ref,modbus,type_str);
-      Ar.add(ref,period);
-      #endif
+      if(sensor.containsKey("ref") && sensor.containsKey("type") && sensor.containsKey("modbus") && sensor.containsKey("period")){
+        String ref = sensor["ref"];
+        String type_str = sensor["type"];
+        String modbus = sensor["modbus"];
+        int16_t period = sensor["period"];
+        #ifdef ENABLE_RS485
+        rs485_add(index++,ref,modbus,type_str);
+        Ar.add(ref,period);
+        #endif
+      }
     }
-  }
-  #else
-  nlohmann::json array = doc["autorequests"]["rs485"];
-  for (nlohmann::json::iterator it = array.begin(); it != array.end(); ++it) {
-    nlohmann::json sensor = *it;
-    if(sensor.containsKey("ref") && sensor.containsKey("type") && sensor.containsKey("modbus") && sensor.containsKey("period")){
-      String ref = sensor["ref"];
-      String type_str = sensor["type"];
-      nlohmann::json modbus_array = sensor["modbus"];
-      std::string modbus = "";
+    #else
+    nlohmann::json array = doc["autorequests"]["rs485"];
+    for (nlohmann::json::iterator it = array.begin(); it != array.end(); ++it) {
+      nlohmann::json sensor = *it;
+      if(sensor.containsKey("ref") && sensor.containsKey("type") && sensor.containsKey("modbus") && sensor.containsKey("period")){
+        String ref = sensor["ref"];
+        String type_str = sensor["type"];
+        nlohmann::json modbus_array = sensor["modbus"];
+        std::string modbus = "";
 
-      for (nlohmann::json::iterator it2 = modbus_array.begin(); it2 != modbus_array.end(); ++it2) {
-        std::string number = "";
-        if(it2->is_number()){
-          number += std::to_string((long)*it2);
-        }
-        if(it2 == modbus_array.begin() || it2 == modbus_array.end())
+        for (nlohmann::json::iterator it2 = modbus_array.begin(); it2 != modbus_array.end(); ++it2) {
+          std::string number = "";
+          if(it2->is_number()){
+            number += std::to_string((long)*it2);
+          }
+          if(it2 == modbus_array.begin() || it2 == modbus_array.end())
           modbus += number;
-        else
+          else
           modbus += ","+ number;
-      }
-      int16_t period = sensor["period"];
+        }
+        int16_t period = sensor["period"];
 
-      if(!rs485_add(index++,ref,modbus,type_str)){
-        DBGLOG(Debug,"couldn't add rs485 sensor");
-      }
+        if(!rs485_add(index++,ref,modbus,type_str)){
+          DBGLOG(Debug,"couldn't add rs485 sensor");
+        }
 
-      if(!Ar.add(ref,period)){
-        DBGLOG(Debug,"couldn't add autorequest");
+        if(!Ar.add(ref,period)){
+          DBGLOG(Debug,"couldn't add autorequest");
+        }
       }
     }
+    #endif
+
+    for(uint8_t j =0;j++;j<MAX_RS485_SENSORS){
+      rs485_log(j);
+    }
   }
-  #endif
 
+  index = 0;
+  if(doc["autorequests"].containsKey("app")){
+    // extract the values
+    #ifndef UNITTEST
+    JsonArray array = doc["autorequests"]["app"].as<JsonArray>();
 
+    for(JsonVariant v : array) {
+      //Serial.println(v.as<char*>());
+      JsonObject sensor = v.as<JsonObject>();
 
-  for(uint8_t j =0;j++;j<MAX_RS485_SENSORS){
-    rs485_log(j);
+      if(sensor.containsKey("ref") && sensor.containsKey("type") && sensor.containsKey("period")){
+        String ref = sensor["ref"];
+        String type_str = sensor["type"];
+        int16_t period = sensor["period"];
+        uint8_t type = get_type(type_str);
+        app_add(index++,ref,type);
+        Ar.add(ref,period);
+      }
+    }
+    #endif
   }
 
   return true;
@@ -170,6 +189,7 @@ bool SENSORS::init_alarm(String data){
       #endif
 
       Alarm.list();
+      Serial.println();
     }
 
   return true;
@@ -207,6 +227,32 @@ void SENSORS::loop(){
     }
   }
   #endif
+
+
+  for(uint8_t i=0; i<MAX_APP_SENSORS; i++){
+    String ref = String(app_map[i].ref);
+    if(Ar.check(ref)){
+      Serial.println("app ar: \""+ref+ "\" executed");
+      table[ref] = 0.0;
+      JsonObject data = table.as<JsonObject>();
+      pSensorCallbacks->getAppValue(data,ref);
+      // store it if you want
+      String value = table[ref];
+      pSensorCallbacks->onReadSensor(ref,value);
+    }
+
+    if(Alarm.timedOut(ref)){
+      Serial.println("check alarm: \""+ref+"\"");
+      table[ref] = 0.0;
+      JsonObject data = table.as<JsonObject>();
+      pSensorCallbacks->getAppValue(data,ref);
+      if(Alarm.check(ref,app_map[i].type,data,calledInAlarm)){
+        Serial.println("\""+ref+"\" is in alarm\n");
+        String value = table[ref];
+        pSensorCallbacks->onAlarmSensor(ref,value);
+      }
+    }
+  }
 
 }
 
@@ -405,6 +451,32 @@ void SENSORS::rs485_log(uint8_t index){
   #endif
 }
 #endif
+
+
+bool SENSORS::app_add(uint8_t index, String ref, uint8_t type){
+
+  if(index >= MAX_APP_SENSORS)
+    return false;
+
+  app_map[index].type = type;
+  uint8_t size = ref.length();
+  if(size > MAX_SIZE_REF)
+    size = MAX_SIZE_REF;
+  memcpy(app_map[index].ref,ref.c_str(),size);
+
+  app_map_len++;
+  app_log(index);
+
+  return true;
+}
+
+
+void SENSORS::app_log(uint8_t index){
+  #ifndef UNITTEST
+  DBGLOG(Debug,"ref: "+String(app_map[index].ref));
+  DBGLOG(Debug,"type: "+String(app_map[index].type));
+  #endif
+}
 
 // --- --- ---
 

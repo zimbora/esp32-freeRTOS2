@@ -148,7 +148,7 @@ void setup() {
   DBGLEV(Debug);
   DBGLOG(Info,"Initing program..");
 
-  /*
+
   xTaskCreatePinnedToCore(
     core_task
     ,  "core_task"   // A name just for humans
@@ -157,8 +157,8 @@ void setup() {
     ,  1 // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.  !! do not edit priority
     ,  NULL
     ,  1);
-  */
-  core_init();
+
+  //core_init();
 
   Serial.println("wait 5s for system to init..");
   delay(5000);
@@ -250,8 +250,7 @@ void loop() {
   mRTOS.loop();
   #endif
 
-  //app.loop();
-  core_loop();
+  //core_loop();
 }
 
 String get_reset_reason(int reason){

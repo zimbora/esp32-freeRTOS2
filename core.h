@@ -22,6 +22,8 @@
 #include "./src/app/demo/app.h"
 #elif defined SLIM_GW
 #include "./src/app/SlimGW/app.h"
+#elif defined MEA_GW
+#include "./src/app/MEAGW/app.h"
 #endif
 
 #ifdef ENABLE_JS
@@ -64,16 +66,16 @@ static const std::map<long, fwTopics_> fwTopics {
   { (long)std::hash<std::string>{}("/fw/clean/records/set"),                fw_clean_records_ },
   { (long)std::hash<std::string>{}("/fw/fota/update/set"),                  fw_fota_update_ },
   { (long)std::hash<std::string>{}("/fw/js/code/set"),                      fw_js_code_ },
-  { (long)std::hash<std::string>{}("/fw/wifi/set"),                         fw_wifi_ },
-  { (long)std::hash<std::string>{}("/fw/wifi/get"),                         fw_wifi_get_ },
-  { (long)std::hash<std::string>{}("/fw/modem/set"),                        fw_modem_ },
-  { (long)std::hash<std::string>{}("/fw/modem/get"),                        fw_modem_get_ },
-  { (long)std::hash<std::string>{}("/fw/mqtt/set"),                         fw_mqtt_ },
-  { (long)std::hash<std::string>{}("/fw/mqtt/get"),                         fw_mqtt_get_ },
-  { (long)std::hash<std::string>{}("/fw/log/set"),                          fw_log_ },
-  { (long)std::hash<std::string>{}("/fw/log/get"),                          fw_log_get_ },
-  { (long)std::hash<std::string>{}("/fw/keepalive/set"),                    fw_keepalive_ },
-  { (long)std::hash<std::string>{}("/fw/keepalive/get"),                    fw_keepalive_get_ },
+  { (long)std::hash<std::string>{}("/fw/settings/wifi/set"),                fw_wifi_ },
+  { (long)std::hash<std::string>{}("/fw/settings/wifi/get"),                fw_wifi_get_ },
+  { (long)std::hash<std::string>{}("/fw/settings/modem/set"),               fw_modem_ },
+  { (long)std::hash<std::string>{}("/fw/settings/modem/get"),               fw_modem_get_ },
+  { (long)std::hash<std::string>{}("/fw/settings/mqtt/set"),                fw_mqtt_ },
+  { (long)std::hash<std::string>{}("/fw/settings/mqtt/get"),                fw_mqtt_get_ },
+  { (long)std::hash<std::string>{}("/fw/settings/log/set"),                 fw_log_ },
+  { (long)std::hash<std::string>{}("/fw/settings/log/get"),                 fw_log_get_ },
+  { (long)std::hash<std::string>{}("/fw/settings/keepalive/set"),           fw_keepalive_ },
+  { (long)std::hash<std::string>{}("/fw/settings/keepalive/get"),           fw_keepalive_get_ },
   { (long)std::hash<std::string>{}("/fw/ar/set"),                           fw_ar_ },
   { (long)std::hash<std::string>{}("/fw/alarm/set"),                        fw_alarm_ }
 };
@@ -143,6 +145,7 @@ class CALLBACKS_SENSORS : public SensorCallbacks
     void onAlarmSensor(String ref, String value);
     void onAlarmTrigger(String ref, String value);
     void onRS485ReadAll(String data);
+    bool getAppValue(JsonObject& obj, String ref); // called if a sensor value from app class is required
 };
 
 void      core_init();
@@ -173,7 +176,5 @@ void      t1Callback();
 #ifdef ENABLE_BLE
 void       bleCallback(String param, String value);
 #endif
-
-
 
 #endif

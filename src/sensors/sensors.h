@@ -16,6 +16,15 @@
 #include "modbus-rtu.h"
 #endif
 
+/*
+#ifdef DEMO
+#include "../app/demo/app.h"
+#elif defined SLIM_GW
+#include "../app/SlimGW/app.h"
+#elif defined MEA_GW
+#include "../app/MEAGW/app.h"
+#endif
+*/
 #else
 
 #include <iostream>
@@ -29,9 +38,10 @@
 
 #endif
 
-#define MAX_IT_SENSORS               10 // do not change it without edit internal_table.h
-#define MAX_IOS_SENSORS              10 // do not change it without edit internal_table.h
-#define MAX_RS485_SENSORS            10 // do not change it without edit internal_t able.h
+#define MAX_IT_SENSORS               10
+#define MAX_IOS_SENSORS              10
+#define MAX_RS485_SENSORS            10
+#define MAX_APP_SENSORS              20
 
 // Sensors actions
 //#define READ                         0x03
@@ -101,6 +111,11 @@ struct RS485{
   bool error;
 };
 
+struct APP_SENSORS{
+  char ref[MAX_SIZE_REF];
+  uint8_t type;
+};
+
 typedef bool (*Callback)(String ref);
 
 class SensorCallbacks{
@@ -110,6 +125,7 @@ class SensorCallbacks{
     virtual void onAlarmSensor(String ref, String value){}; // called if sensor is in alarm state
     virtual void onAlarmTrigger(String ref, String value){}; // called if sensor has entered or exited from alarm
     virtual void onRS485ReadAll(String data){}; // called after call rs485_read_all function
+    virtual bool getAppValue(JsonObject& obj, String ref){return false;}; // called if a sensor value from app class is required
 };
 
 class SENSORS {
@@ -123,7 +139,6 @@ class SENSORS {
     void init();
     bool init_ar(String data);
     bool init_alarm(String filename);
-
     void loop();
 
     void alarmTrigger(String ref, String value);
@@ -145,14 +160,15 @@ class SENSORS {
     void setCallbacks(SensorCallbacks* pClass){
       pSensorCallbacks = pClass;
     };
-    //bool calledInRS485Autorequest(String ref);
 
     bool parseArray(String array, uint16_t* arr, int16_t* len);
     bool has_only_digits(String value_str);
   private:
 
+    bool app_add(uint8_t index, String ref, uint8_t type);
     void rs485_table_refresh(uint8_t index);
     void rs485_log(uint8_t index);
+    void app_log(uint8_t index);
     float truncate(float val, byte dec);
 
 
@@ -161,6 +177,7 @@ class SENSORS {
 
 extern DynamicJsonDocument doc;
 extern SENSORS sensors;
+
 
 #ifdef UNITTEST
 extern nlohmann::json table;
