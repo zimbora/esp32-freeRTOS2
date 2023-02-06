@@ -150,6 +150,23 @@ sends the following topics with keepalive period:
   }
   ```
 
+  All autorequests with `app` key will be managed by app module. So, when a sensor with ref `asd` is configured, the program will call app.getValue method to request the value of `asd` sensor.
+  It's up to you provide code to return `asd` value
+
+  ```
+  {
+    "autorequests": {
+      "app": [
+        {
+          "ref": "asd",
+          "type": "FLOATBE",
+          "period": 60
+        }
+      ]
+    }
+  }
+  ```
+
 ## Alarms
   Use mqtt topic "#/fw/alarm/set" to configure alarms
 
@@ -185,6 +202,22 @@ sends the following topics with keepalive period:
   }
   ```
 
+  Such as autorequests, alarms with `app` key will also be managed by app module. So, when a sensor with ref `asd` is configured, the program will call app.getValue method to request the value of `asd` sensor.
+  It's up to you provide code to return `asd` value
+
+  ```
+  {
+    "alarms": [
+      {
+        "ref": "asd",
+        "period": 15,
+        "max_value": 150,
+        "min_value": 130
+      }
+    ]
+  }
+  ```
+
 ##JS
 
-[Check this page to further info](https://github.com/zimbora/esp32-freeRTOS2/Javascript.md)
+[Check this page to further info](https://github.com/zimbora/esp32-freeRTOS2/blob/main/Javascript.md)
