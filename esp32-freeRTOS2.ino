@@ -87,10 +87,10 @@ void network_lte_task(void *pvParameters){
 
   DBGLOG(Info,"Preparing LTE modem..");
   // radio
-  mRTOS.init(SETTINGS_NB_COPS,GPRS,PWKEY); // initialize modem
+  mRTOS.init(settings.modem.cops,settings.modem.tech,PWKEY); // initialize modem
 
   mRTOS.set_ssl(CONTEXTID);
-  mRTOS.set_context(CONTEXTID,SETTINGS_NB_APN,SETTINGS_NB_USERNAME,SETTINGS_NB_PASSWORD);
+  mRTOS.set_context(CONTEXTID,settings.modem.apn,settings.modem.user,settings.modem.pwd);
 
   // --- MQTT configuration ---
 

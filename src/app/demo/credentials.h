@@ -1,14 +1,4 @@
 
-#define SYS_PATH_SETTINGS "/etc/settings"
-#define FW_SETTINGS_FILENAME "/etc/settings/fw.txt"
-#define FW_AR_FILENAME "/etc/settings/ar.txt"
-#define FW_ALARM_FILENAME "/etc/settings/alarm.txt"
-#define FW_JS_FILENAME "/etc/settings/js.txt"
-
-#define APP_PATH_SETTINGS "/home/app/settings"
-#define APP_SETTINGS_FILENAME "/home/app/settings/app.txt"
-#define APP_PATH_RECORDS "/home/app/records"
-
 #define MQTT_HOST_1 "192.168.1.108" // mac OS broker
 #define MQTT_USER_1 "device"
 #define MQTT_PASSWORD_1 "device"
@@ -29,6 +19,9 @@
 	#define SETTINGS_NB_USERNAME    						""
 	#define SETTINGS_NB_PASSWORD    						""
 	#define SETTINGS_NB_COPS		    						26803
+	//#define SETTINGS_MODEM_COPS		    						0
+	#define SETTINGS_MODEM_BAND		    						0
+	#define SETTINGS_MODEM_TECH		    						1 // 0-ND;1-GSM;2-GPRS;3-NB2;4-CATM1;5-AUTO
 #elif defined DEPLOY_DEVELOPMENT_VODAFONE
 	#define SETTINGS_NB_APN         						"m2m.vodafone.pt"
 	//#define SETTINGS_NB_APN         						"nbiot1.vodafone.pt"  //
@@ -37,5 +30,18 @@
 	#define SETTINGS_NB_USERNAME    						""
 	#define SETTINGS_NB_PASSWORD    						""
 	//#define SETTINGS_NB_COPS		    						26801
-	#define SETTINGS_NB_COPS		    						0
+	#define SETTINGS_MODEM_COPS		    						0
+	#define SETTINGS_MODEM_BAND		    						0
+	#define SETTINGS_MODEM_TECH		    						1 // 0-ND;1-GSM;2-GPRS;3-NB2;4-CATM1;5-AUTO
 #endif
+
+// you have no reason to change it
+#define SYS_PATH_SETTINGS "/etc/settings"
+#define FW_SETTINGS_FILENAME "/etc/settings/fw.txt"
+#define FW_AR_FILENAME "/etc/settings/ar.txt"
+#define FW_ALARM_FILENAME "/etc/settings/alarm.txt"
+#define FW_JS_FILENAME "/etc/settings/js.txt"
+
+#define APP_PATH_SETTINGS "/home/app/settings"
+#define APP_SETTINGS_FILENAME "/home/app/settings/app.txt"
+#define APP_PATH_RECORDS "/home/app/records"

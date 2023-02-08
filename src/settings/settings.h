@@ -21,6 +21,7 @@ enum settingsTopics_ {
   modem_pwd,
   modem_band,
   modem_cops,
+  modem_tech,
   mqtt_host,
   mqtt_user,
   mqtt_pass,
@@ -42,6 +43,7 @@ static const std::map<long, settingsTopics_> settingsTopics {
   { (long)std::hash<std::string>{}("modem_pwd"),                      modem_pwd },
   { (long)std::hash<std::string>{}("modem_band"),                     modem_band },
   { (long)std::hash<std::string>{}("modem_cops"),                     modem_cops },
+  { (long)std::hash<std::string>{}("modem_tech"),                     modem_tech },
   { (long)std::hash<std::string>{}("mqtt_host"),                      mqtt_host },
   { (long)std::hash<std::string>{}("mqtt_user"),                      mqtt_user },
   { (long)std::hash<std::string>{}("mqtt_pass"),                      mqtt_pass },
@@ -74,6 +76,7 @@ struct user_settings {
 		char         pwd[32];
 		uint8_t      band;
 		uint16_t     cops;
+		uint8_t      tech;
 	} modem;
 
   struct mqtt { // on settings load

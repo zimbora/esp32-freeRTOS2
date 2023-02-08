@@ -370,8 +370,10 @@ class JS {
       s_js = jsinit(s_js, JS_MEM_SIZE);
       jsval_t v = js_eval(s_js, code, ~0U);
       String log = js_str(s_js, v);
-      Serial.println("res:"+log);
-      MG_INFO(("%s", (char *)log.c_str()));
+      if(log != "undefined"){
+        Serial.println("res:"+log);
+        MG_INFO(("%s", (char *)log.c_str()));
+      }
       return mg_mprintf("%Q", js_str(s_js, v));
     } else {
       return mg_mprintf("%Q", "missing code");
@@ -382,8 +384,10 @@ class JS {
     if (code) {
       jsval_t v = js_eval(s_js, code, ~0U);
       String log = js_str(s_js, v);
-      Serial.println("res:"+log);;
-      MG_INFO(("%s", (char *)log.c_str()));
+      if(log != "undefined"){
+        Serial.println("res:"+log);;
+        MG_INFO(("%s", (char *)log.c_str()));
+      }
       return mg_mprintf("%Q", js_str(s_js, v));
     } else {
       return mg_mprintf("%Q", "missing code");

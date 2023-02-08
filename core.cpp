@@ -242,6 +242,17 @@ void core_load_settings(){
       settings.log.active = true;
       settings.keepalive.active = true;
       settings.keepalive.period = 15;
+
+      // modem
+      #ifdef ENABLE_LTE
+      memcpy(settings.modem.apn,SETTINGS_MODEM_APN,sizeof(settings.modem.apn));
+      memcpy(settings.modem.user,SETTINGS_MODEM_USERNAME,sizeof(settings.modem.user));
+      memcpy(settings.modem.pwd,SETTINGS_MODEM_PASSWORD,sizeof(settings.modem.pwd));
+      settings.modem.cops = SETTINGS_MODEM_COPS;
+      settings.modem.band = SETTINGS_MODEM_BAND;
+      settings.modem.tech = SETTINGS_MODEM_TECH;
+      #endif
+
       call.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings));
     }
     free(data);
@@ -387,9 +398,10 @@ void core_parse_mqtt_messages(){
   String topic_get = "";
   topic.replace("\"","");
   String payload = String(msg->data);
+  /*
   if(payload.startsWith("\""))
     payload = payload.substring(1,payload.length()-1);
-
+  */
   index = topic.indexOf(uid);
   if(index > -1)
     topic = topic.substring(index+uid.length());
@@ -553,8 +565,9 @@ void core_parse_mqtt_messages(){
         String pwd = String(settings.modem.pwd);
         String band = String(settings.modem.band);
         String cops = String(settings.modem.cops);
+        String tech = String(settings.modem.tech);
 
-        String payload = "{\"apn\":\""+apn+"\",\"user\":\""+user+"\",\"pwd\":\""+pwd+"\",\"band\":"+band+",\"cops\":"+cops+"}";
+        String payload = "{\"apn\":\""+apn+"\",\"user\":\""+user+"\",\"pwd\":\""+pwd+"\",\"band\":"+band+",\"cops\":"+cops+",\"tech\":"+tech+"}";
         core_send_mqtt_message(clientID,topic_get,payload,1,false);
       }
       case fw_modem_:
@@ -618,6 +631,17 @@ void core_parse_mqtt_messages(){
             cops = std::to_string((long)doc["cops"]);
           #endif
           settings_set_param("modem_cops",cops);
+        }
+
+        if(doc.containsKey("tech")){
+          #ifndef UNITTEST
+          String tech = doc["tech"];
+          #else
+          String tech = "";
+          if(doc["tech"].is_number())
+            tech = std::to_string((long)doc["tech"]);
+          #endif
+          settings_set_param("modem_tech",tech);
         }
 
       }

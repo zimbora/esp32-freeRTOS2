@@ -20,7 +20,8 @@ user_settings settings = {
     /* user */        "",
     /* pwd */         "",
     /* band */        0,
-    /* cops */        0
+    /* cops */        0,
+    /* tech */        0 // radio technology GSM:1/GPRS:2/NB:3/CATM1:4/AUTO:5
   },
 
   .mqtt = {
@@ -101,7 +102,12 @@ bool settings_set_param(String param, String value){
           return true;
         }
         break;
-
+      case modem_tech:
+        if(value != "" && has_only_digits(value)){
+          settings.modem.tech = (uint8_t)stoLong(value);
+          return true;
+        }
+        break;
       case mqtt_host:
         if(value.length() <= sizeof(settings.mqtt.host)){
           memset(settings.mqtt.host,0,sizeof(settings.mqtt.host));

@@ -3,6 +3,18 @@
 ## IMPORTANT
   !! now() method cannot be called outside main process
 
+## Compilation
+
+### Before compile
+
+Chose device on ./package.h file
+Go to ./src/app folder and inside your project path edit credentials.h file
+
+### Before publish
+
+Increase fw version in ./package.h file
+Increase app version credentials.h file inside ./src/app folder
+
 ## SYSFILE
 
   On startup 3 directories are created:
