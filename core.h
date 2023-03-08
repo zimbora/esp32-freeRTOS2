@@ -43,6 +43,7 @@ enum fwTopics_ {
   fw_fota_update_,
   fw_settings_update_,
   fw_js_code_,
+  fw_js_code_get_,
   fw_wifi_,
   fw_wifi_get_,
   fw_modem_,
@@ -54,7 +55,9 @@ enum fwTopics_ {
   fw_keepalive_,
   fw_keepalive_get_,
   fw_ar_,
+  fw_ar_get_,
   fw_alarm_,
+  fw_alarm_get_,
   fw_not_found
 };
 
@@ -66,6 +69,7 @@ static const std::map<long, fwTopics_> fwTopics {
   { (long)std::hash<std::string>{}("/fw/clean/records/set"),                fw_clean_records_ },
   { (long)std::hash<std::string>{}("/fw/fota/update/set"),                  fw_fota_update_ },
   { (long)std::hash<std::string>{}("/fw/js/code/set"),                      fw_js_code_ },
+  { (long)std::hash<std::string>{}("/fw/js/code/get"),                      fw_js_code_get_ },
   { (long)std::hash<std::string>{}("/fw/settings/wifi/set"),                fw_wifi_ },
   { (long)std::hash<std::string>{}("/fw/settings/wifi/get"),                fw_wifi_get_ },
   { (long)std::hash<std::string>{}("/fw/settings/modem/set"),               fw_modem_ },
@@ -77,7 +81,9 @@ static const std::map<long, fwTopics_> fwTopics {
   { (long)std::hash<std::string>{}("/fw/settings/keepalive/set"),           fw_keepalive_ },
   { (long)std::hash<std::string>{}("/fw/settings/keepalive/get"),           fw_keepalive_get_ },
   { (long)std::hash<std::string>{}("/fw/ar/set"),                           fw_ar_ },
-  { (long)std::hash<std::string>{}("/fw/alarm/set"),                        fw_alarm_ }
+  { (long)std::hash<std::string>{}("/fw/ar/get"),                           fw_ar_get_ },
+  { (long)std::hash<std::string>{}("/fw/alarm/set"),                        fw_alarm_ },
+  { (long)std::hash<std::string>{}("/fw/alarm/get"),                        fw_alarm_get_ }
 };
 
 #ifdef ENABLE_BLE

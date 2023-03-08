@@ -15,6 +15,10 @@ Go to ./src/app folder and inside your project path edit credentials.h file
 Increase fw version in ./package.h file
 Increase app version credentials.h file inside ./src/app folder
 
+## TODO
+  - Add uid to the header of fota request
+  - Fota md5 is being well calculated but the comparison is not being well done
+
 ## SYSFILE
 
   On startup 3 directories are created:

@@ -34,6 +34,7 @@ public:
   bool store_record(String filename, const char* data, uint16_t len);
   bool remove_dir(String directory);
   void clean_dir(String directory);
+  String get_file_md5(String filename);
   bool read_file(String filename, char* data, uint16_t* len);
   bool write_file(String filename, const char* data, uint16_t len);
   bool delete_file(String filename);

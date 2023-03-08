@@ -80,6 +80,21 @@ bool CALLS::fw_settings_update(String url, String filename){
   xSemaphoreGive(spiffsMutex);
 }
 
+String CALLS::get_file_md5(String filename){
+  String md5_str = "";
+  uint16_t len = 4096;
+  char* data = (char*)malloc(len);
+  if(data != nullptr){
+    if(read_file(filename, data, &len)){
+      md5_.begin();
+      md5_.add((uint8_t*)data,len);
+      md5_.calculate();
+      md5_str = md5_.toString();
+    }else md5_str = "";
+  }
+  return md5_str;
+}
+
 /*
 * read file
 */

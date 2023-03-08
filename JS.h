@@ -6,6 +6,7 @@
 #include "./src/js/mongoose.h"
 #include "./src/calls/calls.h"
 #include "./src/sensors/sensors.h"
+#include "./src/settings/settings.h"
 #include <iostream>
 #include <string>
 
@@ -130,8 +131,10 @@ static jsval_t js_log(struct js *js, jsval_t *args, int nargs) {
                      js_str(js, args[i]));
   }
   buf[sizeof(buf) - 1] = '\0';
-  call.mqtt_send(0,"/js/console",String(buf),1,0);
-  Serial.printf("\nJS->log: %s", buf);
+  if(settings.log.level <= 3){
+    call.mqtt_send(0,"/js/console",String(buf),1,0);
+    Serial.printf("\nJS->log: %s", buf);
+  }
   return js_mkundef();
 }
 
@@ -346,7 +349,8 @@ static void log_cb(uint8_t ch) {
   if (ch == '\n' || len >= sizeof(buf)) {
     fwrite(buf, 1, len, stdout);
     buf[len] = '\0';
-    call.mqtt_send(0,"/js/debug",String(buf),1,0);
+    if(settings.log.level <= 2)
+      call.mqtt_send(0,"/js/debug",String(buf),1,0);
     len = 0;
   }
 }

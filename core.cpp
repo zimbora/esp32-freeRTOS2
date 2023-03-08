@@ -231,7 +231,7 @@ void core_load_settings(){
     memcpy(settings.fw.version,data,sizeof(settings.fw.version));
     String version = String(settings.fw.version);
     DBGLOG(Info,"fw version: "+version);
-    if(version.startsWith("0.") || version.startsWith("1.") || version.startsWith("2."))
+    if( version.startsWith("0.") || version.startsWith("1.") || version.startsWith("2.") )
       memcpy(settings.fw.version,data,sizeof(settings));
     else{
       call.fw_reset();
@@ -244,6 +244,7 @@ void core_load_settings(){
       settings.keepalive.period = 15;
 
       // modem
+
       #ifdef ENABLE_LTE
       memcpy(settings.modem.apn,SETTINGS_MODEM_APN,sizeof(settings.modem.apn));
       memcpy(settings.modem.user,SETTINGS_MODEM_USERNAME,sizeof(settings.modem.user));
@@ -494,6 +495,15 @@ void core_parse_mqtt_messages(){
             call.fw_settings_update(url,FW_SETTINGS_FILENAME);
           }
 
+        }
+        break;
+      case fw_js_code_get_:
+        {
+        #ifdef ENABLE_JS
+          String md5 = call.get_file_md5(FW_JS_FILENAME);
+          String payload = "{\"md5\":\""+md5+"\"}";
+          core_send_mqtt_message(clientID,topic_get,payload,1,false);
+        #endif
         }
         break;
       case fw_js_code_:
@@ -813,9 +823,23 @@ void core_parse_mqtt_messages(){
         }
       }
         break;
+      case fw_ar_get_:
+        {
+        String md5 = call.get_file_md5(FW_AR_FILENAME);
+        String payload = "{\"md5\":\""+md5+"\"}";
+        core_send_mqtt_message(clientID,topic_get,payload,1,false);
+        }
+        break;
       case fw_ar_:
         if(!call.write_file(FW_AR_FILENAME,payload.c_str(),payload.length()))
           DBGLOG(Error,"Error storing Autorequests file");
+        break;
+      case fw_alarm_get_:
+        {
+        String md5 = call.get_file_md5(FW_ALARM_FILENAME);
+        String payload = "{\"md5\":\""+md5+"\"}";
+        core_send_mqtt_message(clientID,topic_get,payload,1,false);
+        }
         break;
       case fw_alarm_:
         if(!call.write_file(FW_ALARM_FILENAME,payload.c_str(),payload.length()))

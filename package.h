@@ -11,7 +11,7 @@
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 // !!To use LTE modem, ENABLE_LTE must also be defined in modem_freeRTOS library
-//#define ENABLE_LTE // Use LTE modem radio
+#define ENABLE_LTE // Use LTE modem radio
 //#define ENABLE_BLE // BLE for device configuration
 #define ENABLE_AP // Access Point for wifi configuration
 #define ENABLE_JS // JavaScript for user runtime code
@@ -22,7 +22,7 @@
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
-#define FW_VERSION        			 	"1.0.2"
+#define FW_VERSION        			 	"1.0.3"
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
