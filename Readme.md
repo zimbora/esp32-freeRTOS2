@@ -7,13 +7,13 @@
 
 ### Before compile
 
-Chose device on ./package.h file
+Chose device on ./package.h file\
 Go to ./src/app folder and inside your project path edit credentials.h file
 
 ### Before publish
 
-Increase fw version in ./package.h file
-Increase app version credentials.h file inside ./src/app folder
+Increase fw version in ./package.h file\
+Increase app version in app_package.h file inside ./src/app folder
 
 ## TODO
   - Add uid to the header of fota request
@@ -32,49 +32,55 @@ Increase app version credentials.h file inside ./src/app folder
 
 #### /app/settings
 
-  Can be used by user to store app configurations
-  Use sysfile.write_file() method to store data
+  Can be used by user to store app configurations\
+  Use sysfile.write_file() method to store data\
   and sysfile.read_file() to read data
 
 #### /app/records
 
-  Use this directory to store data that should be sent to mqtt broker
+  Use this directory to store data that should be sent to mqtt broker\
   An autonomous service will be checking for new files and always that is possible it will send to mqtt broker
 
 ## Commands
 
-  Commands are passed through MQTT with topic prefix/fw/#
+  Commands are passed through MQTT with topic prefix/fw/#\
   The following commands are available
 
   On receive (topic:payload):
   - :prefix/status (update clock)
   - :prefix/fw/reboot/set : 1 (reboots system)
   - :prefix/fw/reset/set : 1 (reset memory)
+  - :prefix/fw/clean/records/set : 1 (clean records in memory)
   - :prefix/fw/fota/update/set : {"url":""} (updates fw)
 
 ## Configurations
 
-  Configurations are done through MQTT with topic :prefix/fw/#
+  Configurations are done through MQTT with topic :prefix/fw/#\
   The following commands are available
 
   On receive
-  - :prefix/fw/modem/set : {"apn":"","pwd":"","user":"","band":(uint8_t),"cops":(uint16_t)} (updates modem settings)
-  - :prefix/fw/mqtt/set : {"host":"","user":"","pass":"","active":(bool)} (configure 2nd mqtt) connection)
-  - :prefix/fw/keepalive/set : {"active":(bool),"period":(seconds)}
+  - :prefix/fw/settings/modem/set : {"apn":"","pwd":"","user":"","band":(uint8_t),"cops":(uint16_t)} (updates modem settings)
+  - :prefix/fw/settings/wifi/set : {"ssid":"","pwd":""} (updates wifi settings)
+  - :prefix/fw/settings/mqtt/set : {"host":"","user":"","pass":"","active":(bool)} (configure 2nd mqtt) connection)
+  - :prefix/fw/settings/keepalive/set : {"active":(bool),"period":(seconds)}
+  - :prefix/fw/settings/log/set : {"active":(bool),"level":(0-disabled;1-verbose;2-debug;3-info;4-warn;5-error)}
+  - :prefix/fw/ar/set : {}
+  - :prefix/fw/alarm/set : {}
+  - :prefix/fw/js/code/set : (file)
 
 ## MQTT
 
-  Device can have one or two connections
-  The first connection will be always enabled
-  A second one can be activated and in that case all publish messages in app directory will
+  Device can have one or two connections\
+  The first connection will be always enabled\
+  A second one can be activated and in that case all publish messages in app directory will\
   be redirected for this second connection
 
 ### Prefix
 
-  Prefix identifies device in MQTT and it is formed by project + uid
+  Prefix identifies device in MQTT and it is formed by project + uid\
   prefix = MQTT_PROJECT+"/"+uid
 
-  MQTT_PROJECT is defined in credentials file
+  MQTT_PROJECT is defined in credentials file\
   uid = "mac:"+macAddress
 
 ### Subscriptions
@@ -184,10 +190,8 @@ sends the following topics with keepalive period:
   ```
 
 ## Alarms
-  Use mqtt topic "#/fw/alarm/set" to configure alarms
-
-  Alarms will use ref field to get configured sensor from autorequests.
-
+  Use mqtt topic "#/fw/alarm/set" to configure alarms\
+  Alarms will use ref field to get configured sensor from autorequests.\
   The following format is available:
 
   ```
@@ -218,7 +222,7 @@ sends the following topics with keepalive period:
   }
   ```
 
-  Such as autorequests, alarms with `app` key will also be managed by app module. So, when a sensor with ref `asd` is configured, the program will call app.getValue method to request the value of `asd` sensor.
+  Such as autorequests, alarms with `app` key will also be managed by app module. So, when a sensor with ref `asd` is configured, the program will call app.getValue method to request the value of `asd` sensor.\
   It's up to you provide code to return `asd` value
 
   ```
@@ -237,3 +241,28 @@ sends the following topics with keepalive period:
 ##JS
 
 [Check this page to further info](https://github.com/zimbora/esp32-freeRTOS2/blob/main/Javascript.md)
+
+# External Dependencies
+
+### External libraries:
+- <ArduinoJson.h>
+- <ESP32Logger.h>
+- <map>
+- <MD5Builder.h>
+- <rom/rtc.h>
+- <Time.h>
+- <TimeLib.h>
+- <WiFi.h>
+- "Arduino.h"
+- "esp_log.h"
+- "esp_task_wdt.h"
+- "mbedtls/md.h"
+- "Update.h"
+
+### Own Libraries:
+- "autorequest.hpp" [autorequest](https://github.com/zimbora/esp32-autorequest)
+- "alarm.hpp" [alarm](https://github.com/zimbora/esp32-alarm)
+- "modbus-rtu.h" [modbus-rtu](https://github.com/zimbora/esp32-ModbusRTU)
+- "modem-freeRTOS.hpp" [modem-freeRTOS](https://github.com/zimbora/esp32-modem-freeRTOS)
+- "esp32-BG95.h" [esp32-BG95](https://github.com/zimbora/esp32-BG95)
+- "sysfile.hpp" [sysfile](https://github.com/zimbora/esp32-sysfile)
