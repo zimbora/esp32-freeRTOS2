@@ -49,32 +49,33 @@ void mqttOnConnect(uint8_t clientID){
   mRTOS.mqtt_pushMessage(clientID,"/fw_version",String(FW_VERSION),2,true);
   mRTOS.mqtt_pushMessage(clientID,"/app_version",String(APP_VERSION),2,true);
   mRTOS.mqtt_pushMessage(clientID,"/uptime",String(millis()/1000),2,true);
-  mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu0",get_reset_reason(rtc_get_reset_reason(0)),2,true);
+  //mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu0",get_reset_reason(rtc_get_reset_reason(0)),2,true);
   //mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu1",get_reset_reason(rtc_get_reset_reason(1)),2,true);
 
   mRTOS.mqtt_subscribeTopics(clientID);
   return;
 }
 
-// This function is called once everything is connected (Wifi and MQTT)
 // WARNING : YOU MUST IMPLEMENT IT IF YOU USE EspMQTTClient
+// This function is called once client 1 is connected (MQTT-WIFI)
 void onConnectionEstablished(){
-  Serial.println("mqtt client 0 is connected - sending first message");
+  DBGLOG(Debug,"mqtt client 1 is connected - sending first message");
 
   mRTOS.mqtt_pushMessage(0,"/status","online",2,true);
   mRTOS.mqtt_pushMessage(0,"/model",String(FW_MODEL),2,true);
   mRTOS.mqtt_pushMessage(0,"/fw_version",String(FW_VERSION),2,true);
   mRTOS.mqtt_pushMessage(0,"/app_version",String(APP_VERSION),2,true);
   mRTOS.mqtt_pushMessage(0,"/uptime",String(millis()/1000),2,true);
-  mRTOS.mqtt_pushMessage(0,"/reboot_cause_cpu0",get_reset_reason(rtc_get_reset_reason(0)),2,true);
-  mRTOS.mqtt_pushMessage(0,"/reboot_cause_cpu1",get_reset_reason(rtc_get_reset_reason(1)),2,true);
+  //mRTOS.mqtt_pushMessage(0,"/reboot_cause_cpu0",get_reset_reason(rtc_get_reset_reason(0)),2,true);
+  //mRTOS.mqtt_pushMessage(0,"/reboot_cause_cpu1",get_reset_reason(rtc_get_reset_reason(1)),2,true);
 
 
   mRTOS.mqtt_subscribeTopics(0);
 }
 
+// This function is called once client 2 is connected (MQTT-WIFI)
 void onConnectionEstablished2(){
-  Serial.println("mqtt client 2 is connected - sending first message");
+  DBGLOG(Debug,"mqtt client 2 is connected - sending first message");
   mRTOS.mqtt_pushMessage(1,"/status","online",2,true);
 
   mRTOS.mqtt_subscribeTopics(1);
@@ -160,7 +161,7 @@ void setup() {
 
   //core_init();
 
-  Serial.println("wait 5s for system to init..");
+  DBGLOG(Info,"wait 5s for system to init..");
   delay(5000);
 
   #ifdef ENABLE_LTE
@@ -177,7 +178,7 @@ void setup() {
     while(!mRTOS.isWifiConnected()){
 
       if(settings.wifi.ssid != ""){
-        Serial.printf("connecting wifi to %s \n",settings.wifi.ssid);
+        DBGLOG(Debug,"connecting wifi to: ",String(settings.wifi.ssid));
         mRTOS.init(settings.wifi.ssid,settings.wifi.pwd);
         uint32_t timeout = millis()+15000; // 15 seconds
         while(timeout > millis() && !mRTOS.isWifiConnected()){
@@ -188,13 +189,13 @@ void setup() {
 
       if(!mRTOS.isWifiConnected()){
         ap.setup();
-        Serial.println(now());
+        DBGLOG(Debug,now());
         uint32_t timeout = now() + 300;
         for(;;){
           ap.loop();
 
           if(timeout < now()){
-            Serial.println("Timeout for Access Point, try WiFi client once again");
+            DBGLOG(Info,"Timeout for Access Point, try WiFi client once again");
             break;
           }
 
@@ -211,7 +212,7 @@ void setup() {
 
     mRTOS.mqtt_set_will_topic(CLIENTID,MQTT_WILL_SUBTOPIC,MQTT_WILL_PAYLOAD);
     mRTOS.mqtt_configure_connection(0,project,get_uid().c_str(),MQTT_HOST_1,port,MQTT_USER_1,MQTT_PASSWORD_1);
-    Serial.println("mqtt client configured");
+    DBGLOG(Debug,"mqtt client 1 configured");
 
 
     for(uint8_t i=0;i<NUMITEMS(mqtt_subscribe_topics);i++){
@@ -225,12 +226,12 @@ void setup() {
       String pass = String(settings.mqtt.pass);
       mRTOS.mqtt_set_will_topic(CLIENTIDEXTERNAL,MQTT_WILL_SUBTOPIC,MQTT_WILL_PAYLOAD);
       mRTOS.mqtt_configure_connection(1,project,get_uid().c_str(),host.c_str(),settings.mqtt.port,user.c_str(),pass.c_str());
-      Serial.println("mqtt client configured");
+      DBGLOG(Debug,"mqtt client 2 configured");
       for(uint8_t i=0;i<NUMITEMS(mqtt_subscribe_topics);i++){
         mRTOS.mqtt_add_subscribe_topic(1,i,mqtt_subscribe_topics[i]);
       }
+      mRTOS.mqtt_wifi_setup(onConnectionEstablished2);
     }
-    mRTOS.mqtt_wifi_setup(onConnectionEstablished2);
 
   #endif
 

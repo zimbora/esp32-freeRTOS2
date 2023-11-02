@@ -161,6 +161,7 @@ void APP::parse_mqtt_messages(uint8_t clientID, String topic, String payload){
           data_str = "{\"error\":\"0x"+String(error,HEX)+"\"}";
         }
 
+        free(data);
         // push message
         core_send_mqtt_message(clientID,subtopic,data_str,1,false);
 
@@ -199,6 +200,8 @@ void APP::parse_mqtt_messages(uint8_t clientID, String topic, String payload){
       // write rs485
       uint8_t error = sensors.rs485_write((uint8_t)arr[0],(uint8_t)arr[1],arr[2],arr[3],data,&size);
 
+      free(data);
+      free(arr);
       String data_str = "";
       if(error){
         data_str = "{\"error\": "+String(error)+"}";

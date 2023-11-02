@@ -305,7 +305,7 @@ String CALLS::do_request(String protocol, String host, String path, String metho
     if(msg_header != NULL){
       Serial.printf("client [%d] %s \n",msg_header->clientID,msg_header->http_response.c_str());
       if(msg_header->http_response.indexOf("200") > 0){
-        Serial.printf("http body len %d \n",msg_header->body_len);
+        //Serial.printf("http body len %d \n",msg_header->body_len);
         uint32_t len = 0;
         char* data = (char*)malloc(msg_header->body_len);
         while(msg_header->body_len != len  && timeout > millis()){
@@ -377,9 +377,9 @@ bool CALLS::do_fota(String protocol, String host, String path, String method, St
                 return false;
               tries--;
             }
-            Serial.println("heap free: " + String(ESP.getFreeHeap() / 1024) + " KiB");
+            //Serial.println("heap free: " + String(ESP.getFreeHeap() / 1024) + " KiB");
             len += msg_body->data_len;
-            Serial.printf("http total bytes read of body data: %d \n",len);
+            //Serial.printf("http total bytes read of body data: %d \n",len);
           }
           delay(100); // use delay to moderate concurrency access to queues
         }

@@ -138,7 +138,7 @@ bool settings_set_param(String param, String value){
         break;
       case mqtt_port:
         if(value != "" && has_only_digits(value)){
-          settings.mqtt.port = (uint8_t)stoLong(value);
+          settings.mqtt.port = (uint16_t)stoLong(value);
           return true;
         }
         break;
@@ -217,6 +217,14 @@ void settings_log(){
   DBGLOG(Info,"modem.band: "+String(settings.modem.band));
   DBGLOG(Info,"modem.cops: "+String(settings.modem.cops));
 
+  DBGLOG(Info,"MQTT System Connection");
+  DBGLOG(Info,"mqtt.host: "+String(MQTT_HOST_1));
+  DBGLOG(Info,"mqtt.user: "+String(MQTT_USER_1));
+  DBGLOG(Info,"mqtt.pass: "+String(MQTT_PASSWORD_1));
+  DBGLOG(Info,"mqtt.prefix: "+String(MQTT_PROJECT));
+  DBGLOG(Info,"mqtt.port: "+String(1883));
+
+  DBGLOG(Info,"MQTT Client Connection");
   DBGLOG(Info,"mqtt.host: "+String(settings.mqtt.host));
   DBGLOG(Info,"mqtt.user: "+String(settings.mqtt.user));
   DBGLOG(Info,"mqtt.pass: "+String(settings.mqtt.pass));

@@ -54,7 +54,7 @@ class APP{
     void init();
     void loop();
     void parse_mqtt_messages(uint8_t clientID, String topic, String payload);
-    bool getValue(JsonObject& obj, String ref){return false};
+    bool getValue(JsonObject& obj, String ref){return false;};
 
   private:
     // do not delete the following function

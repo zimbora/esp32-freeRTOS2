@@ -16,15 +16,6 @@
 #include "modbus-rtu.h"
 #endif
 
-/*
-#ifdef DEMO
-#include "../app/demo/app.h"
-#elif defined SLIM_GW
-#include "../app/SlimGW/app.h"
-#elif defined MEA_GW
-#include "../app/MEAGW/app.h"
-#endif
-*/
 #else
 
 #include <iostream>

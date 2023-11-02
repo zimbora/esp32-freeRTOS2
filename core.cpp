@@ -22,10 +22,10 @@ void CALLBACKS_WIFI_AP::onWiFiSet(String ssid, String pass){
 
   settings_log();
   if(sysfile.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings))){
-    Serial.println("Client Disconnected.");
+    DBGLOG(Info,"Client Disconnected.");
     call.fw_reboot();
   }else{
-    Serial.println("failing writing file: "+String(FW_SETTINGS_FILENAME));
+    DBGLOG(Error,"failing writing file: "+String(FW_SETTINGS_FILENAME));
   }
 }
 #endif
@@ -123,8 +123,8 @@ void bleCallback(String uuid, String value){
       break;
   }
 
-  Serial.println("param:"+param);
-  Serial.println("value:"+value);
+  DBLOG(Debug,"param:"+param);
+  DBLOG(Debug,"value:"+value);
   if(settings_set_param(param,value)){
     settings_log();
     if(!sysfile.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings)))
@@ -144,21 +144,20 @@ void tRecords(){
 
 void tKeepalive(){
 
-
   core_send_mqtt_message(CLIENTID,"/uptime",String(millis()/1000),0,false);
-  core_send_mqtt_message(CLIENTID,"/rssi",String(mRTOS.get_rssi()),0,false);
-  core_send_mqtt_message(CLIENTID,"/tech",String(mRTOS.get_technology()),0,false);
+  //core_send_mqtt_message(CLIENTID,"/rssi",String(mRTOS.get_rssi()),0,false);
+  //core_send_mqtt_message(CLIENTID,"/tech",String(mRTOS.get_technology()),0,false);
   //core_send_mqtt_message(CLIENTID,"/timestamp",String(now()),0,false);
 
 }
 
 void tInfo(){
 
-  Serial.printf("\n\n----- Info -----\n");
-  Serial.println("heap free: " + String(ESP.getFreeHeap() / 1024) + " KiB");
+  DBGLOG(Info,"\n\n----- Info -----\n");
+  DBGLOG(Info,"heap free: " + String(ESP.getFreeHeap() / 1024) + " KiB");
   DBGLOG(Info,date());
   mRTOS.log_modem_status();
-  Serial.printf("--- ----- --- \n\n");
+  DBGLOG(Info,"--- ----- --- \n\n");
 }
 
 Task t1(100, TASK_FOREVER, &core_parse_mqtt_messages); // call it outside functions
@@ -173,31 +172,31 @@ String directory[] = {
 };
 
 void CALLBACKS_SENSORS::onReadSensor(String ref, String value){
-  Serial.println("onReadSensor callback called");
+  DBGLOG(Info,"onReadSensor callback called");
   #ifdef ENABLE_JS
   String code = "event.onReadSensor(\""+ref+"\","+value+")";
   const char* res = JS.call(code.c_str());     // Execute JS code
-  Serial.println(res);
+  DBGLOG(Debug,res);
   #else
   call.mqtt_send("/"+ref,value,2,0);
   #endif
 };
 
 void CALLBACKS_SENSORS::onAlarmSensor(String ref, String value){
-  Serial.println("onAlarmSensor callback called");
+  DBGLOG(Info,"onAlarmSensor callback called");
   #ifdef ENABLE_JS
   String code = "event.onAlarmSensor(\""+ref+"\","+value+")";
   const char* res = JS.call(code.c_str());     // Execute JS code
-  Serial.println(res);
+  DBGLOG(Debug,res);
   #endif
 };
 
 void CALLBACKS_SENSORS::onAlarmTrigger(String ref, String value){
-  Serial.println("onAlarmTrigger callback called");
+  DBGLOG(Info,"onAlarmTrigger callback called");
   #ifdef ENABLE_JS
   String code = "event.onAlarmTrigger(\""+ref+"\","+value+")";
   const char* res = JS.call(code.c_str());     // Execute JS code
-  Serial.println(res);
+  DBGLOG(Debug,res);
   #else
   call.mqtt_send("/"+ref,value,2,0);
   #endif
@@ -205,8 +204,8 @@ void CALLBACKS_SENSORS::onAlarmTrigger(String ref, String value){
 };
 
 void CALLBACKS_SENSORS::onRS485ReadAll(String data_json){
-  Serial.println("onRS485ReadAll callback called");
-  Serial.println("core: "+data_json);
+  DBGLOG(Info,"onRS485ReadAll callback called");
+  DBGLOG(Debug,"core: "+data_json);
   String filename = ".txt";
   core_store_record(filename,data_json.c_str(),data_json.length());
 
@@ -272,9 +271,6 @@ void core_init(){
 
   core_load_settings();
 
-  // log settings
-  settings_log();
-
   uid = get_uid();
 
   #ifdef ENABLE_BLE
@@ -314,6 +310,9 @@ void core_init(){
 
   t4.enable();
   DBGLOG(Debug,"Enabled info logs");
+
+  // log settings
+  settings_log();
 
   sensors.init();
 
@@ -387,7 +386,6 @@ void core_parse_mqtt_messages(){
   if(msg == NULL)
     return;
 
-  DBGLOG(Debug,"new mqtt message received:");
   DBGLOG(Debug,"<< ["+String(msg->clientID)+"] "+String(msg->topic));
 
   bool set = false;
@@ -424,12 +422,12 @@ void core_parse_mqtt_messages(){
       topic_get = topic.substring(0,index); // get filtered
     }
 
-    Serial.println("topic: "+topic);
+    //DBGLOG(Debug,"topic: "+topic);
     switch(resolveOption(fwTopics,topic)){
       case fw_:
         DBGLOG(Info,"getting fw info..");
         //mRTOS.mqtt_pushMessage(clientID,topic,"{\"version\":\""+String(PACKAGE_VERSION)+"\",\"model\":"+String(PACKAGE_MODEL)+",\"hash\":\""+String(settings.fw.hash)+"\""+",\"uptime\":"+String(millis())+"}",1,true);
-        core_send_mqtt_message(clientID,topic_get,String(FW_VERSION),2,true);
+        core_send_mqtt_message(clientID,topic_get,String(FW_VERSION),0,true);
         break;
       case fw_reboot_:
 
@@ -497,25 +495,25 @@ void core_parse_mqtt_messages(){
 
         }
         break;
-      case fw_js_code_get_:
+      case fw_js_program_get_:
         {
         #ifdef ENABLE_JS
           String md5 = call.get_file_md5(FW_JS_FILENAME);
           String payload = "{\"md5\":\""+md5+"\"}";
-          core_send_mqtt_message(clientID,topic_get,payload,1,false);
+          core_send_mqtt_message(clientID,topic_get,payload,0,false);
         #endif
         }
         break;
-      case fw_js_code_:
+      case fw_js_program_:
         {
           #ifdef ENABLE_JS
-          Serial.println(payload);
+          DBGLOG(Debug,payload);
           const char* res = JS.exec(payload.c_str());
           Serial.printf("%s\n", res);
           if(!call.write_file(FW_JS_FILENAME,payload.c_str(),payload.length()))
             DBGLOG(Error,"Error storing js script");
           #else
-          Serial.println("JS not enabled");
+          DBGLOG(Debug,"JS not enabled");
           #endif
         }
         break;
@@ -524,7 +522,7 @@ void core_parse_mqtt_messages(){
         String ssid = String(settings.wifi.ssid);
         String pwd = String(settings.wifi.pwd);
         String payload = "{\"ssid\":\""+ssid+"\",\"pwd\":\""+pwd+"\"}";
-        core_send_mqtt_message(clientID,topic_get,payload,1,false);
+        core_send_mqtt_message(clientID,topic_get,payload,0,false);
       }
       case fw_wifi_:
       {
@@ -578,7 +576,7 @@ void core_parse_mqtt_messages(){
         String tech = String(settings.modem.tech);
 
         String payload = "{\"apn\":\""+apn+"\",\"user\":\""+user+"\",\"pwd\":\""+pwd+"\",\"band\":"+band+",\"cops\":"+cops+",\"tech\":"+tech+"}";
-        core_send_mqtt_message(clientID,topic_get,payload,1,false);
+        core_send_mqtt_message(clientID,topic_get,payload,0,false);
       }
       case fw_modem_:
       {
@@ -665,7 +663,7 @@ void core_parse_mqtt_messages(){
         String port = String(settings.mqtt.port);
         String active = String(settings.mqtt.active);
         String payload = "{\"host\":\""+host+"\",\"user\":\""+user+"\",\"pass\":\""+pass+"\",\"prefix\":\""+prefix+"\",\"port\":"+port+",\"active\":"+active+"}";
-        core_send_mqtt_message(clientID,topic_get,payload,1,false);
+        core_send_mqtt_message(clientID,topic_get,payload,0,false);
       }
       case fw_mqtt_:
       {
@@ -751,7 +749,7 @@ void core_parse_mqtt_messages(){
       {
         String level = String(settings.log.level);
         String payload = "{\"level\":"+level+"}";
-        core_send_mqtt_message(clientID,topic_get,payload,1,false);
+        core_send_mqtt_message(clientID,topic_get,payload,0,false);
         break;
       }
       case fw_log_:
@@ -789,7 +787,7 @@ void core_parse_mqtt_messages(){
       {
         String period = String(settings.keepalive.period);
         String payload = "{\"period\":"+period+"}";
-        core_send_mqtt_message(clientID,topic_get,payload,1,false);
+        core_send_mqtt_message(clientID,topic_get,payload,0,false);
         break;
       }
       case fw_keepalive_:
@@ -827,7 +825,7 @@ void core_parse_mqtt_messages(){
         {
         String md5 = call.get_file_md5(FW_AR_FILENAME);
         String payload = "{\"md5\":\""+md5+"\"}";
-        core_send_mqtt_message(clientID,topic_get,payload,1,false);
+        core_send_mqtt_message(clientID,topic_get,payload,0,false);
         }
         break;
       case fw_ar_:
@@ -838,7 +836,7 @@ void core_parse_mqtt_messages(){
         {
         String md5 = call.get_file_md5(FW_ALARM_FILENAME);
         String payload = "{\"md5\":\""+md5+"\"}";
-        core_send_mqtt_message(clientID,topic_get,payload,1,false);
+        core_send_mqtt_message(clientID,topic_get,payload,0,false);
         }
         break;
       case fw_alarm_:
@@ -846,8 +844,8 @@ void core_parse_mqtt_messages(){
           DBGLOG(Error,"Error storing Alarms file");
         break;
       default:
-        DBGLOG(Info,"topic not known by fw topics");
-        Serial.println(payload);
+        //DBGLOG(Debug,"topic not known by fw topics");
+        //DBGLOG(Debug,payload);
         break;
     }
     // store settings
@@ -863,12 +861,11 @@ void core_parse_mqtt_messages(){
   }else{
     app.parse_mqtt_messages(clientID,topic,payload);
   }
-
-
 }
 
 bool core_send_mqtt_message(uint8_t clientID, String topic, String data, uint8_t qos, bool retain){
 
+  DBGLOG(Debug,">> ["+String(clientID)+"] "+topic);
   return call.mqtt_send(clientID,topic,data,qos,retain);
 }
 
@@ -890,11 +887,11 @@ void core_check_records(){
   if(settings.mqtt.active)
     clientID = CLIENTIDEXTERNAL;
 
-  //Serial.println("check records");
+  //DBGLOG(Debug,"check records");
   if(!mRTOS.mqtt_isConnected(clientID))
     return;
 
-  //Serial.println("check filesystem for new records");
+  //DBGLOG(Debug,"check filesystem for new records");
   uint32_t timeout = millis() + 5000;
   bool (*send_ar)(String);
   send_ar = &core_send_record;

@@ -1,0 +1,28 @@
+Sketch uses 1417889 bytes (72%) of program storage space. Maximum is 1966080 bytes.
+Global variables use 77920 bytes (23%) of dynamic memory, leaving 249760 bytes for local variables. Maximum is 327680 bytes.
+
+[92mUsed library[0m      [92mVersion[0m [90mPath[0m                                                                                           
+[93mWiFi[0m              2.0.0   [90m/Users/jsilva/Library/Arduino15/packages/esp32/hardware/esp32/2.0.11/libraries/WiFi[0m            
+[93mArduinoJson[0m       6.19.4  [90m/Users/jsilva/Documents/Arduino/libraries/ArduinoJson[0m                                          
+[93mESP32Logger[0m       1.0.2   [90m/Users/jsilva/Documents/Arduino/libraries/ESP32Logger[0m                                          
+[93mTime[0m              1.6.1   [90m/Users/jsilva/Documents/Arduino/libraries/Time[0m                                                 
+[93mmodem-freeRTOS[0m    1.0.0   [90m/Users/jsilva/Documents/Arduino/libraries/modem-freeRTOS[0m                                       
+[93mEspMQTTClient[0m     1.13.3  [90m/Users/jsilva/Documents/Arduino/libraries/EspMQTTClient[0m                                        
+[93mArduinoOTA[0m        2.0.0   [90m/Users/jsilva/Library/Arduino15/packages/esp32/hardware/esp32/2.0.11/libraries/ArduinoOTA[0m      
+[93mUpdate[0m            2.0.0   [90m/Users/jsilva/Library/Arduino15/packages/esp32/hardware/esp32/2.0.11/libraries/Update[0m          
+[93mPubSubClient[0m      2.8     [90m/Users/jsilva/Documents/Arduino/libraries/PubSubClient[0m                                         
+[93mWebServer[0m         2.0.0   [90m/Users/jsilva/Library/Arduino15/packages/esp32/hardware/esp32/2.0.11/libraries/WebServer[0m       
+[93mESPmDNS[0m           2.0.0   [90m/Users/jsilva/Library/Arduino15/packages/esp32/hardware/esp32/2.0.11/libraries/ESPmDNS[0m         
+[93mHTTPClient[0m        2.0.0   [90m/Users/jsilva/Library/Arduino15/packages/esp32/hardware/esp32/2.0.11/libraries/HTTPClient[0m      
+[93mWiFiClientSecure[0m  2.0.0   [90m/Users/jsilva/Library/Arduino15/packages/esp32/hardware/esp32/2.0.11/libraries/WiFiClientSecure[0m
+[93msysfile[0m           1.0.0   [90m/Users/jsilva/Documents/Arduino/libraries/sysfile[0m                                              
+[93mFS[0m                2.0.0   [90m/Users/jsilva/Library/Arduino15/packages/esp32/hardware/esp32/2.0.11/libraries/FS[0m              
+[93mLittleFS_esp32[0m    1.0.5   [90m/Users/jsilva/Documents/Arduino/libraries/LittleFS_esp32[0m                                       
+[93mautorequest[0m       1.0.0   [90m/Users/jsilva/Documents/Arduino/libraries/autorequest[0m                                          
+[93malarm[0m             1.0.0   [90m/Users/jsilva/Documents/Arduino/libraries/alarm[0m                                                
+[93mmodbusrtu[0m         1.0.0   [90m/Users/jsilva/Documents/Arduino/libraries/ModbusRTU[0m                                            
+[93mTaskScheduler[0m     3.6.0   [90m/Users/jsilva/Documents/Arduino/libraries/TaskScheduler[0m                                        
+[93mESP32 BLE Arduino[0m 2.0.0   [90m/Users/jsilva/Library/Arduino15/packages/esp32/hardware/esp32/2.0.11/libraries/BLE[0m             
+
+[92mUsed platform[0m [92mVersion[0m [90mPath[0m                                                                
+[93mesp32:esp32[0m   2.0.11  [90m/Users/jsilva/Library/Arduino15/packages/esp32/hardware/esp32/2.0.11[0m
