@@ -30,15 +30,15 @@
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
-#define BUILD_HARDWARE HOMEHEALTH
+#define APP HOMEHEALTH
 
-#if BUILD_HARDWARE == DEMO
+#if APP == DEMO
 	#define DEMO
-#elif BUILD_HARDWARE == SLIM_GW // in production
+#elif APP == SLIM_GW // in production
 	#define SLIM_GW
-#elif BUILD_HARDWARE == MEA_GW // in production
+#elif APP == MEA_GW // in production
 	#define MEA_GW
-#elif BUILD_HARDWARE == HOMEHEALTH // in dev
+#elif APP == HOMEHEALTH // in dev
 	#define HOMEHEALTH
 #endif
 
