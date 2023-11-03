@@ -34,7 +34,7 @@ jobs:
         docker build \
         --build-arg PROJECT=esp32-freeRTOS2 \
         --build-arg APP=DEMO \
-        --build-arg APP_VERSION=${{ setps.release.outputs.tag }} \
+        --build-arg APP_VERSION=${{ steps.release.outputs.tag }} \
         -t ${tag} .
 
     - name: Run script inside Docker container
