@@ -1,0 +1,65 @@
+name: freeRTOS Build
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Get the version
+      id: release
+      run: echo "::set-output name=tag::${GITHUB_REF#refs/tags/}"
+
+    - name: Check release tag format
+      run: |
+        TAG=${{ steps.release.outputs.tag }}
+        if [[ $TAG =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "The release tag is in the format *.*.*: $TAG"
+        else
+          echo "The release tag is not in the expected format: $TAG"
+          exit 1
+        fi
+          
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        path: ./esp32-freeRTOS2
+        
+    - name: Build Docker image
+      run: |
+        docker build \
+        --build-arg PROJECT=esp32-freeRTOS2 \
+        --build-arg APP=DEMO \
+        --build-arg APP_VERSION=${{ setps.release.outputs.tag }} \
+        -t ${tag} .
+
+    - name: Run script inside Docker container
+      run: |
+        docker run --name deploy_freertos freertos
+        docker cp deploy_freertos:esp32-freeRTOS2/images/DEMO ./esp32-freeRTOS2/images/
+        
+    - name: Commit and push if changed
+      run: |
+        cd esp32-freeRTOS2
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        if [[ $GITHUB_REF == refs/heads/main ]]; then
+          git add -A images/
+          git diff-index --quiet HEAD || git commit -m "new release" && git push
+        fi
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: upload images
+        path: ./esp32-freeRTOS2/images
+        
+    - name: Update Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          esp32-freeRTOS2/images/*/*
+        token: ${{ secrets.GITHUB_TOKEN }}
