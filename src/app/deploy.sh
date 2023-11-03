@@ -3,6 +3,7 @@
 home_dir="~"
 project="esp32-freeRTOS2"
 app="DEMO"
+app_version="0.0.0"
 
 docker=false
 libs="WiFi@2.0.0 Update@2.0.0 ArduinoOTA@2.0.0 WebServer@2.0.0
@@ -50,6 +51,11 @@ while [ "$#" -gt 0 ]; do
     -a|--app)
       app="$2"
       echo "Project directory set: $app"
+      shift 2
+      ;;
+    -v|--app_version)
+      app_version="$2"
+      echo "app version set: $app_version"
       shift 2
       ;;
     *)
@@ -121,6 +127,7 @@ cd $project
 
 arduino-cli compile -b esp32:esp32:esp32 \
 --build-property APP=${app} \
+--build-property APP_VERSION=$app_version  \
 --build-property build.partitions=min_spiffs \
 --build-property upload.maximum_size=1966080  \
 --build-path ./build/${app} . 2>&1 | tee compile_logs.txt
