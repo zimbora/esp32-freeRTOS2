@@ -31,6 +31,7 @@ jobs:
         
     - name: Build Docker image
       run: |
+        cd esp32-freeRTOS2
         docker build \
         --build-arg PROJECT=esp32-freeRTOS2 \
         --build-arg APP=DEMO \
@@ -39,7 +40,6 @@ jobs:
 
     - name: Run script inside Docker container
       run: |
-        cd esp32-freeRTOS2
         docker run --name deploy_freertos freertos
         docker cp deploy_freertos:esp32-freeRTOS2/images/DEMO ./esp32-freeRTOS2/images/
         
