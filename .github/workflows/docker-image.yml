@@ -39,12 +39,12 @@ jobs:
 
     - name: Run script inside Docker container
       run: |
+        cd esp32-freeRTOS2
         docker run --name deploy_freertos freertos
         docker cp deploy_freertos:esp32-freeRTOS2/images/DEMO ./esp32-freeRTOS2/images/
         
     - name: Commit and push if changed
       run: |
-        cd esp32-freeRTOS2
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         if [[ $GITHUB_REF == refs/heads/main ]]; then
