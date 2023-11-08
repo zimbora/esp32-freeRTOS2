@@ -9,8 +9,8 @@ docker=false
 libs="WiFi@2.0.0 Update@2.0.0 ArduinoOTA@2.0.0 WebServer@2.0.0
 			ESPmDNS@2.0.0 WiFiClientSecure@2.0.0 FS@2.0.0 ESP32 BLE Arduino@2.0.0
 			ArduinoJson@6.19.4 ESP32Logger@1.0.2 EspMQTTClient@1.13.3 PubSubClient@2.8
-			LittleFS_esp32@1.0.5 TaskScheduler@3.6.0 Time@1.6.1 modem-freeRTOS@1.0.0
-			sysfile@1.0.0 autorequest@1.0.0 alarm@1.0.0 modbusrtu@1.0.0
+			LittleFS_esp32@1.0.5 TaskScheduler@3.6.0 Time@1.6.1 esp32-BG95@1.0.6 modem-freeRTOS@1.0.1
+			sysfile@1.0.1 autorequest@1.0.1 alarm@1.0.1 modbusrtu@1.0.1
 			"
 
 if [ -f /.dockerenv ]; then
@@ -50,7 +50,7 @@ while [ "$#" -gt 0 ]; do
       ;;
     -a|--app)
       app="$2"
-      echo "Project directory set: $app"
+      echo "App set: $app"
       shift 2
       ;;
     -v|--app_version)
@@ -125,17 +125,20 @@ echo "project: ${project}"
 echo "app: ${app}"
 cd $project
 
-arduino-cli compile -b esp32:esp32:esp32 \
---build-property APP=${app} \
---build-property APP_VERSION=$app_version  \
---build-property build.partitions=min_spiffs \
---build-property upload.maximum_size=1966080  \
---build-path ./build/${app} . 2>&1 | tee compile_logs.txt
-
 if [ -d "images/${app}" ]; then
     rm -r "images/${app}"
 fi
 mkdir -p images/${app}
+
+# removes soft links if any
+find src/app/ -type l -exec rm {} \;
+
+arduino-cli cache clean
+
+arduino-cli compile -b esp32:esp32:esp32 \
+--build-property build.partitions=min_spiffs \
+--build-property upload.maximum_size=1966080  \
+--build-path ./build/${app} . 2>&1 | tee compile_logs.txt
 
 filenames=$( find build/${app}/${project}* )
 cp ${filenames} images/${app}/

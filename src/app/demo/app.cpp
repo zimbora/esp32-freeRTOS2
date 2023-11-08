@@ -1,6 +1,6 @@
 
 #include "../../../package.h"
-#ifdef DEMO
+#ifdef APP_DEMO
 
 #include "app.h"
 

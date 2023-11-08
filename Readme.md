@@ -250,7 +250,6 @@ sends the following topics with keepalive period:
 - <map>
 - <MD5Builder.h>
 - <rom/rtc.h>
-- <Time.h>
 - <TimeLib.h>
 - <WiFi.h>
 - "Arduino.h"

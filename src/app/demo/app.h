@@ -42,7 +42,7 @@ static const std::map<long, appTopics_> appTopics {
   { (long)std::hash<std::string>{}("/app/settings/rs485/set"),                  settings_rs485_set_ },
   { (long)std::hash<std::string>{}("/app/settings/rs485/get"),                  settings_rs485_get_ },
   { (long)std::hash<std::string>{}("/app/rs485/read/get"),                      rs485_read_get_ },
-  { (long)std::hash<std::string>{}("/app/rs485/write/get"),                     rs485_write_get_ }
+  { (long)std::hash<std::string>{}("/app/rs485/write/get"),                     rs485_write_get_ },
 };
 
 class APP{

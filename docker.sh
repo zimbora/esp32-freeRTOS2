@@ -8,9 +8,13 @@ tag="freertos"
 # Project name
 project="esp32-freeRTOS2"
 # App to be compiled
-app="DEMO"
+app="APP_TEST"
 # App version
 app_version="1.0.0"
+
+if [ -d "images/${app}" ]; then
+    rm -r "images/${app}"
+fi
 
 docker rm $container
 

@@ -173,7 +173,7 @@ void setup() {
         ,  2 // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest. !! do not edit priority
         ,  NULL
         ,  1);
-  #else
+  #elif defined ENABLE_AP
     ap.setCallbacks(new CALLBACKS_WIFI_AP());
     while(!mRTOS.isWifiConnected()){
 

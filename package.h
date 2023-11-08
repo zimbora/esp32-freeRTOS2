@@ -10,11 +10,10 @@
 // Enabled modules																						 		 //
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
-// !!To use LTE modem, ENABLE_LTE must also be defined in modem_freeRTOS library
 //#define ENABLE_LTE // Use LTE modem radio
 //#define ENABLE_BLE // BLE for device configuration
 #define ENABLE_AP // Access Point for wifi configuration
-#define ENABLE_JS // JavaScript for user runtime code
+//#define ENABLE_JS // JavaScript for user runtime code
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
@@ -22,7 +21,7 @@
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
-#define FW_VERSION        			 	"1.0.3"
+#define FW_VERSION	"1.0.3"
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
@@ -30,27 +29,24 @@
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
-#define APP HOMEHEALTH
+#define APP_TEST
 
-#if APP == DEMO
-	#define DEMO
+//#define APP_TEST
+//#define APP_DEMO
+//#define SLIM_GW
+/*
+#if APP == APP_DEMO
+#define APP_DEMO
+#elif APP == APP_TEST
+#define APP_TEST
 #elif APP == SLIM_GW // in production
-	#define SLIM_GW
+#define SLIM_GW
 #elif APP == MEA_GW // in production
-	#define MEA_GW
+#define MEA_GW
 #elif APP == HOMEHEALTH // in dev
-	#define HOMEHEALTH
+#define HOMEHEALTH
 #endif
-
-//#define FW_MODEL "M5STACK"
-//#define FW_MODEL "FIAMMA" 								// - NA
-//#define FW_MODEL "MODULE_IO" 								// - NA
-//#define FW_MODEL "HOMEHEALTH" 							// - NA
-//#define FW_MODEL "IRHUB"  								// - NA
-//#define FW_MODEL "ETHERNET_GW" 							// - NA
-//#define FW_MODEL "ENERGY_ANALYZER" 						// - NA
-//#define FW_MODEL "MULTI_ENERGY_ANALYZER"					// - NA
-//#define FW_MODEL "SMART_MOTION"							// - NA
+*/
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //

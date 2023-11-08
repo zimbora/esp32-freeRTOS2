@@ -8,7 +8,6 @@
 #include "esp_log.h"
 #include "esp_task_wdt.h"
 #include <map>
-#include <Time.h>
 #include <TimeLib.h>
 
 #include "./src/calls/calls.h"
@@ -18,8 +17,10 @@
 #include "./package.h"
 #include "./src/wifi/wifiAP.h"
 
-#ifdef DEMO
+#ifdef APP_DEMO
 #include "./src/app/demo/app.h"
+#elif defined APP_TEST
+#include "./src/app/test/app.h"
 #elif defined SLIM_GW
 #include "./src/app/SlimGW/app.h"
 #elif defined MEA_GW
