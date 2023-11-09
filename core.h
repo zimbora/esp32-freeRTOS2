@@ -2,6 +2,9 @@
 #define CORE_H
 
 #include "Arduino.h"
+
+#include "./package.h"
+
 #include <WiFi.h>
 #include <ArduinoJson.h>
 #include <ESP32Logger.h>
@@ -14,7 +17,6 @@
 #include "./src/sensors/sensors.h"
 #include "sysfile.hpp"
 #include "./src/settings/settings.h"
-#include "./package.h"
 #include "./src/wifi/wifiAP.h"
 
 #ifdef APP_DEMO
