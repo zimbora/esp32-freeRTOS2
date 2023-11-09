@@ -9,7 +9,7 @@ ARG MACRO="APP_DEMO"
 ARG APP_VERSION=""
 
 # Copy the script into the container
-COPY $PROJECT $PROJECT
+COPY . $PROJECT
 
 # Make the script executable
 RUN chmod +x ${PROJECT}/src/app/${APP}/deploy.sh
