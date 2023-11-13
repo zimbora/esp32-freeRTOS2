@@ -12,6 +12,9 @@ ARG APP_VERSION
 COPY . /${PROJECT}
 
 # Make the script executable
-RUN chmod +x /${PROJECT}/src/app/demo/deploy.sh
+#RUN chmod +x /${PROJECT}/src/app/demo/deploy.sh
+RUN id && \
+    ls -l /${PROJECT}/src/app/demo && \
+    chmod +x /${PROJECT}/src/app/demo/deploy.sh
 
 RUN /${PROJECT}/src/app/demo/deploy.sh -d $BASE_DIR -p $PROJECT -a $APP -m $MACRO -v $APP_VERSION --docker > build_output.txt 2>&1
