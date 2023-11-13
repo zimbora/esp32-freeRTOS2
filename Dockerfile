@@ -12,6 +12,6 @@ ARG APP_VERSION
 COPY . /esp32-freeRTOS2
 
 # Make the script executable
-#RUN chmod +x /esp32-freeRTOS2/src/app/${APP}/deploy.sh
+RUN chmod +x /esp32-freeRTOS2/src/app/${APP}/deploy.sh
 
 RUN /esp32-freeRTOS2/src/app/${APP}/deploy.sh -d $BASE_DIR -p $PROJECT -a $APP -m $MACRO -v $APP_VERSION --docker > build_output.txt 2>&1
