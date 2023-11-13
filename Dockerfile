@@ -11,9 +11,9 @@ ARG APP_VERSION
 
 # Copy the script into the container
 COPY . ${PROJECT}
-RUN ls ${PROJECT}
+RUN ls /${PROJECT}
 
 # Make the script executable
-RUN chmod +x ${PROJECT}/src/app/${APP}/deploy.sh
+RUN chmod +x /${PROJECT}/src/app/${APP}/deploy.sh
 
 RUN ${PROJECT}/src/app/${APP}/deploy.sh -d $BASE_DIR -p $PROJECT -a $APP -m $MACRO -v $APP_VERSION --docker > build_output.txt 2>&1
