@@ -10,7 +10,7 @@ ARG APP_LINK=""
 ARG APP_VERSION
 
 # Copy the script into the container
-COPY . ${PROJECT}
+COPY . /${PROJECT}
 RUN ls /${PROJECT}
 
 # Make the script executable
