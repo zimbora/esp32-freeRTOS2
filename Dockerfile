@@ -10,8 +10,8 @@ ARG APP_LINK=""
 ARG APP_VERSION
 
 # Copy the script into the container
-RUN ls ${PROJECT}
 COPY . ${PROJECT}
+RUN ls ${PROJECT}
 
 # Make the script executable
 RUN chmod +x ${PROJECT}/src/app/${APP}/deploy.sh
