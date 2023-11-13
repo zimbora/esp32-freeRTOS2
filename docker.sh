@@ -55,7 +55,7 @@ else
 fi
 
 docker build \
---build-arg DOCKERFILE_PATH=Dockerfile.custom \
+--build-arg DOCKERFILE_PATH=Dockerfile.local \
 --build-arg PROJECT=$project \
 --build-arg APP=$app \
 --build-arg MACRO=$macro \
