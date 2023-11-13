@@ -55,6 +55,7 @@ else
 fi
 
 docker build \
+--build-arg DOCKERFILE_PATH=Dockerfile.custom \
 --build-arg PROJECT=$project \
 --build-arg APP=$app \
 --build-arg MACRO=$macro \
@@ -76,5 +77,3 @@ if [ -d $app_path ]; then
     rm -r $app
 fi
 
-
-rm -r $project

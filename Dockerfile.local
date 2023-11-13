@@ -9,8 +9,21 @@ ARG MACRO="APP_DEMO"
 ARG APP_LINK=""
 ARG APP_VERSION
 
+RUN echo "APP:${APP}"
+
 # Copy the script into the container
 COPY . ${PROJECT}
+
+# Check if app is referred by a link
+RUN if [ -z "$APP_LINK" ] ; then \
+		echo No link provided for app source ; \
+	else \
+		cd ${PROJECT}; \
+		rm -rf src/app; \
+		mkdir -p src/app; \
+		mv ${APP} src/app/; \
+		cd .. ; \
+	fi > build_setup.txt 2>&1
 
 # Make the script executable
 RUN chmod +x ${PROJECT}/src/app/${APP}/deploy.sh
