@@ -9,9 +9,9 @@ ARG APP_LINK=""
 ARG APP_VERSION
 
 # Copy the script into the container
-COPY . ${PROJECT}
+COPY . /esp32-freeRTOS2
 
 # Make the script executable
-#RUN chmod +x ${PROJECT}/src/app/${APP}/deploy.sh
+#RUN chmod +x /esp32-freeRTOS2/src/app/${APP}/deploy.sh
 
-RUN ${PROJECT}/src/app/${APP}/deploy.sh -d $BASE_DIR -p $PROJECT -a $APP -m $MACRO -v $APP_VERSION --docker > build_output.txt 2>&1
+RUN /esp32-freeRTOS2/src/app/${APP}/deploy.sh -d $BASE_DIR -p $PROJECT -a $APP -m $MACRO -v $APP_VERSION --docker > build_output.txt 2>&1
