@@ -1,4 +1,3 @@
-# Use a base image that has bash and apt (e.g., ubuntu)
 FROM zimbora/arduino-deploy:latest
 
 # Set a default value (optional)
@@ -11,7 +10,6 @@ ARG APP_VERSION
 
 # Copy the script into the container
 COPY . "/${PROJECT}"
-RUN ls "/${PROJECT}"
 
 # Make the script executable
 RUN chmod +x "/${PROJECT}/src/app/${APP}/deploy.sh"
