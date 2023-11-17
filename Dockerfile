@@ -8,10 +8,14 @@ ARG MACRO="APP_DEMO"
 ARG APP_LINK=""
 ARG APP_VERSION
 
-RUN ls
+RUN mkdir /${PROJECT}
+
+WORKDIR /${PROJECT}
 
 # Copy the script into the container
 COPY . /${PROJECT}
+
+RUN ls
 
 # Make the script executable
 #RUN chmod +x /${PROJECT}/src/app/demo/deploy.sh
