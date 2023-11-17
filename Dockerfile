@@ -8,9 +8,12 @@ ARG MACRO="APP_DEMO"
 ARG APP_LINK=""
 ARG APP_VERSION
 
-RUN mkdir /${PROJECT}
 
 WORKDIR /${PROJECT}
+
+RUN ls
+
+RUN mkdir /${PROJECT}
 
 # Copy the script into the container
 COPY . /${PROJECT}
