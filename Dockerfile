@@ -1,6 +1,5 @@
 FROM zimbora/arduino-deploy:latest
 
-# Set a default value (optional)
 ENV BASE_DIR=/root
 ARG PROJECT="esp32-freeRTOS2"
 ARG APP="demo"

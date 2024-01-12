@@ -55,7 +55,6 @@ else
 fi
 
 docker build \
--f Dockerfile.local \
 --build-arg PROJECT=$project \
 --build-arg APP=$app \
 --build-arg MACRO=$macro \
