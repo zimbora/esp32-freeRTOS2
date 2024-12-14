@@ -1,6 +1,5 @@
 
 #include "core.h"
-#include <TaskScheduler.h>
 
 SemaphoreHandle_t spiffsMutex;
 CALLS call;
