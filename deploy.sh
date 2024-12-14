@@ -3,14 +3,13 @@
 home_dir="~"
 project="esp32-freeRTOS2"
 app="DEMO"
-app_version="0.0.0"
+app_version="1.0.0"
 
 docker=false
-libs="WiFi@2.0.0 Update@2.0.0 ArduinoOTA@2.0.0 WebServer@2.0.0
-			ESPmDNS@2.0.0 WiFiClientSecure@2.0.0 FS@2.0.0 ESP32 BLE Arduino@2.0.0
-			ArduinoJson@6.19.4 ESP32Logger2@1.0.3 EspMQTTClient@1.13.3 PubSubClient@2.8
-			LittleFS_esp32@1.0.5 TaskScheduler@3.6.0 Time@1.6.1 esp32-BG95@1.0.6 modem-freeRTOS@1.0.2
-			sysfile@1.0.1 autorequest@1.0.1 alarm@1.0.1 modbusrtu@1.0.1
+libs="WiFi@1.2.7 ESP32httpUpdate@2.1.145 ArduinoJson@6.19.4 
+      ESP32Logger2@1.0.3 EspMQTTClient@1.13.3
+			Time@1.6.1 esp32-BG95@1.0.6 modem-freeRTOS@1.0.4
+			sysfile@1.0.2 autorequest@1.0.1 alarm@1.0.1 modbusrtu@1.0.1
 			"
 
 if [ -f /.dockerenv ]; then
@@ -78,6 +77,11 @@ else
     # Install arduino-cli
 	curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
 
+  current_dir=$(pwd)
+
+  # add to PATH
+  export PATH="$PATH:$current_dir/bin"
+
 	# Initialize arduino-cli (this will create default directories and config file)
 	arduino-cli config init
 
@@ -123,7 +127,11 @@ fi
 echo "Installation complete!"
 echo "project: ${project}"
 echo "app: ${app}"
-cd $project
+
+if [ "$docker" == "true" ]; then
+  cd $project
+fi
+
 
 if [ -d "images/${app}" ]; then
     rm -r "images/${app}"
@@ -131,7 +139,7 @@ fi
 mkdir -p images/${app}
 
 # removes soft links if any
-find src/app/ -type l -exec rm {} \;
+#find src/app/ -type l -exec rm {} \;
 
 arduino-cli cache clean
 
@@ -141,5 +149,6 @@ arduino-cli compile -b esp32:esp32:esp32 \
 --build-path ./build/${app} . 2>&1 | tee compile_logs.txt
 
 filenames=$( find build/${app}/${project}* )
+echo $filenames
 cp ${filenames} images/${app}/
 cp build/${app}/build.options.json images/${app}/

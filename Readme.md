@@ -320,6 +320,6 @@ sends the following topics with keepalive period:
 - alarm v1.0.1[alarm](https://github.com/zimbora/esp32-alarm)
 - modbus-rtu v1.0.1 [modbus-rtu](https://github.com/zimbora/esp32-ModbusRTU)
 - modem-freeRTOS v1.0.4 [modem-freeRTOS](https://github.com/zimbora/esp32-modem-freeRTOS)
-- esp32-BG95 v1.0.5 [esp32-BG95](https://github.com/zimbora/esp32-BG95)
+- esp32-BG95 v1.0.6 [esp32-BG95](https://github.com/zimbora/esp32-BG95)
 - sysfile v1.0.2 [sysfile](https://github.com/zimbora/esp32-sysfile)
 - ESP32Logger2 v1.0.3 [esp32-logger](https://github.com/zimbora/ESP32Logger2)
