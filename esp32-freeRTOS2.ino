@@ -13,15 +13,18 @@
 #include "core.h"
 #include "modem-freeRTOS.hpp"
 #include "./src/sensors/sensors.h"
+#include "./src/app/user/app.h"
 
 #ifdef ENABLE_AP
-#include "./src/wifi/wifiAP.h"
+  #include "./src/wifi/wifiAP.h"
 #endif
 #ifdef ENABLE_BLE
-#include "./src/ble/ble_server.h"
+  #include "./src/ble/ble_server.h"
 #endif
 
 String get_reset_reason(int reason);
+
+extern APP app;
 
 // MQTT
 String mqtt_subscribe_topics[] = {
@@ -33,13 +36,14 @@ String mqtt_subscribe_topics[] = {
 extern MODEMfreeRTOS mRTOS;
 
 #ifdef ENABLE_AP
-WIFIAP ap;
+  WIFIAP ap;
 #endif
 #ifdef ENABLE_BLE
-BLE_SERVER ble;
+  BLE_SERVER ble;
 #endif
 
-
+extern SemaphoreHandle_t spiffsMutex;
+extern SYSFILE sysfile;
 
 void (*callback)(uint8_t);
 void mqttOnConnect(uint8_t clientID){
@@ -82,51 +86,65 @@ void onConnectionEstablished2(){
 }
 
 #ifdef ENABLE_LTE
-void network_lte_task(void *pvParameters);
-void network_lte_task(void *pvParameters){
-  (void) pvParameters;
+  void network_lte_task(void *pvParameters);
+  void network_lte_task(void *pvParameters){
+    (void) pvParameters;
 
-  DBGLOG(Info,"Preparing LTE modem..");
-  // radio
-  mRTOS.init(settings.modem.cops,settings.modem.tech,PWKEY); // initialize modem
+    DBGLOG(Info,"Preparing LTE modem..");
+    // radio
+    mRTOS.init(settings.modem.cops,settings.modem.tech,PWKEY); // initialize modem
 
-  mRTOS.set_ssl(CONTEXTID);
-  mRTOS.set_context(CONTEXTID,settings.modem.apn,settings.modem.user,settings.modem.pwd);
+    mRTOS.set_ssl(CONTEXTID);
+    mRTOS.set_context(CONTEXTID,settings.modem.apn,settings.modem.user,settings.modem.pwd);
 
-  // --- MQTT configuration ---
+    // --- MQTT configuration ---
 
-  // Own cloud
-  mRTOS.mqtt_configure_connection(CLIENTID,CONTEXTID,MQTT_PROJECT,get_uid(),MQTT_HOST_1,1883,MQTT_USER_1,MQTT_PASSWORD_1);
-  mRTOS.mqtt_set_will_topic(CLIENTID,MQTT_WILL_SUBTOPIC,MQTT_WILL_PAYLOAD);
-  uint8_t i = 0;
-  while(i<NUMITEMS(mqtt_subscribe_topics)){
-    mRTOS.mqtt_add_subscribe_topic(CLIENTID,i,mqtt_subscribe_topics[i]);
-    i++;
-  }
-
-  // External cloud
-  if(settings.mqtt.active){
-    String host = String(settings.mqtt.host);
-    String user = String(settings.mqtt.user);
-    String pass = String(settings.mqtt.pass);
-    mRTOS.mqtt_configure_connection(CLIENTIDEXTERNAL,CONTEXTID,MQTT_PROJECT,get_uid(),host,settings.mqtt.port,user,pass);
-    mRTOS.mqtt_set_will_topic(CLIENTIDEXTERNAL,MQTT_WILL_SUBTOPIC,MQTT_WILL_PAYLOAD);
+    // Own cloud
+    String preTopic = String(MQTT_PROJECT);
+    mRTOS.mqtt_configure_connection(CLIENTID,CONTEXTID,preTopic.c_str(),get_uid(),MQTT_HOST_1,1883,MQTT_USER_1,MQTT_PASSWORD_1);
+    mRTOS.mqtt_set_will_topic(CLIENTID,MQTT_WILL_SUBTOPIC,MQTT_WILL_PAYLOAD);
     uint8_t i = 0;
     while(i<NUMITEMS(mqtt_subscribe_topics)){
-      mRTOS.mqtt_add_subscribe_topic(CLIENTIDEXTERNAL,i,mqtt_subscribe_topics[i]);
+      mRTOS.mqtt_add_subscribe_topic(CLIENTID,i,mqtt_subscribe_topics[i]);
       i++;
     }
+
+    // External cloud
+    if(settings.mqtt.active){
+      String host = String(settings.mqtt.host);
+      String user = String(settings.mqtt.user);
+      String pass = String(settings.mqtt.pass);
+      mRTOS.mqtt_configure_connection(CLIENTIDEXTERNAL,CONTEXTID,preTopic.c_str(),get_uid(),host,settings.mqtt.port,user,pass);
+      mRTOS.mqtt_set_will_topic(CLIENTIDEXTERNAL,MQTT_WILL_SUBTOPIC,MQTT_WILL_PAYLOAD);
+      uint8_t i = 0;
+      while(i<NUMITEMS(mqtt_subscribe_topics)){
+        mRTOS.mqtt_add_subscribe_topic(CLIENTIDEXTERNAL,i,mqtt_subscribe_topics[i]);
+        i++;
+      }
+    }
+
+    callback = &mqttOnConnect;
+    mRTOS.mqtt_setup(callback);
+    // --- --- ---
+
+    for(;;){
+      mRTOS.loop();
+    }
+
   }
+#endif
 
-  callback = &mqttOnConnect;
-  mRTOS.mqtt_setup(callback);
-  // --- --- ---
+#ifdef THREAD_APP
+  void app_task(void *pvParameters);
+  void app_task(void *pvParameters){
+  (void) pvParameters;
 
-  for(;;){
-    mRTOS.loop();
+    app.init();
+
+    for(;;){
+      app.loop();
+    }
   }
-
-}
 #endif
 
 void core_task(void *pvParameters);
@@ -134,9 +152,91 @@ void core_task(void *pvParameters){
   (void) pvParameters;
 
   core_init();
+      
+  #ifdef ENABLE_AP
+    ap.setCallbacks(new CALLBACKS_WIFI_AP());
+  #endif
 
+  #ifndef ENABLE_LTE
+
+    //mRTOS.init(WIFI_SSID,WIFI_PASSWORD);
+    mRTOS.init(settings.wifi.ssid,settings.wifi.pwd);
+    String uid = MQTT_UID_PREFIX+mRTOS.macAddress();
+
+    String preTopic = String(MQTT_PROJECT);
+    mRTOS.mqtt_configure_connection(0,preTopic.c_str(),uid.c_str(),MQTT_HOST_1,MQTT_PORT_1,MQTT_USER_1,MQTT_PASSWORD_1);
+    mRTOS.mqtt_set_will_topic(CLIENTID,MQTT_WILL_SUBTOPIC,MQTT_WILL_PAYLOAD);
+    DBGLOG(Debug,"mqtt client 1 configured");
+
+    for(uint8_t i=0;i<NUMITEMS(mqtt_subscribe_topics);i++){
+      mRTOS.mqtt_add_subscribe_topic(0,i,mqtt_subscribe_topics[i]);
+    }
+
+    mRTOS.mqtt_wifi_setup(0,onConnectionEstablished);
+
+    /*
+    // External cloud
+    if(settings.mqtt.active){
+      String host = String(settings.mqtt.host);
+      String user = String(settings.mqtt.user);
+      String pass = String(settings.mqtt.pass);
+      mRTOS.mqtt_set_will_topic(CLIENTIDEXTERNAL,MQTT_WILL_SUBTOPIC,MQTT_WILL_PAYLOAD);
+      mRTOS.mqtt_configure_connection(1,MQTT_PROJECT,get_uid().c_str(),host.c_str(),settings.mqtt.port,user.c_str(),pass.c_str());
+      DBGLOG(Debug,"mqtt client 2 configured");
+      for(uint8_t i=0;i<NUMITEMS(mqtt_subscribe_topics);i++){
+        mRTOS.mqtt_add_subscribe_topic(1,i,mqtt_subscribe_topics[i]);
+      }
+      mRTOS.mqtt_wifi_setup(1,onConnectionEstablished2);
+    }
+    */
+/*
+    #ifndef ENABLE_LTE
+      Serial.println("wait for wifi connection..");
+      while(!mRTOS.isWifiConnected()) delay(100);
+      Serial.println("wifi is connected");
+    #else
+      Serial.println("waiting for modem to register on network..");
+      while(!mRTOS.isLTERegistered()) delay(100);
+      Serial.println("modem is registered");
+    #endif
+*/
+  #endif
+
+  bool wifiDefault = false;
+  uint32_t wifiTimeout = 30*1000;
   for(;;){
     core_loop();
+
+    #ifndef ENABLE_LTE
+      mRTOS.loop();
+
+      if(!mRTOS.isWifiConnected() && wifiTimeout < millis()){
+        #ifndef ENABLE_AP
+          if(wifiDefault){
+            mRTOS.wifiReconnect(WIFI_SSID,WIFI_PASSWORD);
+            wifiDefault = false;
+          }else{
+            mRTOS.wifiReconnect(settings.wifi.ssid,settings.wifi.pwd);
+            wifiDefault = true;
+          }
+          wifiTimeout = millis() + 30*1000;
+        #else ENABLE_AP
+          ap.setup();
+          DBGLOG(Debug,now());
+          uint32_t timeout = now() + 300;
+          for(;;){
+            ap.loop();
+
+            if(timeout < now()){
+              DBGLOG(Info,"Timeout for Access Point, try WiFi client once again");
+              break;
+            }
+          }
+          mRTOS.wifiReconnect(settings.wifi.ssid,settings.wifi.pwd);
+          wifiTimeout = millis() + 30*1000;
+        #endif
+      }
+    #endif
   }
 }
 
@@ -149,20 +249,34 @@ void setup() {
   DBGLEV(Debug);
   DBGLOG(Info,"Initing program..");
 
+  spiffsMutex = xSemaphoreCreateMutex();
+
+  DBGLOG(Info,"initing file system..");
+  sysfile.init();
+
+  delay(500);
+  DBGLOG(Info,"loading settings..");
+  core_load_settings();
+
+  DBGLOG(Info,"logging settings..");
+  delay(500);
+  settings_log();
+
+  DBGLOG(Info,"wait 2s for system to init..");
+  delay(500);
+
 
   xTaskCreatePinnedToCore(
     core_task
     ,  "core_task"   // A name just for humans
     ,  2048*8  // This stack size can be checked & adjusted by reading the Stack Highwater
     ,  NULL
-    ,  1 // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.  !! do not edit priority
+    ,  3 // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.  !! do not edit priority
     ,  NULL
     ,  1);
 
-  //core_init();
+  core_init();
 
-  DBGLOG(Info,"wait 5s for system to init..");
-  delay(5000);
 
   #ifdef ENABLE_LTE
     xTaskCreatePinnedToCore(
@@ -173,85 +287,37 @@ void setup() {
         ,  2 // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest. !! do not edit priority
         ,  NULL
         ,  1);
-  #elif defined ENABLE_AP
-    ap.setCallbacks(new CALLBACKS_WIFI_AP());
-    while(!mRTOS.isWifiConnected()){
-
-      if(settings.wifi.ssid != ""){
-        DBGLOG(Debug,"connecting wifi to: ",String(settings.wifi.ssid));
-        mRTOS.init(settings.wifi.ssid,settings.wifi.pwd);
-        uint32_t timeout = millis()+15000; // 15 seconds
-        while(timeout > millis() && !mRTOS.isWifiConnected()){
-          delay(1000);
-          Serial.print(".");
-        }
-      }
-
-      if(!mRTOS.isWifiConnected()){
-        ap.setup();
-        DBGLOG(Debug,now());
-        uint32_t timeout = now() + 300;
-        for(;;){
-          ap.loop();
-
-          if(timeout < now()){
-            DBGLOG(Info,"Timeout for Access Point, try WiFi client once again");
-            break;
-          }
-
-        }
-      }
-    }
-
   #endif
 
-  #ifndef ENABLE_LTE
-
-    const char project[] = MQTT_PROJECT;
-    uint16_t port = 1883;
-
-    mRTOS.mqtt_set_will_topic(CLIENTID,MQTT_WILL_SUBTOPIC,MQTT_WILL_PAYLOAD);
-    mRTOS.mqtt_configure_connection(0,project,get_uid().c_str(),MQTT_HOST_1,port,MQTT_USER_1,MQTT_PASSWORD_1);
-    DBGLOG(Debug,"mqtt client 1 configured");
-
-
-    for(uint8_t i=0;i<NUMITEMS(mqtt_subscribe_topics);i++){
-      mRTOS.mqtt_add_subscribe_topic(0,i,mqtt_subscribe_topics[i]);
-    }
-
-    // External cloud
-    if(settings.mqtt.active){
-      String host = String(settings.mqtt.host);
-      String user = String(settings.mqtt.user);
-      String pass = String(settings.mqtt.pass);
-      mRTOS.mqtt_set_will_topic(CLIENTIDEXTERNAL,MQTT_WILL_SUBTOPIC,MQTT_WILL_PAYLOAD);
-      mRTOS.mqtt_configure_connection(1,project,get_uid().c_str(),host.c_str(),settings.mqtt.port,user.c_str(),pass.c_str());
-      DBGLOG(Debug,"mqtt client 2 configured");
-      for(uint8_t i=0;i<NUMITEMS(mqtt_subscribe_topics);i++){
-        mRTOS.mqtt_add_subscribe_topic(1,i,mqtt_subscribe_topics[i]);
-      }
-      mRTOS.mqtt_wifi_setup(onConnectionEstablished2);
-    }
-
+  #ifdef THREAD_APP
+    xTaskCreatePinnedToCore(
+        app_task
+        ,  "app_task"   // A name just for humans
+        ,  2048*4  // This stack size can be checked & adjusted by reading the Stack Highwater
+        ,  NULL
+        ,  1 // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest. !! do not edit priority
+        ,  NULL
+        ,  1);
   #endif
 
   #ifdef ENABLE_BLE
-  ble.init();
-  ble.enable();
+    ble.init(uid);
+    ble.setCallback(&bleCallback);
+    ble.enable();
   #endif
 
-  //app.init();
-
+  #ifdef FAST_APP
+    delay(3000); // wait for app to initialize
+    app.init();
+  #endif
 }
 
 
 void loop() {
-
-  #ifndef ENABLE_LTE
-  mRTOS.loop();
+  
+  #ifdef FAST_APP
+    app.loop();
   #endif
-
-  //core_loop();
 }
 
 String get_reset_reason(int reason){

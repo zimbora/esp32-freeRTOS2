@@ -19,17 +19,7 @@
 #include "./src/settings/settings.h"
 #include "./src/wifi/wifiAP.h"
 
-#ifdef APP_DEMO
-#include "./src/app/demo/app.h"
-#elif defined APP_TEST
-#include "./src/app/test/app.h"
-#elif defined SLIM_GW
-#include "./src/app/SlimGW/app.h"
-#elif defined MEA_GW
-#include "./src/app/MEAGW/app.h"
-#elif defined HOMEHEALTH
-#include "./src/app/HOMEHEALTH/app.h"
-#endif
+#include "./src/app/user/app.h"
 
 #ifdef ENABLE_JS
 #include "JS.h"
@@ -38,6 +28,10 @@
 #ifdef ENABLE_BLE
 #include "./src/ble/ble_server.h"
 #endif
+
+extern CALLS call;
+extern SemaphoreHandle_t spiffsMutex;
+extern SYSFILE sysfile;
 
 enum fwTopics_ {
   fw_,
@@ -59,10 +53,14 @@ enum fwTopics_ {
   fw_log_get_,
   fw_keepalive_,
   fw_keepalive_get_,
+  fw_serial_,
+  fw_serial_get_,
   fw_ar_,
   fw_ar_get_,
   fw_alarm_,
   fw_alarm_get_,
+  fw_serial_read_get_,
+  fw_serial_write_get_,
   fw_not_found
 };
 
@@ -85,10 +83,14 @@ static const std::map<long, fwTopics_> fwTopics {
   { (long)std::hash<std::string>{}("/fw/settings/log/get"),                 fw_log_get_ },
   { (long)std::hash<std::string>{}("/fw/settings/keepalive/set"),           fw_keepalive_ },
   { (long)std::hash<std::string>{}("/fw/settings/keepalive/get"),           fw_keepalive_get_ },
+  { (long)std::hash<std::string>{}("/fw/settings/serial/set"),              fw_serial_ },
+  { (long)std::hash<std::string>{}("/fw/settings/serial/get"),              fw_serial_get_ },
   { (long)std::hash<std::string>{}("/fw/ar/set"),                           fw_ar_ },
   { (long)std::hash<std::string>{}("/fw/ar/get"),                           fw_ar_get_ },
   { (long)std::hash<std::string>{}("/fw/alarms/set"),                       fw_alarm_ },
-  { (long)std::hash<std::string>{}("/fw/alarms/get"),                       fw_alarm_get_ }
+  { (long)std::hash<std::string>{}("/fw/alarms/get"),                       fw_alarm_get_ },
+  { (long)std::hash<std::string>{}("/fw/serial/read/get"),                  fw_serial_read_get_ },
+  { (long)std::hash<std::string>{}("/fw/serial/write/get"),                 fw_serial_write_get_ }
 };
 
 #ifdef ENABLE_BLE
@@ -161,6 +163,7 @@ class CALLBACKS_SENSORS : public SensorCallbacks
 
 void      core_init();
 void      core_loop();
+void      core_load_settings();
 
 void      core_parse_mqtt_messages();
 bool      core_send_mqtt_message(uint8_t clientID, String topic, String data, uint8_t qos, bool retain);

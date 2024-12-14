@@ -8,8 +8,8 @@ app_version="0.0.0"
 docker=false
 libs="WiFi@2.0.0 Update@2.0.0 ArduinoOTA@2.0.0 WebServer@2.0.0
 			ESPmDNS@2.0.0 WiFiClientSecure@2.0.0 FS@2.0.0 ESP32 BLE Arduino@2.0.0
-			ArduinoJson@6.19.4 ESP32Logger@1.0.2 EspMQTTClient@1.13.3 PubSubClient@2.8
-			LittleFS_esp32@1.0.5 TaskScheduler@3.6.0 Time@1.6.1 esp32-BG95@1.0.6 modem-freeRTOS@1.0.1
+			ArduinoJson@6.19.4 ESP32Logger2@1.0.3 EspMQTTClient@1.13.3 PubSubClient@2.8
+			LittleFS_esp32@1.0.5 TaskScheduler@3.6.0 Time@1.6.1 esp32-BG95@1.0.6 modem-freeRTOS@1.0.2
 			sysfile@1.0.1 autorequest@1.0.1 alarm@1.0.1 modbusrtu@1.0.1
 			"
 
@@ -143,4 +143,3 @@ arduino-cli compile -b esp32:esp32:esp32 \
 filenames=$( find build/${app}/${project}* )
 cp ${filenames} images/${app}/
 cp build/${app}/build.options.json images/${app}/
-

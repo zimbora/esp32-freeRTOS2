@@ -246,7 +246,7 @@ void CALLS::clean_dir(String dir){
     //xSemaphoreGive(spiffsMutex);
     return;
   }
-  sysfile.deleteEmptySubDirectories(LITTLEFS,dir.c_str(),2000);
+  sysfile.deleteEmptySubDirectories(LittleFS,dir.c_str(),2000);
 
   xSemaphoreGive( spiffsMutex );
 }

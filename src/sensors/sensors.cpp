@@ -14,7 +14,9 @@ ALARM Alarm(&Serial);
 SENSORS sensors;
 
 #ifndef UNITTEST
+#ifdef ENABLE_RS485
 ModbusRTU modbus;
+#endif
 
 DynamicJsonDocument table(512);
 DynamicJsonDocument doc(2048);
@@ -43,7 +45,15 @@ void SENSORS::alarmTrigger(String ref, String value){
 SENSORS::SENSORS(){}
 
 void SENSORS::init(){
-
+if(settings.uart2.active){
+  #ifdef EXT_SERIAL_COMM
+    DBGLOG(Debug,"initing Serial1 - assigned to uart2 struct");
+    Serial1.begin(settings.uart2.baudrate, settings.uart2.config, SERIAL1_GPIO_RX, SERIAL1_GPIO_TX);
+  #elif defined ENABLE_RS485
+    sensors.rs485_init(&Serial1,SERIAL1_GPIO_RX,SERIAL1_GPIO_TX,SERIAL1_GPIO_RTS);
+    sensors.rs485_set_config(1,settings.uart2.baudrate,settings.uart2.config);
+  #endif
+  }
 }
 
 // pass json data as ar
@@ -257,199 +267,199 @@ void SENSORS::loop(){
 }
 
 #ifdef ENABLE_RS485
-void SENSORS::rs485_init(HardwareSerial* port, uint8_t rx, uint8_t tx, uint8_t rts){
+  void SENSORS::rs485_init(HardwareSerial* port, uint8_t rx, uint8_t tx, uint8_t rts){
 
-  DBGLOG(Debug,"initing rs485");
-  modbus.setup(port,rx,tx,rts);
-}
+    DBGLOG(Debug,"initing rs485");
+    modbus.setup(port,rx,tx,rts);
+  }
 
-void SENSORS::rs485_set_config(uint8_t mode, uint32_t baudrate, uint32_t config, uint8_t retries){
+  void SENSORS::rs485_set_config(uint8_t mode, uint32_t baudrate, uint32_t config, uint8_t retries){
 
-  modbus.begin(mode,baudrate,config,retries);
-}
+    modbus.begin(mode,baudrate,config,retries);
+  }
 
-void SENSORS::rs485_change_config(uint8_t mode, uint32_t baudrate, uint32_t config, uint8_t retries){
+  void SENSORS::rs485_change_config(uint8_t mode, uint32_t baudrate, uint32_t config, uint8_t retries){
 
-  modbus.change_config(mode,baudrate,config,retries);
-}
+    modbus.change_config(mode,baudrate,config,retries);
+  }
 
 
-bool SENSORS::rs485_add(uint8_t index, String ref_str, String modbus, String type_str){
+  bool SENSORS::rs485_add(uint8_t index, String ref_str, String modbus, String type_str){
 
-  uint8_t type = get_type(type_str);
+    uint8_t type = get_type(type_str);
 
-  int16_t len = 4;
-  uint16_t data[len];
+    int16_t len = 4;
+    uint16_t data[len];
 
-  if(parseArray(modbus,data,&len)){
-    if(len < 4)
+    if(parseArray(modbus,data,&len)){
+      if(len < 4)
+        return false;
+
+      uint8_t i = 0;
+      uint8_t unit_id = data[i++];
+      uint8_t fc = data[i++];
+      uint16_t address = data[i++];
+      uint8_t len = data[i++];
+      uint8_t* value = nullptr;
+      //if(len > 4)
+        //value = (uint8_t*)&data[i];
+
+      return rs485_add(index,ref_str.c_str(),type,unit_id,fc,address,len,value);
+    }
+    return false;
+  }
+
+  bool SENSORS::rs485_add(uint8_t index, String ref, uint8_t type, uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* value){
+
+    if(index >= MAX_RS485_SENSORS)
       return false;
 
-    uint8_t i = 0;
-    uint8_t unit_id = data[i++];
-    uint8_t fc = data[i++];
-    uint16_t address = data[i++];
-    uint8_t len = data[i++];
-    uint8_t* value = nullptr;
-    //if(len > 4)
-      //value = (uint8_t*)&data[i];
+    rs485_map[index].type = type;
+    rs485_map[index].unit_id = unit_id;
+    rs485_map[index].fc = fc;
+    rs485_map[index].address = address;
+    rs485_map[index].len = len;
 
-    return rs485_add(index,ref_str.c_str(),type,unit_id,fc,address,len,value);
-  }
-  return false;
-}
+    uint8_t size = ref.length();
+    if(size > MAX_SIZE_REF)
+      size = MAX_SIZE_REF;
+    memcpy(rs485_map[index].ref,ref.c_str(),size);
 
-bool SENSORS::rs485_add(uint8_t index, String ref, uint8_t type, uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* value){
+    rs485_map_len++;
+    rs485_log(index);
 
-  if(index >= MAX_RS485_SENSORS)
-    return false;
-
-  rs485_map[index].type = type;
-  rs485_map[index].unit_id = unit_id;
-  rs485_map[index].fc = fc;
-  rs485_map[index].address = address;
-  rs485_map[index].len = len;
-
-  uint8_t size = ref.length();
-  if(size > MAX_SIZE_REF)
-    size = MAX_SIZE_REF;
-  memcpy(rs485_map[index].ref,ref.c_str(),size);
-
-  rs485_map_len++;
-  rs485_log(index);
-
-  return true;
-}
-
-// --- RS485 ---
-bool SENSORS::rs485_read_all(){
-
-  for(uint8_t i=0;i<rs485_map_len;i++){
-    sensors.rs485_read(rs485_map[i].ref);
+    return true;
   }
 
-  char content[255];
-  memset(content,0,255);
-  serializeJson(table, content);
-  Serial.println(content);
-  String data = String(content);
-  pSensorCallbacks->onRS485ReadAll(data);
+  // --- RS485 ---
+  bool SENSORS::rs485_read_all(){
 
-  return true;
-}
-
-void SENSORS::rs485_table_refresh(uint8_t i){
-
-  String ref = rs485_map[i].ref;
-  uint8_t* result = rs485_map[i].value;
-  if(rs485_map[i].type == int16be_type){
-    int16_t value = (result[0]<<8)|result[1];
-    //Serial.printf("value: %d \n",value);
-    table[ref] = value;
-  }else if(rs485_map[i].type == uint16be_type){
-    uint16_t value = (result[0]<<8)|result[1];
-    //Serial.printf("value: %d \n",value);
-    table[ref] = value;
-  }else if(rs485_map[i].type == int32be_type){
-    int32_t value = (result[0]<<24)|(result[1]<<16)|(result[2]<<8)|result[3];
-    //Serial.printf("value: %l \n",value);
-    table[ref] = value;
-  }else if(rs485_map[i].type == uint32be_type){
-    uint32_t value = (result[0]<<24)|(result[1]<<16)|(result[2]<<8)|result[3];
-    //Serial.printf("value: %lu \n",value);
-    table[ref] = value;
-  }else if(rs485_map[i].type == floatbe_type){
-
-    uint32_t aux = ((result[0]<<24) | (result[1]<<16) | (result[2]<<8) | result[3]);
-    float value = *((float*)&aux);
-    value = truncate(value,3);
-    table[ref] = value;
-
-  }else
-    DBGLOG(Error,"table refresh - type not found");
-}
-
-uint8_t SENSORS::rs485_read(String ref){
-
-  uint8_t i = 0;
-  while(i<rs485_map_len){
-    if(String(rs485_map[i].ref) == ref)
-      break;
-    i++;
-  }
-
-  return rs485_read(i);
-}
-
-uint8_t SENSORS::rs485_read(uint8_t index){
-
-  uint16_t size = 32;
-  uint8_t* data = (uint8_t*)malloc(size);
-
-  uint8_t i = index;
-  uint8_t error = rs485_read(rs485_map[i].unit_id,
-    rs485_map[i].fc,
-    rs485_map[i].address,
-    rs485_map[i].len,
-    data,
-    &size);
-
-  if(!error){
-    uint8_t len = rs485_map[i].len*2;
-    for(uint8_t j=0; j<len; j++){
-      rs485_map[i].value[MAX_VALUE_LEN-j-1] = data[len-j-1];
+    for(uint8_t i=0;i<rs485_map_len;i++){
+      sensors.rs485_read(rs485_map[i].ref);
     }
-    Serial.println();
-  }else{
-    for(uint8_t j=0; j<MAX_VALUE_LEN; j++)
-      rs485_map[i].value[MAX_VALUE_LEN-j-1] = 0;
-  }
-  rs485_table_refresh(i);
 
-  return error;
-}
+    char content[255];
+    memset(content,0,255);
+    serializeJson(table, content);
+    Serial.println(content);
+    String data = String(content);
+    pSensorCallbacks->onRS485ReadAll(data);
 
-uint8_t SENSORS::rs485_read(uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* data, uint16_t* size){
-
-  uint8_t error = modbus.rs485_read(unit_id,fc,address,len,data,size);
-
-  if(error != 0){
-    Serial.printf("error: 0x%x \n",error);
-    String error_msg = modbus.getLastError();
-    if(error_msg != "")
-      Serial.println("error msg: "+error_msg);
+    return true;
   }
 
-  return error;
-}
+  void SENSORS::rs485_table_refresh(uint8_t i){
 
-uint8_t SENSORS::rs485_write(uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* data, uint16_t* size){
+    String ref = rs485_map[i].ref;
+    uint8_t* result = rs485_map[i].value;
+    if(rs485_map[i].type == int16be_type){
+      int16_t value = (result[0]<<8)|result[1];
+      //Serial.printf("value: %d \n",value);
+      table[ref] = value;
+    }else if(rs485_map[i].type == uint16be_type){
+      uint16_t value = (result[0]<<8)|result[1];
+      //Serial.printf("value: %d \n",value);
+      table[ref] = value;
+    }else if(rs485_map[i].type == int32be_type){
+      int32_t value = (result[0]<<24)|(result[1]<<16)|(result[2]<<8)|result[3];
+      //Serial.printf("value: %l \n",value);
+      table[ref] = value;
+    }else if(rs485_map[i].type == uint32be_type){
+      uint32_t value = (result[0]<<24)|(result[1]<<16)|(result[2]<<8)|result[3];
+      //Serial.printf("value: %lu \n",value);
+      table[ref] = value;
+    }else if(rs485_map[i].type == floatbe_type){
 
-  Serial.println("Writing rs485..");
-  uint8_t error = modbus.rs485_write(unit_id,fc,address,len,data,size);
-  if(error == 0){
-    Serial.println("packet written successfully");
-  }else{
-    Serial.printf("error: 0x%x \n",error);
-    String error_msg = modbus.getLastError();
-    if(error_msg != "")
-      Serial.println("error msg: "+error_msg);
+      uint32_t aux = ((result[0]<<24) | (result[1]<<16) | (result[2]<<8) | result[3]);
+      float value = *((float*)&aux);
+      value = truncate(value,3);
+      table[ref] = value;
+
+    }else
+      DBGLOG(Error,"table refresh - type not found");
   }
 
-  return error;
-}
+  uint8_t SENSORS::rs485_read(String ref){
 
-void SENSORS::rs485_log(uint8_t index){
-  #ifndef UNITTEST
-  DBGLOG(Debug,"ref: "+String(rs485_map[index].ref));
-  DBGLOG(Debug,"type: "+String(rs485_map[index].type));
-  DBGLOG(Debug,"unit_id: "+String(rs485_map[index].unit_id));
-  DBGLOG(Debug,"fc: "+String(rs485_map[index].fc));
-  DBGLOG(Debug,"address: "+String(rs485_map[index].address));
-  DBGLOG(Debug,"len: "+String(rs485_map[index].len));
-  //DBGLOG(Debug,"value: "+String(rs485_map[index].value,MAX_VALUE_LEN));
-  #endif
-}
+    uint8_t i = 0;
+    while(i<rs485_map_len){
+      if(String(rs485_map[i].ref) == ref)
+        break;
+      i++;
+    }
+
+    return rs485_read(i);
+  }
+
+  uint8_t SENSORS::rs485_read(uint8_t index){
+
+    uint16_t size = 32;
+    uint8_t* data = (uint8_t*)malloc(size);
+
+    uint8_t i = index;
+    uint8_t error = rs485_read(rs485_map[i].unit_id,
+      rs485_map[i].fc,
+      rs485_map[i].address,
+      rs485_map[i].len,
+      data,
+      &size);
+
+    if(!error){
+      uint8_t len = rs485_map[i].len*2;
+      for(uint8_t j=0; j<len; j++){
+        rs485_map[i].value[MAX_VALUE_LEN-j-1] = data[len-j-1];
+      }
+      Serial.println();
+    }else{
+      for(uint8_t j=0; j<MAX_VALUE_LEN; j++)
+        rs485_map[i].value[MAX_VALUE_LEN-j-1] = 0;
+    }
+    rs485_table_refresh(i);
+
+    return error;
+  }
+
+  uint8_t SENSORS::rs485_read(uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* data, uint16_t* size){
+
+    uint8_t error = modbus.rs485_read(unit_id,fc,address,len,data,size);
+
+    if(error != 0){
+      Serial.printf("error: 0x%x \n",error);
+      String error_msg = modbus.getLastError();
+      if(error_msg != "")
+        Serial.println("error msg: "+error_msg);
+    }
+
+    return error;
+  }
+
+  uint8_t SENSORS::rs485_write(uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* data, uint16_t* size){
+
+    Serial.println("Writing rs485..");
+    uint8_t error = modbus.rs485_write(unit_id,fc,address,len,data,size);
+    if(error == 0){
+      Serial.println("packet written successfully");
+    }else{
+      Serial.printf("error: 0x%x \n",error);
+      String error_msg = modbus.getLastError();
+      if(error_msg != "")
+        Serial.println("error msg: "+error_msg);
+    }
+
+    return error;
+  }
+
+  void SENSORS::rs485_log(uint8_t index){
+    #ifndef UNITTEST
+    DBGLOG(Debug,"ref: "+String(rs485_map[index].ref));
+    DBGLOG(Debug,"type: "+String(rs485_map[index].type));
+    DBGLOG(Debug,"unit_id: "+String(rs485_map[index].unit_id));
+    DBGLOG(Debug,"fc: "+String(rs485_map[index].fc));
+    DBGLOG(Debug,"address: "+String(rs485_map[index].address));
+    DBGLOG(Debug,"len: "+String(rs485_map[index].len));
+    //DBGLOG(Debug,"value: "+String(rs485_map[index].value,MAX_VALUE_LEN));
+    #endif
+  }
 #endif
 
 
