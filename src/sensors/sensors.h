@@ -10,8 +10,8 @@
 #include <ArduinoJson.h>
 #include "autorequest.hpp"
 #include "alarm.hpp"
-
-#include "hardware.h"
+#include "../settings/settings.h"
+#include "../app/user/app_package.h"
 #ifdef ENABLE_RS485
 #include "modbus-rtu.h"
 #endif
@@ -134,16 +134,16 @@ class SENSORS {
 
     void alarmTrigger(String ref, String value);
     #ifdef ENABLE_RS485
-    void rs485_init(HardwareSerial* port, uint8_t rx, uint8_t tx, uint8_t rts);
-    void rs485_set_config(uint8_t mode=1, uint32_t baudrate=9600, uint32_t config=SERIAL_8N1, uint8_t retries=3);
-    void rs485_change_config(uint8_t mode=1, uint32_t baudrate=9600, uint32_t config=SERIAL_8N1, uint8_t retries=3);
-    bool rs485_read_all();
-    uint8_t rs485_read(String ref);
-    uint8_t rs485_read(uint8_t index);
-    uint8_t rs485_read(uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* data, uint16_t* size);
-    uint8_t rs485_write(uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* data, uint16_t* size);
-    bool rs485_add(uint8_t index, String ref_str, String modbus, String type_str);
-    bool rs485_add(uint8_t index, String ref_str, uint8_t type, uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* value);
+      void rs485_init(HardwareSerial* port, uint8_t rx, uint8_t tx, uint8_t rts);
+      void rs485_set_config(uint8_t mode=1, uint32_t baudrate=9600, uint32_t config=SERIAL_8N1, uint8_t retries=3);
+      void rs485_change_config(uint8_t mode=1, uint32_t baudrate=9600, uint32_t config=SERIAL_8N1, uint8_t retries=3);
+      bool rs485_read_all();
+      uint8_t rs485_read(String ref);
+      uint8_t rs485_read(uint8_t index);
+      uint8_t rs485_read(uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* data, uint16_t* size);
+      uint8_t rs485_write(uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* data, uint16_t* size);
+      bool rs485_add(uint8_t index, String ref_str, String modbus, String type_str);
+      bool rs485_add(uint8_t index, String ref_str, uint8_t type, uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* value);
     #endif
     int get_type(String type);
 

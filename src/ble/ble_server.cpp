@@ -18,9 +18,9 @@ void BLE_SERVER::setCallback(void (*fp)(String, String)){
 void MyCallbacks::onWrite(BLECharacteristic *pCharacteristic) {
 
   BLEUUID uid = pCharacteristic->getUUID();
-  std::string uid_str = uid.toString();
+  String uid_str = uid.toString();
 
-  std::string rxValue = pCharacteristic->getValue();
+  String rxValue = pCharacteristic->getValue();
 
   if (rxValue.length() > 0) {
     String a = String(uid_str.c_str());
@@ -33,7 +33,7 @@ void MyCallbacks::onWrite(BLECharacteristic *pCharacteristic) {
 
 void BLE_SERVER::init(String uid) {
 
-  std::string uid_str(uid.c_str(), uid.length());
+  String uid_str(uid.c_str(), uid.length());
   //std::string name = "ESP32-"+uid_str;
   BLEDevice::init(uid_str);
   BLEServer *pServer = BLEDevice::createServer();

@@ -1,18 +1,19 @@
 
 #include "settings.h"
-
+#include "../app/user/credentials.h"
+#include "../../package.h"
 
 user_settings settings = {
 
   .fw = {
-    /* version */     "",
+    /* version */     FW_VERSION,
     /* md5 */         ""
   },
 
   .wifi = {
     /* mode */        "",
-    /* ssid */        "",
-    /* pwd */         ""
+    /* ssid */        WIFI_SSID,
+    /* pwd */         WIFI_PASSWORD
   },
 
   .modem = {
@@ -25,22 +26,35 @@ user_settings settings = {
   },
 
   .mqtt = {
-    /* host */        "",
-    /* user */        "",
-    /* pass */        "",
-    /* prefix */      "",
-    /* port */        0,
-    /* active */      false
+    /* host */        MQTT_HOST_1,
+    /* user */        MQTT_USER_1,
+    /* pass */        MQTT_PASSWORD_1,
+    /* port */        MQTT_PORT_1,
+    /* active */      true
+  },
+
+    .mqtt2 = {
+    /* host */        MQTT_HOST_2,
+    /* user */        MQTT_USER_2,
+    /* pass */        MQTT_PASSWORD_2,
+    /* port */        MQTT_PORT_2,
+    /* active */      MQTT_ACTIVE_2
   },
 
   .log = {
-    /* active */      false,
-    /* level */       0
+    /* active */      LOG_ACTIVE,
+    /* level */       LOG_LEVEL
   },
 
   .keepalive = {
-    /* active */      false,
-    /* period */      0 // in seconds
+    /* active */      KEEPALIVE_ACTIVE,
+    /* period */      KEEPALIVE_PERIOD // in seconds
+  },
+
+  .uart2 = {
+    /* active */    UART2_ACTIVE,
+    /* baudrate */  UART2_BAUDRATE,
+    /* config */    UART2_CONFIG
   }
 };
 
@@ -109,36 +123,29 @@ bool settings_set_param(String param, String value){
         }
         break;
       case mqtt_host:
-        if(value.length() <= sizeof(settings.mqtt.host)){
-          memset(settings.mqtt.host,0,sizeof(settings.mqtt.host));
-          memcpy(settings.mqtt.host,value.c_str(),value.length());
+        if(value.length() <= sizeof(settings.mqtt2.host)){
+          memset(settings.mqtt2.host,0,sizeof(settings.mqtt2.host));
+          memcpy(settings.mqtt2.host,value.c_str(),value.length());
           return true;
         }
         break;
       case mqtt_user:
-        if(value.length() <= sizeof(settings.mqtt.user)){
-          memset(settings.mqtt.user,0,sizeof(settings.mqtt.user));
-          memcpy(settings.mqtt.user,value.c_str(),value.length());
+        if(value.length() <= sizeof(settings.mqtt2.user)){
+          memset(settings.mqtt2.user,0,sizeof(settings.mqtt2.user));
+          memcpy(settings.mqtt2.user,value.c_str(),value.length());
           return true;
         }
         break;
       case mqtt_pass:
-        if(value.length() <= sizeof(settings.mqtt.pass)){
-          memset(settings.mqtt.pass,0,sizeof(settings.mqtt.pass));
-          memcpy(settings.mqtt.pass,value.c_str(),value.length());
-          return true;
-        }
-        break;
-      case mqtt_prefix:
-        if(value.length() <= sizeof(settings.mqtt.prefix)){
-          memset(settings.mqtt.prefix,0,sizeof(settings.mqtt.prefix));
-          memcpy(settings.mqtt.prefix,value.c_str(),value.length());
+        if(value.length() <= sizeof(settings.mqtt2.pass)){
+          memset(settings.mqtt2.pass,0,sizeof(settings.mqtt2.pass));
+          memcpy(settings.mqtt2.pass,value.c_str(),value.length());
           return true;
         }
         break;
       case mqtt_port:
         if(value != "" && has_only_digits(value)){
-          settings.mqtt.port = (uint16_t)stoLong(value);
+          settings.mqtt2.port = (uint16_t)stoLong(value);
           return true;
         }
         break;
@@ -146,7 +153,7 @@ bool settings_set_param(String param, String value){
         if(value != "" && has_only_digits(value)){
           long active_ = stoLong(value);
           if(active_ == 0 || active_ == 1){
-            settings.mqtt.active = (bool)active_;
+            settings.mqtt2.active = (bool)active_;
             return true;
           }
         }
@@ -207,36 +214,44 @@ settingsTopics_ resolveOptionSettings(std::map<long, settingsTopics_> map, Strin
 
 void settings_log(){
 
-  DBGLOG(Info,"wifi.mode: "+String(settings.wifi.mode));
-  DBGLOG(Info,"wifi.ssid: "+String(settings.wifi.ssid));
-  DBGLOG(Info,"wifi.pwd: "+String(settings.wifi.pwd));
+  if(!settings.log.active)
+    return;
 
-  DBGLOG(Info,"modem.apn: "+String(settings.modem.apn));
-  DBGLOG(Info,"modem.user: "+String(settings.modem.user));
-  DBGLOG(Info,"modem.pwd: "+String(settings.modem.pwd));
-  DBGLOG(Info,"modem.band: "+String(settings.modem.band));
-  DBGLOG(Info,"modem.cops: "+String(settings.modem.cops));
+  Serial.println("wifi.mode: "+String(settings.wifi.mode));
+  Serial.println("wifi.ssid: "+String(settings.wifi.ssid));
+  Serial.println("wifi.pwd: "+String(settings.wifi.pwd));
 
-  DBGLOG(Info,"MQTT System Connection");
-  DBGLOG(Info,"mqtt.host: "+String(MQTT_HOST_1));
-  DBGLOG(Info,"mqtt.user: "+String(MQTT_USER_1));
-  DBGLOG(Info,"mqtt.pass: "+String(MQTT_PASSWORD_1));
-  DBGLOG(Info,"mqtt.prefix: "+String(MQTT_PROJECT));
-  DBGLOG(Info,"mqtt.port: "+String(1883));
+#ifdef ENABLE_LTE
+  Serial.println("modem.apn: "+String(settings.modem.apn));
+  Serial.println("modem.user: "+String(settings.modem.user));
+  Serial.println("modem.pwd: "+String(settings.modem.pwd));
+  Serial.println("modem.band: "+String(settings.modem.band));
+  Serial.println("modem.cops: "+String(settings.modem.cops));
+#endif
 
-  DBGLOG(Info,"MQTT Client Connection");
-  DBGLOG(Info,"mqtt.host: "+String(settings.mqtt.host));
-  DBGLOG(Info,"mqtt.user: "+String(settings.mqtt.user));
-  DBGLOG(Info,"mqtt.pass: "+String(settings.mqtt.pass));
-  DBGLOG(Info,"mqtt.prefix: "+String(settings.mqtt.prefix));
-  DBGLOG(Info,"mqtt.port: "+String(settings.mqtt.port));
-  DBGLOG(Info,"mqtt.active: "+String(settings.mqtt.active));
+  Serial.println("MQTT Client1 Connection");
+  Serial.println("mqtt.host: "+String(settings.mqtt.host));
+  Serial.println("mqtt.user: "+String(settings.mqtt.user));
+  Serial.println("mqtt.pass: "+String(settings.mqtt.pass));
+  Serial.println("mqtt.port: "+String(settings.mqtt.port));
+  Serial.println("mqtt.active: "+String(settings.mqtt.active));
 
-  DBGLOG(Info,"log.active: "+String(settings.log.active));
-  DBGLOG(Info,"log.level: "+String(settings.log.level));
+  Serial.println("MQTT Client2 Connection");
+  Serial.println("mqtt.host: "+String(settings.mqtt2.host));
+  Serial.println("mqtt.user: "+String(settings.mqtt2.user));
+  Serial.println("mqtt.pass: "+String(settings.mqtt2.pass));
+  Serial.println("mqtt.port: "+String(settings.mqtt2.port));
+  Serial.println("mqtt.active: "+String(settings.mqtt2.active));
 
-  DBGLOG(Info,"keepalive.active: "+String(settings.keepalive.active));
-  DBGLOG(Info,"keepalive.period: "+String(settings.keepalive.period));
+  Serial.println("log.active: "+String(settings.log.active));
+  Serial.println("log.level: "+String(settings.log.level));
+
+  Serial.println("keepalive.active: "+String(settings.keepalive.active));
+  Serial.println("keepalive.period: "+String(settings.keepalive.period));
+
+  Serial.println("uart2.active: "+String(settings.uart2.active));
+  Serial.println("uart2.baudrate: "+String(settings.uart2.baudrate));
+  Serial.println("uart2.config: "+String(settings.uart2.config));
 }
 
 bool has_only_digits(String value_str){

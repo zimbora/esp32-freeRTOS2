@@ -4,6 +4,7 @@
 #include "Arduino.h"
 #include <map>
 
+#include "../../../package.h"
 #include "sysfile.hpp"
 #include "app_package.h"
 #include "credentials.h"
@@ -17,21 +18,11 @@ struct app_settings {
     char         md5[16];
   }fw;
 
-	struct rs485 { // on settings load
-		bool          active;
-		uint32_t      baudrate;
-		uint32_t       config;
-	} rs485;
-
 };
 
 // user can edit it
 enum appTopics_ {
   settings_reset_set_,
-  settings_rs485_set_,
-  settings_rs485_get_,
-  rs485_read_get_,
-  rs485_write_get_,
   app_not_found
 };
 
@@ -39,10 +30,6 @@ enum appTopics_ {
 // user can edit it
 static const std::map<long, appTopics_> appTopics {
   { (long)std::hash<std::string>{}("/app/settings/reset/set"),                  settings_reset_set_ },
-  { (long)std::hash<std::string>{}("/app/settings/rs485/set"),                  settings_rs485_set_ },
-  { (long)std::hash<std::string>{}("/app/settings/rs485/get"),                  settings_rs485_get_ },
-  { (long)std::hash<std::string>{}("/app/rs485/read/get"),                      rs485_read_get_ },
-  { (long)std::hash<std::string>{}("/app/rs485/write/get"),                     rs485_write_get_ },
 };
 
 class APP{
@@ -63,6 +50,8 @@ class APP{
     bool store_settings();
     bool reset_settings();
     void log_settings();
+
+    uint32_t timeoutInfo;
 };
 
 #endif

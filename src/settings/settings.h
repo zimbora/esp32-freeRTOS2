@@ -9,7 +9,6 @@
 #include <map>
 
 //#include "package.h"
-#include <ESP32Logger.h>
 
 enum settingsTopics_ {
   setting_not_found,
@@ -47,7 +46,6 @@ static const std::map<long, settingsTopics_> settingsTopics {
   { (long)std::hash<std::string>{}("mqtt_host"),                      mqtt_host },
   { (long)std::hash<std::string>{}("mqtt_user"),                      mqtt_user },
   { (long)std::hash<std::string>{}("mqtt_pass"),                      mqtt_pass },
-  { (long)std::hash<std::string>{}("mqtt_prefix"),                    mqtt_prefix },
   { (long)std::hash<std::string>{}("mqtt_port"),                      mqtt_port },
   { (long)std::hash<std::string>{}("mqtt_active"),                    mqtt_active },
   { (long)std::hash<std::string>{}("log_active"),                     log_active },
@@ -83,10 +81,17 @@ struct user_settings {
     char        host[64];
     char        user[32];
     char        pass[32];
-    char        prefix[32];
     uint16_t    port; //1883
     bool        active; //false
   } mqtt;
+
+  struct mqtt2 { // on settings load
+    char        host[64];
+    char        user[32];
+    char        pass[32];
+    uint16_t    port; //1883
+    bool        active; //false
+  } mqtt2;
 
 	struct log { // on settings load
 		bool         active;
@@ -98,6 +103,11 @@ struct user_settings {
 		uint32_t     period;
 	} keepalive;
 
+  struct uart2 { // on settings load
+    bool         active;
+    uint32_t     baudrate;
+    uint32_t     config;
+  } uart2;
 };
 
 extern user_settings settings;

@@ -1,0 +1,4 @@
+bin/*
+build/*
+images/*
+compile_logs.txt
