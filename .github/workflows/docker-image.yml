@@ -32,7 +32,7 @@ jobs:
         TAG=${{ steps.release.outputs.tag }}
         if [[ $TAG =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
           echo "The release tag is in the format *.*.*: $TAG"
-          $VERSION = $TAG
+          VERSION = $TAG
         else
           echo "The release tag is not in the expected format: $TAG"
           exit 1
