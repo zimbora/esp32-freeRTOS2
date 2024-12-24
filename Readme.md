@@ -5,18 +5,34 @@
 
 ## How to use source code
   - Fork the repository
-  - Update your esp32 board manager version
-  - Install dependent libraries from your Arduino libraries manager  
-  - Compile code. Check for correct output
   - Edit FW_MODEL in src/app/user/app_package.h file
   - Edit credentials.h file according to your needs
   - Use app.cpp and app.h to write your own code
   - If new changes are available sync it with main repo
 Note: all changes are made outside src/app folder
 
+## Build
+  
+### Linux and MacOs
+  >> ./deploy.sh
+
+### Using docker
+  >> ./docker.sh
+
+### Arduino
+  - Update your esp32 board manager version
+  - Install dependent libraries from your Arduino libraries manager  
+  - Compile code. Check for correct output
+
+### Github Actions
+  - Change .github/workflows/docker-image.yml
+  - Add your GITHUB_TOKEN to secrets
+  - Push commit to a new branch or create a new Tag
+  - Check generated files on Actions/Artifacts or release
+
 ## package.h
 
-## Connection
+### Connection
   - ENABLE_LTE - Uses BG95 modem
   - ENABLE_BLE - Uses BLE to set wifi credentials
   - ENABLE_AP - Launches Access Point and http server on IP 192.168.4.1 to set wifi credentials otherwise try to connect to default wifi credentials and credentials stored on sysfile at each 30s. 
@@ -310,12 +326,12 @@ sends the following topics with keepalive period:
 - Board esp32 by Espressif Systems 3.0.7
 - WiFi.h v1.2.7
 - HTTPClient v2.2.0
-- EspMQTTClient.h v1.13.3
 - TimeLib v1.6.1
 - ESP32httpUpdate v2.1.145
 - ArduinoJson.h v6.19.4 - deprecated
 
 ### Own Libraries:
+- EspMQTTClientFork v1.13.3 [EspMQTTClientFork](https://github.com/zimbora/EspMQTTClient)
 - autorequest v1.0.1 [autorequest](https://github.com/zimbora/esp32-autorequest)
 - alarm v1.0.1[alarm](https://github.com/zimbora/esp32-alarm)
 - modbus-rtu v1.0.1 [modbus-rtu](https://github.com/zimbora/esp32-ModbusRTU)

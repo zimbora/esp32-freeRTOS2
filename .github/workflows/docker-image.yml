@@ -1,65 +1,77 @@
 name: freeRTOS Build
 
 on:
+  branch:
+    types: [*]
   release:
     types: [created]
 
 jobs:
   docker:
     runs-on: ubuntu-latest
+    env:
+      BASE_DIR: /root
+      PROJECT: esp32-freeRTOS2
+      APP: user
+      VERSION: 0.0.0
+      CONTAINER: deploy-freertos
+      CONTAINER-TAG: freertos
 
     steps:
+    - name: Set Project
+      run: echo "Using project $PROJECT"
 
     - name: Get the version
       id: release
       run: echo "::set-output name=tag::${GITHUB_REF#refs/tags/}"
+      if: github.event_name == 'release'  # Run only on release events
 
     - name: Check release tag format
       run: |
         TAG=${{ steps.release.outputs.tag }}
         if [[ $TAG =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
           echo "The release tag is in the format *.*.*: $TAG"
+          $VERSION = $TAG
         else
           echo "The release tag is not in the expected format: $TAG"
           exit 1
         fi
-          
+      if: github.event_name == 'release'  # Run only on release events
+
     - name: Checkout repository
       uses: actions/checkout@v3
       with:
-        path: ./esp32-freeRTOS2
+        path: ./${PROJECT}
         
     - name: Build Docker image
       run: |
-        cd esp32-freeRTOS2
+        cd ${PROJECT}
         docker build \
-        --build-arg PROJECT=esp32-freeRTOS2 \
-        --build-arg APP=DEMO \
-        --build-arg APP_VERSION=${{ steps.release.outputs.tag }} \
+        -f Dockerfile \
+        --build-arg BASE_DIR=${BASE_DIR} \
+        --build-arg PROJECT=${PROJECT} \
+        --build-arg APP=${APP} \
+        --build-arg APP_VERSION=${VERSION} \
         -t freertos .
 
     - name: Run script inside Docker container
       run: |
-        docker run --name deploy_freertos freertos
-        docker cp deploy_freertos:esp32-freeRTOS2/images/DEMO ./esp32-freeRTOS2/images/
-        
-    - name: Commit and push if changed
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        if [[ $GITHUB_REF == refs/heads/main ]]; then
-          git add -A images/
-          git diff-index --quiet HEAD || git commit -m "new release" && git push
-        fi
+        docker run --name $CONTAINER $CONTAINER-TAG
+        docker cp ${CONTAINER}:${PROJECT}/images/ ./${PROJECT}/images/
 
     - uses: actions/upload-artifact@v3
       with:
         name: upload images
-        path: ./esp32-freeRTOS2/images
+        path: ./${PROJECT}/images
         
     - name: Update Release
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          esp32-freeRTOS2/images/*/*
+          ${PROJECT}/images/*
         token: ${{ secrets.GITHUB_TOKEN }}
+      if: github.event_name == 'release'  # Run only on release events
+
+    - name: Clean up
+      run: |
+        docker rm $CONTAINER

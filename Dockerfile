@@ -1,17 +1,18 @@
-FROM zimbora/arduino-deploy:latest
+FROM zimbora/arduino-deploy-amd:latest
 
 # Set a default value (optional)
 ENV BASE_DIR=/root
 ARG PROJECT="esp32-freeRTOS2"
-ARG APP="demo"
-ARG MACRO="APP_DEMO"
-ARG APP_LINK=""
-ARG APP_VERSION
+ARG APP="user"
+ARG APP_VERSION="1.0.0"
 
 # Copy the script into the container
 COPY . /${PROJECT}
 
 # Make the script executable
-RUN chmod +x /${PROJECT}/src/app/{APP}/deploy.sh
+RUN chmod +x /${PROJECT}/deploy.sh
 
-RUN /${PROJECT}/src/app/${APP}/deploy.sh -d $BASE_DIR -p $PROJECT -a $APP -m $MACRO -v $APP_VERSION --docker > build_output.txt 2>&1
+# Set the working directory to your project directory
+WORKDIR /${PROJECT}
+
+RUN ./deploy.sh -d $BASE_DIR -p $PROJECT -a $APP -v $APP_VERSION
