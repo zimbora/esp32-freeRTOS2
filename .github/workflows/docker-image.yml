@@ -57,7 +57,7 @@ jobs:
         docker run --name $CONTAINER $CONTAINERTAG
         docker cp ${CONTAINER}:${PROJECT}/images/ ./images/
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: upload images
         path: ./images
