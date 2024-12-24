@@ -1,4 +1,4 @@
-name: freeRTOS Build
+name: CI/CD Workflow
 
 on:
   push:          # Triggers on push events (to any branch)
@@ -42,11 +42,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
       with:
-        path: ./${PROJECT}
+        path: /${PROJECT}
         
     - name: Build Docker image
       run: |
-        cd ${PROJECT}
+        cd /${PROJECT}
         docker build \
         -f Dockerfile \
         --build-arg BASE_DIR=${BASE_DIR} \
