@@ -16,7 +16,7 @@ jobs:
       APP: user
       VERSION: 0.0.0
       CONTAINER: deploy-freertos
-      CONTAINER-TAG: freertos
+      CONTAINERTAG: freertos
 
     steps:
     - name: Set Project
@@ -54,7 +54,7 @@ jobs:
 
     - name: Run script inside Docker container
       run: |
-        docker run --name $CONTAINER $CONTAINER-TAG
+        docker run --name $CONTAINER $CONTAINERTAG
         docker cp ${CONTAINER}:${PROJECT}/images/ ./images/
 
     - uses: actions/upload-artifact@v3
