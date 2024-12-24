@@ -1,8 +1,9 @@
 name: freeRTOS Build
 
 on:
-  branch:
-    types: [*]
+  push:          # Triggers on push events (to any branch)
+    branches:
+      - '**'     # Matches all branches (you can also use '*' for all branches)
   release:
     types: [created]
 
