@@ -50,7 +50,7 @@ jobs:
         --build-arg PROJECT=${PROJECT} \
         --build-arg APP=${APP} \
         --build-arg APP_VERSION=${VERSION} \
-        -t CONTAINERTAG .
+        -t $CONTAINERTAG .
 
     - name: Run script inside Docker container
       run: |
