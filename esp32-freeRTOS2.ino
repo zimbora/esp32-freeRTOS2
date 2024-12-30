@@ -269,9 +269,9 @@ void setup() {
   xTaskCreatePinnedToCore(
     core_task
     ,  "core_task"   // A name just for humans
-    ,  2048*8  // This stack size can be checked & adjusted by reading the Stack Highwater
+    ,  NETWORK_CORE_TASK_SIZE  // This stack size can be checked & adjusted by reading the Stack Highwater
     ,  NULL
-    ,  3 // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.  !! do not edit priority
+    ,  NETWORK_CORE_TASK_PRIORITY // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.  !! do not edit priority
     ,  NULL
     ,  1);
 
@@ -282,9 +282,9 @@ void setup() {
     xTaskCreatePinnedToCore(
         network_lte_task
         ,  "network_lte_task"   // A name just for humans
-        ,  2048*4  // This stack size can be checked & adjusted by reading the Stack Highwater
+        ,  NETWORK_LTE_TASK_SIZE  // This stack size can be checked & adjusted by reading the Stack Highwater
         ,  NULL
-        ,  2 // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest. !! do not edit priority
+        ,  NETWORK_LTE_TASK_PRIORITY // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest. !! do not edit priority
         ,  NULL
         ,  1);
   #endif
@@ -293,9 +293,9 @@ void setup() {
     xTaskCreatePinnedToCore(
         app_task
         ,  "app_task"   // A name just for humans
-        ,  2048*4  // This stack size can be checked & adjusted by reading the Stack Highwater
+        ,  NETWORK_APP_TASK_SIZE  // This stack size can be checked & adjusted by reading the Stack Highwater
         ,  NULL
-        ,  1 // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest. !! do not edit priority
+        ,  NETWORK_APP_TASK_PRIORITY // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest. !! do not edit priority
         ,  NULL
         ,  1);
   #endif

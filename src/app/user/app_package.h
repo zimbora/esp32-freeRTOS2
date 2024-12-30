@@ -24,6 +24,16 @@
 */
 #define FW_MODEL                  "DEMO"
 
+
+/////////////////////////////////////////////////////////////////////
+//                                                                 //
+// Enabled modules																						 		 //
+//                                                                 //
+/////////////////////////////////////////////////////////////////////
+//#define ENABLE_LTE // Use LTE modem radio
+//#define ENABLE_BLE // BLE for device configuration
+//#define ENABLE_AP // Access Point for wifi configuration
+
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
 //                         APP PROCESS		                       //
@@ -34,6 +44,16 @@
 //#define FAST_APP // App runing on main thread
 //#define THREAD_APP // 1 dedicated thread for app
 #define SYNCHED_APP // App running on core thread
+
+// TASKS CONFIGS
+#define NETWORK_CORE_TASK_SIZE 2048*8
+#define NETWORK_CORE_TASK_PRIORITY 3
+
+#define NETWORK_LTE_TASK_SIZE 2048*4
+#define NETWORK_LTE_TASK_PRIORITY 2
+
+#define NETWORK_APP_TASK_SIZE 2048*4
+#define NETWORK_APP_TASK_PRIORITY 1
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //

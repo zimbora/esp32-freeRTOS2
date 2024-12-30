@@ -13,6 +13,11 @@ After being tested with some devices, version can be changed to stable a version
   - Add uid to the header of fota request
   - Fota md5 is being well calculated but the comparison is not being well done
 
+### 1.1.1 - In dev
+	- Adds Macros for tasks
+	- Moves macros from package.h to app_package.h
+	- Adds var in workflow
+
 ### 1.1.0 - Big refactor - Not fully tested
 	- supports modem-freeRTOS v1.0.4
 	- compiled with 3.0.7 esp32 by Espressif Systems
