@@ -1,8 +1,8 @@
 #ifndef FOTA_H
 #define FOTA_H
 
-#include "Update.h"
 #include "Arduino.h"
+#include "Update.h"
 
 class FOTA {
 public:

@@ -10,6 +10,15 @@
 
 //#include "package.h"
 
+enum Debug_ {
+  LOG_NONE,
+  LOG_ERROR,
+  LOG_WARN,
+  LOG_INFO,
+  LOG_DEBUG,
+  LOG_VERBOSE,
+};
+
 enum settingsTopics_ {
   setting_not_found,
   wifi_mode,

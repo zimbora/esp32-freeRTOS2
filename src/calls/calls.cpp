@@ -15,7 +15,7 @@ HTTP_BODY_MSG* msg_body;
 FOTA fota;
 MD5Builder md5_;
 
-bool CALLS::fw_fota(String url){
+String CALLS::fw_fota(String url){
 
   String protocol = "";
   if(url.startsWith("HTTPS://") || url.startsWith("https://")){
@@ -26,7 +26,7 @@ bool CALLS::fw_fota(String url){
     url = url.substring(7);
   }else{
     Serial.println("Invalid URL");
-    return false;
+    return "Invalid URL";
   }
 
   int16_t index = url.indexOf("/");
@@ -38,7 +38,7 @@ bool CALLS::fw_fota(String url){
   String body = "";
   bool json = false;
 
-  do_fota(protocol,host,path,method,header_key,header_value,body,json);
+  return do_fota(protocol,host,path,method,header_key,header_value,body,json);
 }
 
 /*
@@ -301,14 +301,16 @@ String CALLS::do_request(String protocol, String host, String path, String metho
 
   uint32_t timeout = millis() + 60000; // 30 seconds timeout
   while(timeout > millis()){
+
     msg_header = mRTOS.http_header_getNextMessage(msg_header);
     if(msg_header != NULL){
       Serial.printf("client [%d] %s \n",msg_header->clientID,msg_header->http_response.c_str());
       if(msg_header->http_response.indexOf("200") > 0){
-        //Serial.printf("http body len %d \n",msg_header->body_len);
+        Serial.printf("http body len %d \n",msg_header->body_len);
         uint32_t len = 0;
         char* data = (char*)malloc(msg_header->body_len);
         while(msg_header->body_len != len  && timeout > millis()){
+
           msg_body = mRTOS.http_body_getNextMessage(msg_body);
 
           if(msg_body != NULL){
@@ -323,7 +325,7 @@ String CALLS::do_request(String protocol, String host, String path, String metho
             Serial.printf("http total bytes read of body data: %d \n",len);
 
           }
-          delay(100); // use delay to moderate concurrency access to queues
+          delay(1); // use delay to moderate concurrency access to queues
         }
         Serial.println("http all data was read");
 
@@ -338,51 +340,67 @@ String CALLS::do_request(String protocol, String host, String path, String metho
         return body;
       }
     }
-    delay(100); // use delay to moderate concurrency access to queues
+    delay(1); // use delay to moderate concurrency access to queues
   }
   return "";
 }
 
-bool CALLS::do_fota(String protocol, String host, String path, String method, String header_key, String header_value, String body, bool json){
+String CALLS::do_fota(String protocol, String host, String path, String method, String header_key, String header_value, String body, bool json){
 
+  String error = "timeout";
   if(protocol == "HTTPS")
     mRTOS.https_pushMessage(CONTEXTID,CLIENTID,SSLCLIENTID,host,path,method,header_key,header_value,body,json);
   else if(protocol == "HTTP")
     mRTOS.http_pushMessage(CONTEXTID,CLIENTID,host,path,method);
-  else return "";
+  else return "protocol not known, use http or https";
 
   uint32_t timeout = millis() + 60000; // 30 seconds timeout
+  uint32_t progressTimeout = 0; // 30 seconds timeout
   uint32_t fota_size;
   while(timeout > millis()){
+
     msg_header = mRTOS.http_header_getNextMessage(msg_header);
     if(msg_header != NULL){
       Serial.printf("client [%d] %s \n",msg_header->clientID,msg_header->http_response.c_str());
       if(msg_header->http_response.indexOf("200") >= 0){
         Serial.printf("http body len %lu \n",msg_header->body_len);
-        fota.start(msg_header->body_len);
         fota_size = msg_header->body_len;
+        fota.start(fota_size);
         md5_.begin();
         uint32_t len = 0;
 
         while(fota_size != len && timeout > millis()){
-          msg_body = mRTOS.http_body_getNextMessage(msg_body);
 
+          msg_body = mRTOS.http_body_getNextMessage(msg_body);
           if(msg_body != NULL){
+            //Serial.printf("http data len %lu \n",msg_body->data_len);
             timeout = millis()+10000;
             md5_.add((uint8_t*)msg_body->data,msg_body->data_len);
+            
             int8_t tries = 3;
             while(!fota.write_block((uint8_t*)msg_body->data,msg_body->data_len)){
               delay(300);
               if(tries == 0)
-                return false;
+                return "write flash tries exceed";
               tries--;
             }
+            
             //Serial.println("heap free: " + String(ESP.getFreeHeap() / 1024) + " KiB");
             len += msg_body->data_len;
-            //Serial.printf("http total bytes read of body data: %d \n",len);
+            uint32_t progress = len*100/fota_size;
+            if( progressTimeout < millis()){
+              Serial.printf("Progress: %d% \n",progress);
+              progressTimeout = 2000 + millis();
+            }
           }
-          delay(100); // use delay to moderate concurrency access to queues
+          delay(1); // use delay to moderate concurrency access to queues
         }
+
+        if(timeout < millis())
+          return "transfer timeout";
+        if(fota_size != len)
+          return "fota size failed";
+
         Serial.println("http all data was read");
 
         md5_.calculate();
@@ -391,7 +409,10 @@ bool CALLS::do_fota(String protocol, String host, String path, String method, St
         Serial.println("md5 header: "+msg_header->md5);
         if(msg_header->md5 == md5_calculated){
           Serial.println("md5 checked");
-        }else Serial.println("md5 check has failed");
+        }else{
+          Serial.println("md5 check has failed");
+          return "md5 not matched";
+        } 
 
         if(fota.has_finished()){
           Serial.println("new fw uploaded");
@@ -399,11 +420,15 @@ bool CALLS::do_fota(String protocol, String host, String path, String method, St
           fw_reboot();
         }
 
-        return true;
+        return "fota done"; // unrecheable
 
-      }else Serial.println("fota request has failed");
+      }else{
+        Serial.println("fota request has failed");
+        error = "http error: "+msg_header->http_response;
+        return error;
+      } 
     }
-    delay(100); // use delay to moderate concurrency access to queues
+    delay(1); // use delay to moderate concurrency access to queues
   }
-  return false;
+  return error;
 }

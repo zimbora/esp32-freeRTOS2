@@ -14,6 +14,8 @@ After being tested with some devices, version can be changed to stable a version
   - Fota md5 is being well calculated but the comparison is not being well done
 
 ### 1.1.1 - In dev
+	- Adds enum for logs
+	- Sends reboot cause, rssi and tech
 	- Adds Macros for tasks
 	- Moves macros from package.h to app_package.h
 	- Adds var in workflow

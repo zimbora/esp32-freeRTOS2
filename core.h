@@ -12,6 +12,8 @@
 #include "esp_task_wdt.h"
 #include <map>
 #include <TimeLib.h>
+#include <HTTPClient.h>
+#include <HTTPUpdate.h>
 
 #include "./src/calls/calls.h"
 #include "./src/sensors/sensors.h"
@@ -173,6 +175,8 @@ void      core_check_records();
 bool      core_send_record(String filename);
 bool      core_store_record(String filename, const char* data, uint16_t len);
 
+String    core_fota(String url);
+
 uint8_t   parse_float_array(float* arr, uint8_t len, String payload);
 fwTopics_ resolveOption(std::map<long, fwTopics_> map, String topic);
 #ifdef ENABLE_BLE
@@ -190,5 +194,7 @@ void      t1Callback();
 #ifdef ENABLE_BLE
 void       bleCallback(String param, String value);
 #endif
+
+
 
 #endif

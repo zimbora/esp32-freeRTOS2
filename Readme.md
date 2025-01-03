@@ -221,14 +221,17 @@ sends the following topics with keepalive period:
 - [/fw/info/get] (#fw_info_)
 - [/fw/clean/records/set] (#fw_info_)
 - [/fw/fota/update/set] (#fw_fota_update_)
-- [/fw/js/code/set] (#fw_js_code_)
-- [/fw/wifi/set] (#fw_wifi_)
-- [/fw/modem/set] (#fw_modem_)
-- [/fw/mqtt/set] (#fw_mqtt_)
-- [/fw/log/set] (#fw_log_)
-- [/fw/keepalive/set] (#fw_keepalive_)
+- [/fw/js_program/set] (#fw_js_code_)
+- [/fw/settings/wifi/set] (#fw_wifi_)
+- [/fw/settings/modem/set] (#fw_modem_)
+- [/fw/settings/mqtt/set] (#fw_mqtt_)
+- [/fw/settings/log/set] (#fw_log_)
+- [/fw/settings/keepalive/set] (#fw_keepalive_)
+- [/fw/settings/serial/set] (#fw_serial_)
 - [/fw/ar/set] (#fw_ar_)
 - [/fw/alarm/set] (#fw_alarm_)
+- [/fw/serial/read/get] (#fw_serial_read_)
+- [/fw/serial/write/get] (#fw_serial_write_)
 
 ## Autorequests
   Use mqtt topic "#/fw/ar/set" to configure autorequests

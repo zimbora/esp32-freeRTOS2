@@ -46,8 +46,11 @@
 #define SYNCHED_APP // App running on core thread
 
 // TASKS CONFIGS
-#define NETWORK_CORE_TASK_SIZE 2048*8
+#define NETWORK_CORE_TASK_SIZE 2048*4
 #define NETWORK_CORE_TASK_PRIORITY 3
+
+#define MRTOS_TASK_SIZE 2048*4
+#define MRTOS_TASK_PRIORITY 2
 
 #define NETWORK_LTE_TASK_SIZE 2048*4
 #define NETWORK_LTE_TASK_PRIORITY 2
@@ -76,5 +79,20 @@
 #define SERIAL1_GPIO_TX 14
 #define SERIAL1_GPIO_RTS 13
 
+/////////////////////////////////////////////////////////////////////
+//                                                                 //
+//                         DEBUG                             	   //
+//                                                                 //
+/////////////////////////////////////////////////////////////////////
+#define DEBUG_SNIFFER
+
+/////////////////////////////////////////////////////////////////////
+//                                                                 //
+//                   Libraries macros                              //
+//                                                                 //
+/////////////////////////////////////////////////////////////////////
+#define MQTT_TX_QUEUE_SIZE 10
+//#define DEBUG_HTTP
+//#DEBUG_MQTT_PAYLOAD
 
 #endif

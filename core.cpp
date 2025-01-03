@@ -195,9 +195,12 @@ void core_load_settings(){
     if( ((version.startsWith("0.") || version.startsWith("1.") || version.startsWith("2."))) )
       memcpy(settings.fw.version,data,sizeof(settings));
     else{
+      Serial.println("resetting settings..");
       call.fw_reset();
       call.init_filesystem(directory,NUMITEMS(directory));
 
+      memset(settings.fw.version,0,sizeof(settings.fw.version));
+      memcpy(settings.fw.version,FW_VERSION,sizeof(FW_VERSION));
       // modem
   #ifdef ENABLE_LTE
       memcpy(settings.modem.apn,SETTINGS_MODEM_APN,sizeof(settings.modem.apn));
@@ -268,10 +271,11 @@ void core_init(){
   #endif
 }
 
-uint32_t timeout = 0;
+uint32_t keepaliveTimeout = 0;
+uint32_t logTimeout = 0;
 void core_loop(){
 
-  if(timeout < millis()){
+  if(settings.keepalive.active && keepaliveTimeout < millis()){
     Serial.println("send info");
 
     String heapFree = String(ESP.getFreeHeap() / 1024);
@@ -282,18 +286,28 @@ void core_loop(){
     String payload = String(millis()/1000);
     mRTOS.mqtt_pushMessage(CLIENTID,topic,payload,0,false);
 
-    Serial.println("\n\n----- Info -----\n");
-    Serial.println("heap free: " + heapFree + " KiB");
-    Serial.println(date());
-    mRTOS.log_modem_status();
-    Serial.println("--- ----- --- \n\n");
+    topic = "/rssi";
+    payload = String(mRTOS.get_rssi());
+    mRTOS.mqtt_pushMessage(CLIENTID,topic,payload,0,false);
 
-    timeout = millis()+5000;
+    keepaliveTimeout = millis()+(settings.keepalive.period*1000);
 
     sensors.loop();
     core_check_records();
     String directory = APP_PATH_RECORDS;
     call.clean_dir(directory);
+  }
+
+  if(settings.log.active && logTimeout < millis()){
+    if(settings.log.level >= LOG_INFO){
+      String heapFree = String(ESP.getFreeHeap() / 1024);
+      Serial.println("\n\n----- Info -----\n");
+      Serial.println("heap free: " + heapFree + " KiB");
+      Serial.println(date());
+      mRTOS.log_modem_status();
+      Serial.println("--- ----- --- \n\n");
+    }
+    logTimeout = millis()+5000;
   }
 
   core_parse_mqtt_messages();
@@ -328,6 +342,7 @@ void core_parse_mqtt_messages(){
   uint8_t clientID = msg->clientID;
   String topic = String(msg->topic);
   String topic_get = "";
+  String topic_set = "";
   topic.replace("\"","");
   String payload = String(msg->data);
 
@@ -343,6 +358,8 @@ void core_parse_mqtt_messages(){
 
     if(topic.endsWith("/set")){
       set = true;
+      index = topic.lastIndexOf("/");
+      topic_set = topic.substring(0,index); // set filtered
       if(payload == "")
         return;
     }
@@ -404,7 +421,15 @@ void core_parse_mqtt_messages(){
               String token = doc["token"];
             }else{
               Serial.println("fota from "+url);
-              call.fw_fota(url);
+              String error = "";
+              #ifndef ENABLE_LTE
+                error = core_fota(url);
+              #else
+                error = call.fw_fota(url);
+              #endif
+              if(error != ""){
+                core_send_mqtt_message(clientID,topic_set+"/status",error,2,false);
+              }
             }
           }
 
@@ -935,6 +960,9 @@ void core_parse_mqtt_messages(){
 bool core_send_mqtt_message(uint8_t clientID, String topic, String data, uint8_t qos, bool retain){
 
   Serial.println(">> ["+String(clientID)+"] "+topic);
+  #ifdef DEBUG_MQTT_PAYLOAD
+    Serial.println("[data]: "+data);
+  #endif
   return call.mqtt_send(clientID,topic,data,qos,retain);
 }
 
@@ -1069,4 +1097,59 @@ String date() {
 
 String pad2(int value) {
 	return String(value < 10 ? "0" : "") + String(value);
+}
+
+
+void update_started() {
+  Serial.println("CALLBACK:  HTTP update process started");
+}
+
+void update_finished() {
+  Serial.println("CALLBACK:  HTTP update process finished");
+}
+
+void update_progress(int cur, int total) {
+  Serial.printf("CALLBACK:  HTTP update process at %d of %d bytes...\n", cur, total);
+}
+
+void update_error(int err) {
+  Serial.printf("CALLBACK:  HTTP update fatal error code %d\n", err);
+}
+
+String core_fota(String url){
+  NetworkClient client;
+
+  // The line below is optional. It can be used to blink the LED on the board during flashing
+  // The LED will be on during download of one buffer of data from the network. The LED will
+  // be off during writing that buffer to flash
+  // On a good connection the LED should flash regularly. On a bad connection the LED will be
+  // on much longer than it will be off. Other pins than LED_BUILTIN may be used. The second
+  // value is used to put the LED on. If the LED is on with HIGH, that value should be passed
+  // httpUpdate.setLedPin(LED_BUILTIN, LOW);
+
+  // Add x-MD5 to header 
+  httpUpdate.onStart(update_started);
+  httpUpdate.onEnd(update_finished);
+  httpUpdate.onProgress(update_progress);
+  httpUpdate.onError(update_error);
+
+  t_httpUpdate_return ret = httpUpdate.update(client, url);
+
+  String error = "";
+  switch (ret) {
+    case HTTP_UPDATE_FAILED: 
+      error = "HTTP_UPDATE_FAILED Error: "+ httpUpdate.getLastErrorString();
+      Serial.println(error); 
+      break;
+
+    case HTTP_UPDATE_NO_UPDATES: 
+      error = "HTTP_UPDATE_NO_UPDATES";
+      Serial.println(error); 
+      break;
+
+    case HTTP_UPDATE_OK: 
+      Serial.println("HTTP_UPDATE_OK"); 
+      break;
+  }
+  return error;
 }

@@ -23,7 +23,7 @@ class CALLS{
 public:
   CALLS(){};
 
-  bool fw_fota(String url);
+  String fw_fota(String url);
   bool fw_settings_update(String url, String filename);
   bool fw_reboot();
   bool fw_reset();
@@ -49,7 +49,7 @@ public:
 private:
 
   String do_request(String protocol, String host, String path, String method, String header_key, String header_value, String body, bool json);
-  bool do_fota(String protocol, String host, String path, String method, String header_key, String header_value, String body, bool json);
+  String do_fota(String protocol, String host, String path, String method, String header_key, String header_value, String body, bool json);
 
 };
 

@@ -12,8 +12,10 @@
 #define APP_ACCUM_FILENAME "/home/app/accum.txt"
 #define APP_ACCUM_TP_FILENAME "/home/app/accumtp.txt"
 
-#define WIFI_SSID "inlocAP"
-#define WIFI_PASSWORD "inlocAPpwd"
+//#define WIFI_SSID "inlocAP"
+#define WIFI_SSID "Vodafone-rocks"
+//#define WIFI_PASSWORD "inlocAPpwd"
+#define WIFI_PASSWORD "famelgasilva"
 
 #define MQTT_HOST_1 "devices.dev.inloc.cloud" // mac OS broker
 #define MQTT_PORT_1 1883

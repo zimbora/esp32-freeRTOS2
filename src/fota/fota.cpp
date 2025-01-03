@@ -11,15 +11,21 @@ void FOTA::in_progress(bool state){
 }
 
 bool FOTA::start(uint32_t size){
-  if (!Update.begin(size))
+  if (!Update.begin(size)){
     Serial.print("fota: cannot begin, not enough space");
-  else
+    Update.printError(Serial);
+    return false;
+  }
+  else{
     in_progress(true);
+    return true;
+  }
 }
 
 bool FOTA::write_block(uint8_t* frame, uint16_t length){
   if (Update.write(frame, length) != length) {
     Serial.println("fota: write has failed");
+    Update.printError(Serial);
     return false;
   }
   return true;
@@ -27,6 +33,7 @@ bool FOTA::write_block(uint8_t* frame, uint16_t length){
 
 bool FOTA::has_finished(){
 
+  
   if (!Update.end(true)) {
   	Serial.print("fota: cannot end");
   	Update.printError(Serial);
