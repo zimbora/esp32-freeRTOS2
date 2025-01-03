@@ -13,12 +13,28 @@ After being tested with some devices, version can be changed to stable a version
   - Add uid to the header of fota request
   - Fota md5 is being well calculated but the comparison is not being well done
 
-### 1.1.1 - In dev
-	- Adds enum for logs
+### 1.1.2 - In dev
+
+### 1.1.1
+	Creates:
+	- Doc folder
+	Moves: 
+	- macros from package.h to app_package.h
+	Fixes:
+	- write settings fw version
+	- WIFI fota
+	- fota mqtt msg
+	Adds:
+	- DEBUG_MQTT_PAYLOAD
+	- delay to tasks
+	- mRTOS task for wifi devices
+	- var in workflow
+	- Macros for tasks
+	- enum for logs
+	MQTT:
 	- Sends reboot cause, rssi and tech
-	- Adds Macros for tasks
-	- Moves macros from package.h to app_package.h
-	- Adds var in workflow
+	Uses:
+	- modem-freeRTOSv1.0.5 version on build
 
 ### 1.1.0 - Big refactor - Not fully tested
 	- supports modem-freeRTOS v1.0.4
