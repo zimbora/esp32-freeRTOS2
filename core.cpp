@@ -191,9 +191,14 @@ void core_load_settings(){
     call.read_file(FW_SETTINGS_FILENAME,data,&len);
     memcpy(settings.fw.version,data,sizeof(settings.fw.version));
     String version = String(settings.fw.version);
-    Serial.println("fw version: "+version);
-    if( ((version.startsWith("0.") || version.startsWith("1.") || version.startsWith("2."))) )
+    Serial.println("current fw version: "+String(FW_VERSION));
+    Serial.println("previous fw version: "+version);
+    if( ((version.startsWith("0.") || version.startsWith("1.") || version.startsWith("2."))) ){
       memcpy(settings.fw.version,data,sizeof(settings));
+      memset(settings.fw.version,0,sizeof(settings.fw.version));
+      memcpy(settings.fw.version,FW_VERSION,sizeof(FW_VERSION));
+      call.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings));
+    }
     else{
       Serial.println("resetting settings..");
       call.fw_reset();

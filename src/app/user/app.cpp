@@ -94,15 +94,20 @@ bool APP::load_settings(){
   char data[1000];
   call.read_file(APP_SETTINGS_FILENAME,data,&len);
   memcpy(app_s.fw.version,data,sizeof(app_s.fw.version));
-  String version = String(app_s.fw.version);
-  Serial.println("fw version: "+version);
-  if(version.startsWith("0.") || version.startsWith("1.") || version.startsWith("2."))
+  String oldVersion = String(app_s.fw.version);
+  String currentVersion = String(APP_VERSION);
+  Serial.println("prev app.version: "+oldVersion);
+  Serial.println("current app.version: "+currentVersion);
+  if(currentVersion.startsWith("0.") || currentVersion.startsWith("1.") || currentVersion.startsWith("2.")){
     memcpy(app_s.fw.version,data,sizeof(app_s));
-  else{
-    String version = APP_VERSION;
-    memcpy(app_s.fw.version,version.c_str(),version.length());
-    store_settings();
+    memset(app_s.fw.version,0,sizeof(app_s.fw.version));
+    memcpy(app_s.fw.version,currentVersion.c_str(),currentVersion.length());
+  }else{
+    Serial.println("resetting app settings..");
+    memset(app_s.fw.version,0,sizeof(app_s.fw.version));
+    memcpy(app_s.fw.version,currentVersion.c_str(),currentVersion.length());
   }
+  store_settings();
   return true;
 }
 
@@ -125,7 +130,6 @@ bool APP::reset_settings(){
 
 void APP::log_settings(){
 
-  Serial.println("fw.version: "+String(app_s.fw.version));
-  Serial.println("fw.md5: "+String(app_s.fw.md5));
+  Serial.println("app.md5: "+String(app_s.fw.md5));
 
 }
