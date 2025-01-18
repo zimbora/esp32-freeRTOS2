@@ -49,7 +49,7 @@ jobs:
         --build-arg BASE_DIR=${BASE_DIR} \
         --build-arg PROJECT=${PROJECT} \
         --build-arg APP=${APP} \
-        --build-arg APP_VERSION=${VERSION} \
+        //--build-arg APP_VERSION=${VERSION} \
         -t $CONTAINERTAG .
 
     - name: Run script inside Docker container

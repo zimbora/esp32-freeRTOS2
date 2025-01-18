@@ -14,6 +14,9 @@ After being tested with some devices, version can be changed to stable a version
   - Fota md5 is being well calculated but the comparison is not being well done
 
 ### 1.1.2 - In dev
+	- changes on build. Adds fw and app version to binary file. Gets fw version from package.h file
+	- adds retain to upime, rssi and heapFree
+	- Uses sysfile v1.0.3 
 
 ### 1.1.1
 	Creates:

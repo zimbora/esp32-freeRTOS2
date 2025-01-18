@@ -23,7 +23,6 @@ docker build --no-cache \
 docker run --name $container ${tag}:latest
 #debug
 #docker run -it --name $container ${tag}:latest
-#docker create --name ${container} ${tag}
 
 docker cp ${container}:${project}/images/ ./images/
 docker stop $container

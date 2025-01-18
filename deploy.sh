@@ -3,13 +3,21 @@
 home_dir="~"
 project="esp32-freeRTOS2"
 app="user"
+fw_version="1.0.0"
 app_version="1.0.0"
+
+# Set the path to your header file
+FILE="package.h"
+
+# Use grep to find the line, then sed to extract the version number
+fw_version=$(grep "#define FW_VERSION" "$FILE" | sed -E 's/#define FW_VERSION\s+"([^"]+)"/\1/')
+echo "fw version: $fw_version"
 
 docker=false
 libs="ESP32httpUpdate@2.1.145 ArduinoJson@6.19.4 
       ESP32Logger2@1.0.3 EspMQTTClientFork@1.13.4
 			Time@1.6.1 esp32-BG95@1.0.6 modem-freeRTOS@1.0.5
-			sysfile@1.0.2 autorequest@1.0.1 alarm@1.0.1 modbusrtu@1.0.1
+			sysfile@1.0.3 autorequest@1.0.1 alarm@1.0.1 modbusrtu@1.0.1
 			"
 
 if [ -f /.dockerenv ]; then
@@ -53,7 +61,12 @@ while [ "$#" -gt 0 ]; do
       echo "App set: $app"
       shift 2
       ;;
-    -v|--app_version)
+    -v|--fw_version)
+      fw_version="$2"
+      echo "fw version set: $fw_version"
+      shift 2
+      ;;
+    -va|--app_version)
       app_version="$2"
       echo "app version set: $app_version"
       shift 2
@@ -135,10 +148,15 @@ arduino-cli compile -b esp32:esp32:esp32 \
 --build-property upload.maximum_size=1966080  \
 --build-path ./build/${app} . 2>&1 | tee compile_logs.txt
 
-if [ ! -d "images/${app}" ]; then
-  mkdir -p "images/${app}"
+if [ ! -d "images" ]; then
+  rm -r "images"
 fi
+
+mkdir -p "images"
 
 filenames=$( find build/${app}/${project}* )
 cp ${filenames} images/
 cp build/${app}/build.options.json images/
+cp build/${app}/build.options.json images/
+
+mv images/${project}.ino.bin images/${project}-${fw_version}-${app_version}.ino.bin

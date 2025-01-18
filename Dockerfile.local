@@ -18,4 +18,4 @@ RUN chmod +x /${PROJECT}/deploy.sh
 # Set the working directory to your project directory
 WORKDIR /${PROJECT}
 
-RUN ./deploy.sh -d $BASE_DIR -p $PROJECT -a $APP -v $APP_VERSION
+RUN ./deploy.sh -d $BASE_DIR -p $PROJECT -a $APP -va $APP_VERSION

@@ -285,15 +285,15 @@ void core_loop(){
 
     String heapFree = String(ESP.getFreeHeap() / 1024);
     String topic = "/heapFree";
-    mRTOS.mqtt_pushMessage(CLIENTID,topic,heapFree,0,0);
+    mRTOS.mqtt_pushMessage(CLIENTID,topic,heapFree,0,true);
 
     topic = "/uptime";
     String payload = String(millis()/1000);
-    mRTOS.mqtt_pushMessage(CLIENTID,topic,payload,0,false);
+    mRTOS.mqtt_pushMessage(CLIENTID,topic,payload,0,true);
 
     topic = "/rssi";
     payload = String(mRTOS.get_rssi());
-    mRTOS.mqtt_pushMessage(CLIENTID,topic,payload,0,false);
+    mRTOS.mqtt_pushMessage(CLIENTID,topic,payload,0,true);
 
     keepaliveTimeout = millis()+(settings.keepalive.period*1000);
 

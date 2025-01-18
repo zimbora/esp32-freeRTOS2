@@ -33,7 +33,7 @@ user_settings settings = {
     /* active */      true
   },
 
-    .mqtt2 = {
+  .mqtt2 = {
     /* host */        MQTT_HOST_2,
     /* user */        MQTT_USER_2,
     /* pass */        MQTT_PASSWORD_2,
