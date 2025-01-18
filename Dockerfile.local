@@ -4,7 +4,7 @@ FROM zimbora/arduino-deploy-amd:latest
 # Set a default value (optional)
 ENV BASE_DIR=/root
 ARG PROJECT="esp32-freeRTOS2"
-ARG APP="user"
+ARG APP="demo"
 ARG APP_VERSION="1.0.0"
 
 RUN echo "APP:${APP}"

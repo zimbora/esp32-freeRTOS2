@@ -2,7 +2,7 @@
 
 home_dir="~"
 project="esp32-freeRTOS2"
-app="user"
+app="demo"
 fw_version="1.0.0"
 app_version="1.0.0"
 
@@ -159,4 +159,4 @@ cp ${filenames} images/
 cp build/${app}/build.options.json images/
 cp build/${app}/build.options.json images/
 
-mv images/${project}.ino.bin images/${project}-${fw_version}-${app_version}.ino.bin
+mv images/${project}.ino.bin images/${project}-${fw_version}-{app}-${app_version}.ino.bin

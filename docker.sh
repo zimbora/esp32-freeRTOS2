@@ -7,7 +7,7 @@ tag="freertos"
 # Project name
 project="esp32-freeRTOS2"
 # dir name
-app="user"
+app="demo"
 # App version
 app_version="1.0.0"
 
