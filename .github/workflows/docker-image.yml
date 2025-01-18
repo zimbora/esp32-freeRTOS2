@@ -13,7 +13,7 @@ jobs:
     env:
       BASE_DIR: /root
       PROJECT: esp32-freeRTOS2
-      APP: user
+      APP: demo
       VERSION: 0.0.0
       CONTAINER: deploy-freertos
       CONTAINERTAG: freertos
