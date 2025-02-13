@@ -2,3 +2,4 @@ bin/*
 build/*
 images/*
 compile_logs.txt
+esp32-freeRTOS2.ino.merged.bin

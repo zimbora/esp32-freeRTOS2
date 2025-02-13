@@ -148,7 +148,7 @@ arduino-cli compile -b esp32:esp32:esp32 \
 --build-property upload.maximum_size=1966080  \
 --build-path ./build/${app} . 2>&1 | tee compile_logs.txt
 
-if [ ! -d "images" ]; then
+if [ -d "images" ]; then
   rm -r "images"
 fi
 
@@ -157,6 +157,3 @@ mkdir -p "images"
 filenames=$( find build/${app}/${project}* )
 cp ${filenames} images/
 cp build/${app}/build.options.json images/
-cp build/${app}/build.options.json images/
-
-mv images/${project}.ino.bin images/${project}-${fw_version}-${app}-${app_version}.ino.bin
