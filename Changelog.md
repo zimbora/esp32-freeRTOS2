@@ -13,7 +13,14 @@ After being tested with some devices, version can be changed to stable a version
   - Add uid to the header of fota request
   - Fota md5 is being well calculated but the comparison is not being well done
 
-### 1.1.2 - In dev
+### 1.1.3
+	- Changes Docker build
+	- Adds script to flash esp32
+	- Fixes images folder creation
+	- Changes modem-freeRTOS lib to v1.0.6. 
+	- Removes wifi credentials
+
+### 1.1.2
 	- changes on build. Adds fw and app version to binary file. Gets fw version from package.h file
 	- adds retain to upime, rssi and heapFree
 	- Uses sysfile v1.0.3 
