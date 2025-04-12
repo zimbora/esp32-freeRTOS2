@@ -461,7 +461,7 @@ void core_parse_mqtt_messages(){
         #ifdef ENABLE_JS
           String md5 = call.get_file_md5(FW_JS_FILENAME);
           String payload = "{\"md5\":\""+md5+"\"}";
-          core_send_mqtt_message(clientID,topic_get,payload,0,false);
+          core_send_mqtt_message(clientID,topic_get,payload,2,false);
         #endif
         }
         break;
@@ -483,7 +483,7 @@ void core_parse_mqtt_messages(){
         String ssid = String(settings.wifi.ssid);
         String pwd = String(settings.wifi.pwd);
         String payload = "{\"ssid\":\""+ssid+"\",\"pwd\":\""+pwd+"\"}";
-        core_send_mqtt_message(clientID,topic_get,payload,0,false);
+        core_send_mqtt_message(clientID,topic_get,payload,2,false);
       }
       case fw_wifi_:
       {
@@ -537,7 +537,7 @@ void core_parse_mqtt_messages(){
         String tech = String(settings.modem.tech);
 
         String payload = "{\"apn\":\""+apn+"\",\"user\":\""+user+"\",\"pwd\":\""+pwd+"\",\"band\":"+band+",\"cops\":"+cops+",\"tech\":"+tech+"}";
-        core_send_mqtt_message(clientID,topic_get,payload,0,false);
+        core_send_mqtt_message(clientID,topic_get,payload,2,false);
       }
       case fw_modem_:
       {
@@ -617,13 +617,13 @@ void core_parse_mqtt_messages(){
         break;
       case fw_mqtt_get_:
       {
-        String host = String(settings.mqtt.host);
-        String user = String(settings.mqtt.user);
-        String pass = String(settings.mqtt.pass);
-        String port = String(settings.mqtt.port);
-        String active = String(settings.mqtt.active);
+        String host = String(settings.mqtt2.host);
+        String user = String(settings.mqtt2.user);
+        String pass = String(settings.mqtt2.pass);
+        String port = String(settings.mqtt2.port);
+        String active = String(settings.mqtt2.active);
         String payload = "{\"host\":\""+host+"\",\"user\":\""+user+"\",\"pass\":\""+pass+"\",\"port\":"+port+",\"active\":"+active+"}";
-        core_send_mqtt_message(clientID,topic_get,payload,0,false);
+        core_send_mqtt_message(clientID,topic_get,payload,2,false);
       }
       case fw_mqtt_:
       {
@@ -709,7 +709,7 @@ void core_parse_mqtt_messages(){
       {
         String level = String(settings.log.level);
         String payload = "{\"level\":"+level+"}";
-        core_send_mqtt_message(clientID,topic_get,payload,0,false);
+        core_send_mqtt_message(clientID,topic_get,payload,2,false);
         break;
       }
       case fw_log_:
@@ -747,7 +747,7 @@ void core_parse_mqtt_messages(){
         {
           String period = String(settings.keepalive.period);
           String payload = "{\"period\":"+period+"}";
-          core_send_mqtt_message(clientID,topic_get,payload,0,false);
+          core_send_mqtt_message(clientID,topic_get,payload,2,false);
           break;
         }
       case fw_keepalive_:
@@ -788,7 +788,7 @@ void core_parse_mqtt_messages(){
           String config = String(settings.uart2.config);
 
           String payload = "{\"active\":"+active+",\"baudrate\":"+baudrate+",\"config\":"+config+"}";
-          core_send_mqtt_message(clientID,topic_get,payload,0,false);
+          core_send_mqtt_message(clientID,topic_get,payload,2,false);
           break;
         }
       case fw_serial_:
@@ -841,7 +841,7 @@ void core_parse_mqtt_messages(){
         {
         String md5 = call.get_file_md5(FW_AR_FILENAME);
         String payload = "{\"md5\":\""+md5+"\"}";
-        core_send_mqtt_message(clientID,topic_get,payload,0,false);
+        core_send_mqtt_message(clientID,topic_get,payload,2,false);
         }
         break;
       case fw_ar_:
@@ -852,7 +852,7 @@ void core_parse_mqtt_messages(){
         {
         String md5 = call.get_file_md5(FW_ALARM_FILENAME);
         String payload = "{\"md5\":\""+md5+"\"}";
-        core_send_mqtt_message(clientID,topic_get,payload,0,false);
+        core_send_mqtt_message(clientID,topic_get,payload,2,false);
         }
         break;
       case fw_alarm_:
@@ -891,7 +891,7 @@ void core_parse_mqtt_messages(){
 
           free(data);
           // push message
-          core_send_mqtt_message(clientID,topic_get,data_str,0,false);
+          core_send_mqtt_message(clientID,topic_get,data_str,2,false);
 
           free(data);
           //free(arr);
@@ -938,7 +938,7 @@ void core_parse_mqtt_messages(){
           }
 
           // push message
-          core_send_mqtt_message(clientID,topic_get,data_str,0,false);
+          core_send_mqtt_message(clientID,topic_get,data_str,2,false);
         }
         break;
 #endif

@@ -69,7 +69,7 @@ void APP::parse_mqtt_messages(uint8_t clientID, String topic, String payload){
   }
 
   if(set)
-    core_send_mqtt_message(clientID,topic,"",0,true); // unpublish
+    core_send_mqtt_message(clientID,topic,"",2,true); // unpublish
 
 }
 
