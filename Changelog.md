@@ -13,6 +13,14 @@ After being tested with some devices, version can be changed to stable a version
   - Add uid to the header of fota request
   - Fota md5 is being well calculated but the comparison is not being well done
 
+### 1.1.4
+	- MQTT
+	- fixes mqtt 2nd connection
+	- supports modem-freeRTOS v1.0.7
+	- fixes discard qos 2 messages
+	- disables MQTT debug
+	- fixes digit check and conversion - impacts mqtt active and port configuration
+
 ### 1.1.3
 	- Changes Docker build
 	- Adds script to flash esp32

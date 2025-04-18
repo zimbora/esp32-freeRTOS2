@@ -68,15 +68,14 @@ void mqttOnConnect(uint8_t clientID){
 void onConnectionEstablished(){
   DBGLOG(Debug,"mqtt client 1 is connected - sending first message");
 
-  mRTOS.mqtt_pushMessage(0,"/status","online",2,true);
-  mRTOS.mqtt_pushMessage(0,"/model",String(FW_MODEL),2,true);
-  mRTOS.mqtt_pushMessage(0,"/fw_version",String(FW_VERSION),2,true);
-  mRTOS.mqtt_pushMessage(0,"/app_version",String(APP_VERSION),2,true);
-  mRTOS.mqtt_pushMessage(0,"/uptime",String(millis()/1000),2,true);
-  mRTOS.mqtt_pushMessage(0,"/tech",mRTOS.get_technology(),2,true);
-  mRTOS.mqtt_pushMessage(0,"/reboot_cause_cpu0",get_reset_reason(rtc_get_reset_reason(0)),2,true);
-  mRTOS.mqtt_pushMessage(0,"/reboot_cause_cpu1",get_reset_reason(rtc_get_reset_reason(1)),2,true);
-
+  mRTOS.mqtt_pushMessage(CLIENTID,"/status","online",2,true);
+  mRTOS.mqtt_pushMessage(CLIENTID,"/model",String(FW_MODEL),2,true);
+  mRTOS.mqtt_pushMessage(CLIENTID,"/fw_version",String(FW_VERSION),2,true);
+  mRTOS.mqtt_pushMessage(CLIENTID,"/app_version",String(APP_VERSION),2,true);
+  mRTOS.mqtt_pushMessage(CLIENTID,"/uptime",String(millis()/1000),2,true);
+  mRTOS.mqtt_pushMessage(CLIENTID,"/tech",mRTOS.get_technology(),2,true);
+  mRTOS.mqtt_pushMessage(CLIENTID,"/reboot_cause_cpu0",get_reset_reason(rtc_get_reset_reason(0)),2,true);
+  mRTOS.mqtt_pushMessage(CLIENTID,"/reboot_cause_cpu1",get_reset_reason(rtc_get_reset_reason(1)),2,true);
 
   mRTOS.mqtt_subscribeTopics(0);
 }
@@ -84,7 +83,8 @@ void onConnectionEstablished(){
 // This function is called once client 2 is connected (MQTT-WIFI)
 void onConnectionEstablished2(){
   DBGLOG(Debug,"mqtt client 2 is connected - sending first message");
-  mRTOS.mqtt_pushMessage(1,"/status","online",2,true);
+  if(!mRTOS.mqtt_pushMessage(CLIENTIDEXTERNAL,"/status","online",2,true))
+    DBGLOG(Debug,"!! status message not sent for client CLIENTIDEXTERNAL");
 
   mRTOS.mqtt_subscribeTopics(1);
 }
@@ -185,42 +185,36 @@ void mRTOS_task(void *pvParameters){
   String uid = MQTT_UID_PREFIX+mRTOS.macAddress();
 
   String preTopic = String(MQTT_PROJECT);
-  mRTOS.mqtt_configure_connection(0,preTopic.c_str(),uid.c_str(),MQTT_HOST_1,MQTT_PORT_1,MQTT_USER_1,MQTT_PASSWORD_1);
+  
+  mRTOS.mqtt_configure_connection(CLIENTID,preTopic.c_str(),uid.c_str(),MQTT_HOST_1,MQTT_PORT_1,MQTT_USER_1,MQTT_PASSWORD_1);
   mRTOS.mqtt_set_will_topic(CLIENTID,MQTT_WILL_SUBTOPIC,MQTT_WILL_PAYLOAD);
   DBGLOG(Debug,"mqtt client 1 configured");
 
   for(uint8_t i=0;i<NUMITEMS(mqtt_subscribe_topics);i++){
-    mRTOS.mqtt_add_subscribe_topic(0,i,mqtt_subscribe_topics[i]);
+    mRTOS.mqtt_add_subscribe_topic(CLIENTID,i,mqtt_subscribe_topics[i]);
   }
+  
+  mRTOS.mqtt_wifi_setup(CLIENTID,onConnectionEstablished);
 
-  mRTOS.mqtt_wifi_setup(0,onConnectionEstablished);
-
-  /*
   // External cloud
   if(settings.mqtt.active){
-    String host = String(settings.mqtt.host);
-    String user = String(settings.mqtt.user);
-    String pass = String(settings.mqtt.pass);
+    String host = String(settings.mqtt2.host);
+    String user = String(settings.mqtt2.user);
+    String pass = String(settings.mqtt2.pass);
     mRTOS.mqtt_set_will_topic(CLIENTIDEXTERNAL,MQTT_WILL_SUBTOPIC,MQTT_WILL_PAYLOAD);
-    mRTOS.mqtt_configure_connection(1,MQTT_PROJECT,get_uid().c_str(),host.c_str(),settings.mqtt.port,user.c_str(),pass.c_str());
+    mRTOS.mqtt_configure_connection(CLIENTIDEXTERNAL,preTopic.c_str(),uid.c_str(),host.c_str(),settings.mqtt2.port,user.c_str(),pass.c_str());
     DBGLOG(Debug,"mqtt client 2 configured");
     for(uint8_t i=0;i<NUMITEMS(mqtt_subscribe_topics);i++){
-      mRTOS.mqtt_add_subscribe_topic(1,i,mqtt_subscribe_topics[i]);
+      mRTOS.mqtt_add_subscribe_topic(CLIENTIDEXTERNAL,i,mqtt_subscribe_topics[i]);
     }
-    mRTOS.mqtt_wifi_setup(1,onConnectionEstablished2);
+    mRTOS.mqtt_wifi_setup(CLIENTIDEXTERNAL,onConnectionEstablished2);
   }
-  */
-  /*
-  #ifndef ENABLE_LTE
-    Serial.println("wait for wifi connection..");
-    while(!mRTOS.isWifiConnected()) delay(100);
-    Serial.println("wifi is connected");
-  #else
+  
+  #ifdef ENABLE_LTE
     Serial.println("waiting for modem to register on network..");
     while(!mRTOS.isLTERegistered()) delay(100);
     Serial.println("modem is registered");
   #endif
-  */
 
   bool wifiDefault = false;
   uint32_t wifiTimeout = 0;
@@ -228,6 +222,7 @@ void mRTOS_task(void *pvParameters){
     
     mRTOS.loop();
 
+#ifndef ENABLE_LTE
     if(!mRTOS.isWifiConnected() && wifiTimeout < millis()){
       #ifndef ENABLE_AP
         if(wifiDefault){
@@ -255,6 +250,7 @@ void mRTOS_task(void *pvParameters){
       #endif
     }
     delay(1); // !! do not remove - switching between tasks
+#endif
   }
 }
 #endif

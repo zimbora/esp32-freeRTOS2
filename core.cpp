@@ -964,7 +964,9 @@ void core_parse_mqtt_messages(){
 
 bool core_send_mqtt_message(uint8_t clientID, String topic, String data, uint8_t qos, bool retain){
 
+  #ifdef DEBUG_MQTT_TOPIC
   Serial.println(">> ["+String(clientID)+"] "+topic);
+  #endif
   #ifdef DEBUG_MQTT_PAYLOAD
     Serial.println("[data]: "+data);
   #endif
@@ -1097,11 +1099,11 @@ uuidTopics_ resolveOptionUUID(std::map<long, uuidTopics_> map, String param) {
 #endif
 
 String date() {
-	return String(year()) + "-" + pad2(month()) + "-" + pad2(day()) + " " + pad2(hour()) + ":" + pad2(minute()) + ":" + pad2(second());
+  return String(year()) + "-" + pad2(month()) + "-" + pad2(day()) + " " + pad2(hour()) + ":" + pad2(minute()) + ":" + pad2(second());
 }
 
 String pad2(int value) {
-	return String(value < 10 ? "0" : "") + String(value);
+  return String(value < 10 ? "0" : "") + String(value);
 }
 
 

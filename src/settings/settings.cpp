@@ -259,28 +259,26 @@ bool has_only_digits(String value_str){
   #ifndef UNITTEST
   unsigned int stringLength = value_str.length();
 
-  if (stringLength == 0)
+  if (stringLength < 1)
     return false;
 
   for(unsigned int i = 0; i < stringLength; ++i) {
     if (isDigit(value_str.charAt(i)))
       continue;
-
+    Serial.println("is not digit: "+value_str.charAt(i));
     return false;
   }
   #else
     if(value_str.length() == 0)
       return false;
     return (value_str.find_first_not_of( "0123456789" ) == std::string::npos);
-  #endif
-
+  #endif 
+  return true;
 }
 
 long stoLong(String s){
 
   #ifndef UNITTEST
-    if(!has_only_digits(s))
-      return 0;
     return s.toInt();
   #else
     return std::stoi(s);

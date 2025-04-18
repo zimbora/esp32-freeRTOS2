@@ -277,7 +277,7 @@ bool CALLS::mqtt_send(String topic, String data, uint8_t qos, bool retain){
 }
 
 bool CALLS::mqtt_send(uint8_t clientID, String topic, String data, uint8_t qos, bool retain){
-  if(qos =! 2 && !mRTOS.mqtt_isConnected(clientID))
+  if(qos != 2 && !mRTOS.mqtt_isConnected(clientID))
     return false;
   else
     return mRTOS.mqtt_pushMessage(clientID,topic,data,qos,retain);
