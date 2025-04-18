@@ -148,10 +148,11 @@ echo "app: ${app}"
 
 arduino-cli cache clean
 
-arduino-cli compile -b esp32:esp32:esp32 \
+# Compile the project and capture output
+output=$(arduino-cli compile -b esp32:esp32:esp32 \
 --build-property build.partitions=min_spiffs \
---build-property upload.maximum_size=1966080  \
---build-path ./build/${app} . 2>&1 | tee compile_logs.txt
+--build-property upload.maximum_size=1966080 \
+--build-path ./build/${app} . 2>&1)
 
 # Check if the compilation was successful
 if [ $? -eq 0 ]; then
@@ -160,6 +161,10 @@ else
   echo "Error: Compilation failed. Check compile_logs.txt for details."
   exit 1  # Exit with an error status
 fi
+
+# Log output to a file
+echo "$output" | tee compile_logs.txt
+
 
 if [ -d "images" ]; then
   rm -r "images"
