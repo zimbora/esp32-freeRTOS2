@@ -153,10 +153,13 @@ arduino-cli compile -b esp32:esp32:esp32 \
 --build-property upload.maximum_size=1966080  \
 --build-path ./build/${app} . 2>&1 | tee compile_logs.txt
 
-if [ $? -ne 0 ]; then
-      echo "Error: Failed to compile project"
-      exit 1  # Exit with an error status
-  fi
+# Check if the compilation was successful
+if [ $? -eq 0 ]; then
+  echo "Compilation successful!"
+else
+  echo "Error: Compilation failed. Check compile_logs.txt for details."
+  exit 1  # Exit with an error status
+fi
 
 if [ -d "images" ]; then
   rm -r "images"
