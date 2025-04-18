@@ -131,6 +131,11 @@ arduino-cli config dump
 for lib in $libs; do
 	echo $lib
 	arduino-cli lib install $lib
+  # Check if the last command was successful
+  if [ $? -ne 0 ]; then
+      echo "Error: Failed to install $lib"
+      exit 1  # Exit with an error status
+  fi
 done
 
 if [ "$docker" == "true" ]; then
@@ -147,6 +152,11 @@ arduino-cli compile -b esp32:esp32:esp32 \
 --build-property build.partitions=min_spiffs \
 --build-property upload.maximum_size=1966080  \
 --build-path ./build/${app} . 2>&1 | tee compile_logs.txt
+
+if [ $? -ne 0 ]; then
+      echo "Error: Failed to compile project"
+      exit 1  # Exit with an error status
+  fi
 
 if [ -d "images" ]; then
   rm -r "images"
