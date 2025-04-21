@@ -16,7 +16,7 @@ After being tested with some devices, version can be changed to stable a version
 ### 1.1.4
 	- MQTT
 	- fixes mqtt 2nd connection
-	- supports modem-freeRTOS v1.0.7
+	- supports modem-freeRTOS v1.0.8
 	- fixes discard qos 2 messages
 	- disables MQTT debug
 	- fixes digit check and conversion - impacts mqtt active and port configuration

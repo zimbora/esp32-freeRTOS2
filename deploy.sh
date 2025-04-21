@@ -16,7 +16,7 @@ echo "fw version: $fw_version"
 docker=false
 libs="ESP32httpUpdate@2.1.145 ArduinoJson@6.19.4 
       ESP32Logger2@1.0.3 EspMQTTClientFork@1.13.4
-			Time@1.6.1 esp32-BG95@1.0.6 modem-freeRTOS@1.0.7
+			Time@1.6.1 esp32-BG95@1.0.6 modem-freeRTOS@1.0.8
 			sysfile@1.0.3 autorequest@1.0.1 alarm@1.0.1 modbusrtu@1.0.1
 			"
 
@@ -158,13 +158,13 @@ output=$(arduino-cli compile -b esp32:esp32:esp32 \
 if [ $? -eq 0 ]; then
   echo "Compilation successful!"
 else
-  echo "Error: Compilation failed. Check compile_logs.txt for details."
+  # Log output to a file
+  echo "$output"
+  echo "Error: Compilation failed."
   exit 1  # Exit with an error status
 fi
 
-# Log output to a file
 echo "$output" | tee compile_logs.txt
-
 
 if [ -d "images" ]; then
   rm -r "images"
@@ -173,5 +173,6 @@ fi
 mkdir -p "images"
 
 filenames=$( find build/${app}/${project}* )
+cp compiles_logs.txt images/
 cp ${filenames} images/
 cp build/${app}/build.options.json images/
