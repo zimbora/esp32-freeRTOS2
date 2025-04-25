@@ -13,6 +13,10 @@ After being tested with some devices, version can be changed to stable a version
   - Add uid to the header of fota request
   - Fota md5 is being well calculated but the comparison is not being well done
 
+### 1.1.5
+	- Uses insecure connection for wifi fota
+	- Fota tested
+
 ### 1.1.4
 	- MQTT
 	- fixes mqtt 2nd connection
