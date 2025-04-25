@@ -1106,7 +1106,6 @@ String pad2(int value) {
   return String(value < 10 ? "0" : "") + String(value);
 }
 
-
 void update_started() {
   Serial.println("CALLBACK:  HTTP update process started");
 }
@@ -1123,16 +1122,37 @@ void update_error(int err) {
   Serial.printf("CALLBACK:  HTTP update fatal error code %d\n", err);
 }
 
-String core_fota(String url){
-  NetworkClient client;
+// get certificate in ESP32 code formate from that link
+//https://projects.petrucci.ch/esp32/?page=ssl.php&url=https%3A%2F%2Fdevices.dev.inloc.cloud
 
-  // The line below is optional. It can be used to blink the LED on the board during flashing
-  // The LED will be on during download of one buffer of data from the network. The LED will
-  // be off during writing that buffer to flash
-  // On a good connection the LED should flash regularly. On a bad connection the LED will be
-  // on much longer than it will be off. Other pins than LED_BUILTIN may be used. The second
-  // value is used to put the LED on. If the LED is on with HIGH, that value should be passed
-  // httpUpdate.setLedPin(LED_BUILTIN, LOW);
+// certificate for https://devices.dev.inloc.cloud
+// E5, valid until Mon May 26 2025, size: 1294 bytes 
+const char* rootCACertificate = \
+"-----BEGIN CERTIFICATE-----\n" \
+"MIIDjjCCAxSgAwIBAgISBPM3s2vn9n5mKMBCNrLgPY/HMAoGCCqGSM49BAMDMDIx\n" \
+"CzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJF\n" \
+"NTAeFw0yNTAyMjQyMzA0MDlaFw0yNTA1MjUyMzA0MDhaMCIxIDAeBgNVBAMTF2Rl\n" \
+"dmljZXMuZGV2LmlubG9jLmNsb3VkMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE\n" \
+"x5uPg1lGDMvvvO6e1jrBHQEmFM6mMsrSmtcJks+HWoS3evHmSJrNrRMJql/bQItS\n" \
+"PS6aZ+xtNonSdTcQgNEuaqOCAhgwggIUMA4GA1UdDwEB/wQEAwIHgDAdBgNVHSUE\n" \
+"FjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQU\n" \
+"jZs6sL1RBB+HnRUwgjrArx24zLUwHwYDVR0jBBgwFoAUnytfzzwhT50Et+0rLMTG\n" \
+"cIvS1w0wVQYIKwYBBQUHAQEESTBHMCEGCCsGAQUFBzABhhVodHRwOi8vZTUuby5s\n" \
+"ZW5jci5vcmcwIgYIKwYBBQUHMAKGFmh0dHA6Ly9lNS5pLmxlbmNyLm9yZy8wIgYD\n" \
+"VR0RBBswGYIXZGV2aWNlcy5kZXYuaW5sb2MuY2xvdWQwEwYDVR0gBAwwCjAIBgZn\n" \
+"gQwBAgEwggEDBgorBgEEAdZ5AgQCBIH0BIHxAO8AdgDm0jFjQHeMwRBBBtdxuc7B\n" \
+"0kD2loSG+7qHMh39HjeOUAAAAZU6aa9VAAAEAwBHMEUCIQDL0Hpkm5nO2IryokWx\n" \
+"wlVK9nTGeJEglrC5KFI4yRBoQAIgHh0kADXgq6zQvOpiIGqfgZQw76+4KjPMjBB/\n" \
+"bXWVCRsAdQATSt8atZhCCXgMb+9MepGkFrcjSc5YV2rfrtqnwqvgIgAAAZU6abBb\n" \
+"AAAEAwBGMEQCIEmEgsWxhQ4ktlpqV5vH09J4nYo6RiVNECFbT76AOTiHAiBT1Tqa\n" \
+"P/2BlwtYp5HfPQIEcsm8kvMnrk2tcG8Tiw0D+DAKBggqhkjOPQQDAwNoADBlAjB1\n" \
+"8kUItHXwXe9lYiXjeKfFgsPCOVF5u3wfKXhxtjyblMU3C3ZiE8lskwpLlrDJHXIC\n" \
+"MQDvWCDjTrqp6JDYAEJBpRMj3Qg48TZY5WOwbAGFzUVHr4/qzneKsgNelR6vWJ5c\n" \
+"Et8=\n" \
+"-----END CERTIFICATE-----\n" \
+"";
+
+String core_fota(String url){
 
   // Add x-MD5 to header 
   httpUpdate.onStart(update_started);
@@ -1140,6 +1160,10 @@ String core_fota(String url){
   httpUpdate.onProgress(update_progress);
   httpUpdate.onError(update_error);
 
+  //NetworkClient client;
+  NetworkClientSecure client;
+  client.setInsecure();
+  //client.setCACert(rootCACertificate); // not working
   t_httpUpdate_return ret = httpUpdate.update(client, url);
 
   String error = "";
