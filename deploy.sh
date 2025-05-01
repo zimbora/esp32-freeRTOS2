@@ -8,7 +8,7 @@ app_version="1.0.0"
 
 # Set the path to your header file
 FILE="package.h"
-FILEAPP="./app/user/app_package.h"
+FILEAPP="./src/app/user/app_package.h"
 
 # Use grep to find the line, then sed to extract the version number
 fw_version=$(grep "#define FW_VERSION" "$FILE" | sed -E 's/#define FW_VERSION\s+"([^"]+)"/\1/')
