@@ -8,8 +8,6 @@ tag="freertos"
 project="esp32-freeRTOS2"
 # dir name
 app="demo"
-# App version
-app_version="1.0.0"
 # folder to store generated images
 folder="images"
 
@@ -23,7 +21,6 @@ docker build --no-cache \
 -f Dockerfile.local \
 --build-arg PROJECT=$project \
 --build-arg APP=$app \
---build-arg APP_VERSION=$app_version \
 -t ${tag} .
 
 docker run --name $container ${tag}:latest

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 home_dir="~"
+build="dev"
 project="esp32-freeRTOS2"
 app="demo"
 fw_version="1.0.0"
@@ -52,6 +53,11 @@ while [ "$#" -gt 0 ]; do
     -d|--directory)
       home_dir="$2"
       echo "home dir set: ${home_dir}"
+      shift 2
+      ;;
+    -b|--build)
+      build="$2"
+      echo "build set: ${build}"
       shift 2
       ;;
     -p|--project)
@@ -178,5 +184,5 @@ mkdir -p "images"
 filenames=$( find build/${app}/${project}* )
 cp compiles_logs.txt images/
 cp ${filenames} images/
-mv images/esp32-freeRTOS2.ino.bin images/${project}-${demo}-${fw_version}-${app_version}.bin
+mv images/esp32-freeRTOS2.ino.bin images/${project}-${app}-${fw_version}-${app_version}-${build}.bin
 cp build/${app}/build.options.json images/
