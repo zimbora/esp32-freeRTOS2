@@ -14,7 +14,7 @@ jobs:
       BASE_DIR: /root
       PROJECT: esp32-freeRTOS2
       APP: demo
-      BUILD: "dev"
+      BUILD: dev
       CONTAINER: deploy-freertos
       CONTAINERTAG: freertos
 
@@ -25,7 +25,8 @@ jobs:
     - name: Check release tag format
       run: |
         echo "Creating prod release"
-        BUILD=prod
+        echo "Setting BUILD to prod"
+        echo "BUILD=prod" >> $GITHUB_ENV  # Set BUILD environment variable for subsequent steps
       if: github.event_name == 'release'  # Run only on release events
 
     - name: Checkout repository
