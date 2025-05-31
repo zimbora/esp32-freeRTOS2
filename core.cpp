@@ -284,14 +284,14 @@ void core_loop(){
     Serial.println("send info");
 
     String heapFree = String(ESP.getFreeHeap() / 1024);
-    String topic = "/heapFree";
+    String topic = "/fw/heapFree";
     mRTOS.mqtt_pushMessage(CLIENTID,topic,heapFree,0,true);
 
-    topic = "/uptime";
+    topic = "/fw/uptime";
     String payload = String(millis()/1000);
     mRTOS.mqtt_pushMessage(CLIENTID,topic,payload,0,true);
 
-    topic = "/rssi";
+    topic = "/fw/rssi";
     payload = String(mRTOS.get_rssi());
     mRTOS.mqtt_pushMessage(CLIENTID,topic,payload,0,true);
 

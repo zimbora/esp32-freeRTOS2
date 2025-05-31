@@ -54,7 +54,6 @@ void mqttOnConnect(uint8_t clientID){
   mRTOS.mqtt_pushMessage(clientID,"/model",String(FW_MODEL),2,true);
   mRTOS.mqtt_pushMessage(clientID,"/fw_version",String(FW_VERSION),2,true);
   mRTOS.mqtt_pushMessage(clientID,"/app_version",String(APP_VERSION),2,true);
-  mRTOS.mqtt_pushMessage(clientID,"/uptime",String(millis()/1000),2,true);
   mRTOS.mqtt_pushMessage(clientID,"/tech",mRTOS.get_technology(),2,true);
   mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu0",get_reset_reason(rtc_get_reset_reason(0)),2,true);
   mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu1",get_reset_reason(rtc_get_reset_reason(1)),2,true);
@@ -72,7 +71,6 @@ void onConnectionEstablished(){
   mRTOS.mqtt_pushMessage(CLIENTID,"/model",String(FW_MODEL),2,true);
   mRTOS.mqtt_pushMessage(CLIENTID,"/fw_version",String(FW_VERSION),2,true);
   mRTOS.mqtt_pushMessage(CLIENTID,"/app_version",String(APP_VERSION),2,true);
-  mRTOS.mqtt_pushMessage(CLIENTID,"/uptime",String(millis()/1000),2,true);
   mRTOS.mqtt_pushMessage(CLIENTID,"/tech",mRTOS.get_technology(),2,true);
   mRTOS.mqtt_pushMessage(CLIENTID,"/reboot_cause_cpu0",get_reset_reason(rtc_get_reset_reason(0)),2,true);
   mRTOS.mqtt_pushMessage(CLIENTID,"/reboot_cause_cpu1",get_reset_reason(rtc_get_reset_reason(1)),2,true);
