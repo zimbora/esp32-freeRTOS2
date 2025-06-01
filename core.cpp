@@ -1169,7 +1169,7 @@ String core_fota(String url){
   String error = "";
   switch (ret) {
     case HTTP_UPDATE_FAILED: 
-      error = "HTTP_UPDATE_FAILED Error: "+ httpUpdate.getLastErrorString();
+      error = "HTTP_UPDATE_FAILED Error: ("+ String(httpUpdate.getLastError()) +") "+ httpUpdate.getLastErrorString();
       Serial.println(error); 
       break;
 
