@@ -13,6 +13,12 @@ After being tested with some devices, version can be changed to stable a version
   - Add uid to the header of fota request
   - Fota md5 is being well calculated but the comparison is not being well done
 
+### 1.1.6
+	mqtt: changes topics
+		uptime, rssi and heapFree are now inside fw topic
+		uptime is not sent anymore on connection established
+	core: fota: wifi: returns error number in case of failure
+
 ### 1.1.5
 	- Uses insecure connection for wifi fota
 	- Fota tested
