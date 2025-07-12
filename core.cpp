@@ -955,7 +955,7 @@ void core_parse_mqtt_messages(){
     }
 
     if(set)
-      core_send_mqtt_message(clientID,topic,"",0,true); // unpublish
+      core_send_mqtt_message(clientID,topic,"",1,true); // msg is delivered at least once
 
   }else{
     app.parse_mqtt_messages(clientID,topic,payload);
