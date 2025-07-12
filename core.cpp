@@ -285,9 +285,11 @@ void core_loop(){
     String sHeapFree = String(ESP.getFreeHeap() / 1024);
     String sUptime = String(millis()/1000);
     String sRssi = String(mRTOS.get_rssi());
+    String sTech = String(mRTOS.get_technology());
+    
 
     String topic = "/fw";
-    String payload = '{\"{heapFree\":'+sHeapFree+',\"{sUptime\":'+sUptime+',\"{rssi\":'+sRssi+'}';
+    String payload = '{\"{heapFree\":'+sHeapFree+',\"uptime\":'+sUptime+',\"rssi\":'+sRssi+',\"tech\":\"'+sTech+'\"}';
 
     mRTOS.mqtt_pushMessage(CLIENTID,topic,payload,0,true);
 
