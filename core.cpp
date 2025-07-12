@@ -281,18 +281,14 @@ uint32_t logTimeout = 0;
 void core_loop(){
 
   if(settings.keepalive.active && keepaliveTimeout < millis()){
-    Serial.println("send info");
 
-    String heapFree = String(ESP.getFreeHeap() / 1024);
-    String topic = "/fw/heapFree";
-    mRTOS.mqtt_pushMessage(CLIENTID,topic,heapFree,0,true);
+    String sHeapFree = String(ESP.getFreeHeap() / 1024);
+    String sUptime = String(millis()/1000);
+    String sRssi = String(mRTOS.get_rssi());
 
-    topic = "/fw/uptime";
-    String payload = String(millis()/1000);
-    mRTOS.mqtt_pushMessage(CLIENTID,topic,payload,0,true);
+    String topic = "/fw";
+    String payload = '{\"{heapFree\":'+sHeapFree+',\"{sUptime\":'+sUptime+',\"{rssi\":'+sRssi+'}';
 
-    topic = "/fw/rssi";
-    payload = String(mRTOS.get_rssi());
     mRTOS.mqtt_pushMessage(CLIENTID,topic,payload,0,true);
 
     keepaliveTimeout = millis()+(settings.keepalive.period*1000);
