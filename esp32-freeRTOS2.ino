@@ -71,7 +71,7 @@ void onConnectionEstablished(){ // Used on wifi comms
   mRTOS.mqtt_pushMessage(CLIENTID,"/model",String(FW_MODEL),2,true);
   mRTOS.mqtt_pushMessage(CLIENTID,"/version",String(FW_VERSION),2,true);
   mRTOS.mqtt_pushMessage(CLIENTID,"/app_version",String(APP_VERSION),2,true);
-  mRTOS.mqtt_pushMessage(clientID,"/tech",mRTOS.get_technology(),2,true);
+  mRTOS.mqtt_pushMessage(CLIENTID,"/tech",mRTOS.get_technology(),2,true);
   mRTOS.mqtt_pushMessage(CLIENTID,"/reboot_cause_cpu0",get_reset_reason(rtc_get_reset_reason(0)),2,true);
   mRTOS.mqtt_pushMessage(CLIENTID,"/reboot_cause_cpu1",get_reset_reason(rtc_get_reset_reason(1)),2,true);
 
