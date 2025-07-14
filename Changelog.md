@@ -13,6 +13,16 @@ After being tested with some devices, version can be changed to stable a version
   - Add uid to the header of fota request
   - Fota md5 is being well calculated but the comparison is not being well done
 
+### 1.1.7
+	Dockerfile.local:
+		- add option to specify build
+		- remove option to specify version (version is obtained from header file)
+	MQTT:
+		- core: increase qos level for set messages
+		- core: send fw info as json
+		- esp32-freeRTOS: changes topic fw_version to version
+		- core: Adds tech to mqtt periodically updates and removes from initial msgs, fixes uptime
+
 ### 1.1.6
 	mqtt: changes topics
 		uptime, rssi and heapFree are now inside fw topic
