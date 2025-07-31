@@ -157,11 +157,11 @@ Note: all changes are made outside src/app folder
   The following commands are available
 
   On receive
-  - :prefix/fw/settings/modem/set : {"apn":"","pwd":"","user":"","band":(uint8_t),"cops":(uint16_t)} (updates modem settings)
-  - :prefix/fw/settings/wifi/set : {"ssid":"","pwd":""} (updates wifi settings)
-  - :prefix/fw/settings/mqtt/set : {"host":"","user":"","pass":"","active":(bool)} (configure 2nd mqtt) connection)
-  - :prefix/fw/settings/keepalive/set : {"active":(bool),"period":(seconds)}
-  - :prefix/fw/settings/log/set : {"active":(bool),"level":(0-disabled;1-verbose;2-debug;3-info;4-warn;5-error)}
+  - :prefix/settings/modem/set : {"apn":"","pwd":"","user":"","band":(uint8_t),"cops":(uint16_t)} (updates modem settings)
+  - :prefix/settings/wifi/set : {"ssid":"","pwd":""} (updates wifi settings)
+  - :prefix/settings/mqtt/set : {"host":"","user":"","pass":"","active":(bool)} (configure 2nd mqtt) connection)
+  - :prefix/settings/keepalive/set : {"active":(bool),"period":(seconds)}
+  - :prefix/settings/log/set : {"active":(bool),"level":(0-disabled;1-verbose;2-debug;3-info;4-warn;5-error)}
   - :prefix/fw/ar/set : {}
   - :prefix/fw/alarm/set : {}
   - :prefix/fw/js/code/set : (file)
@@ -199,17 +199,16 @@ sends the following topics:
   - /status - online
   - /model - FW_MODEL
   - /version - FW_VERSION
-  - /uptime
+  - /tech - radio technology
   - /reboot_cause_cpu0
   - /reboot_cause_cpu1
 
 ### Running
 
-sends the following topics with keepalive period:
-  - /uptime
-  - /rssi
-  - /tech
-
+sends the following topic with keepalive period:
+  - /fw
+    payload: {uptime:x,rssi:x,heapFree:x}
+  
 ### Clocksync
   Clock is synched when a ':prefix/status' msg is received
 
@@ -221,15 +220,15 @@ sends the following topics with keepalive period:
 - [/fw/info/get] (#fw_info_)
 - [/fw/clean/records/set] (#fw_info_)
 - [/fw/fota/update/set] (#fw_fota_update_)
-- [/fw/js_program/set] (#fw_js_code_)
-- [/fw/settings/wifi/set] (#fw_wifi_)
-- [/fw/settings/modem/set] (#fw_modem_)
-- [/fw/settings/mqtt/set] (#fw_mqtt_)
-- [/fw/settings/log/set] (#fw_log_)
-- [/fw/settings/keepalive/set] (#fw_keepalive_)
-- [/fw/settings/serial/set] (#fw_serial_)
+- [/settings/wifi/set] (#settings_wifi_)
+- [/settings/modem/set] (#settings_modem_)
+- [/settings/mqtt/set] (#settings_mqtt_)
+- [/settings/log/set] (#settings_log_)
+- [/settings/keepalive/set] (#settings_keepalive_)
+- [/settings/serial/set] (#settings_serial_)
 - [/fw/ar/set] (#fw_ar_)
 - [/fw/alarm/set] (#fw_alarm_)
+- [/fw/js_program/set] (#fw_js_code_)
 - [/fw/serial/read/get] (#fw_serial_read_)
 - [/fw/serial/write/get] (#fw_serial_write_)
 

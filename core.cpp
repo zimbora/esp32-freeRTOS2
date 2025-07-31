@@ -436,7 +436,7 @@ void core_parse_mqtt_messages(){
 
         }
         break;
-      case fw_settings_update_:
+      case settings_update_:
         {
           DeserializationError error = deserializeJson(doc, payload);
           if(error){
@@ -452,301 +452,281 @@ void core_parse_mqtt_messages(){
 
         }
         break;
-      case fw_js_program_get_:
+      case settings_wifi_get_:
         {
-        #ifdef ENABLE_JS
-          String md5 = call.get_file_md5(FW_JS_FILENAME);
-          String payload = "{\"md5\":\""+md5+"\"}";
+          String ssid = String(settings.wifi.ssid);
+          String pwd = String(settings.wifi.pwd);
+          String payload = "{\"ssid\":\""+ssid+"\",\"pwd\":\""+pwd+"\"}";
           core_send_mqtt_message(clientID,topic_get,payload,2,false);
-        #endif
         }
         break;
-      case fw_js_program_:
+      case settings_wifi_:
         {
-          #ifdef ENABLE_JS
-          Serial.println(payload);
-          const char* res = JS.exec(payload.c_str());
-          Serial.printf("%s\n", res);
-          if(!call.write_file(FW_JS_FILENAME,payload.c_str(),payload.length()))
-            Serial.println("Error storing js script");
-          #else
-          Serial.println("JS not enabled");
-          #endif
+          DeserializationError error = deserializeJson(doc, payload);
+          if(error){
+            Serial.println("Not Json");
+            return;
+          }
+          store = true;
+          if(doc.containsKey("mode")){
+            #ifndef UNITTEST
+              String mode = doc["mode"];
+            #else
+              String mode = "";
+              if(doc["mode"].is_string())
+                mode = doc["mode"];
+            #endif
+            settings_set_param("wifi_mode",mode);
+          }
+
+          if(doc.containsKey("ssid")){
+            #ifndef UNITTEST
+              String ssid = doc["ssid"];
+            #else
+              String ssid = "";
+              if(doc["ssid"].is_string())
+                ssid = doc["ssid"];
+            #endif
+            settings_set_param("wifi_ssid",ssid);
+          }
+
+          if(doc.containsKey("pwd")){
+            #ifndef UNITTEST
+              String pwd = doc["pwd"];
+            #else
+              String pwd = "";
+              if(doc["pwd"].is_string())
+                pwd = doc["pwd"];
+            #endif
+            settings_set_param("wifi_pwd",pwd);
+          }
         }
         break;
-      case fw_wifi_get_:
-      {
-        String ssid = String(settings.wifi.ssid);
-        String pwd = String(settings.wifi.pwd);
-        String payload = "{\"ssid\":\""+ssid+"\",\"pwd\":\""+pwd+"\"}";
-        core_send_mqtt_message(clientID,topic_get,payload,2,false);
-      }
-      case fw_wifi_:
-      {
-        DeserializationError error = deserializeJson(doc, payload);
-        if(error){
-          Serial.println("Not Json");
-          return;
-        }
-        store = true;
-        if(doc.containsKey("mode")){
-          #ifndef UNITTEST
-            String mode = doc["mode"];
-          #else
-            String mode = "";
-            if(doc["mode"].is_string())
-              mode = doc["mode"];
-          #endif
-          settings_set_param("wifi_mode",mode);
-        }
+      case settings_modem_get_:
+        {
+          String apn = String(settings.modem.apn);
+          String user = String(settings.modem.user);
+          String pwd = String(settings.modem.pwd);
+          String band = String(settings.modem.band);
+          String cops = String(settings.modem.cops);
+          String tech = String(settings.modem.tech);
 
-        if(doc.containsKey("ssid")){
-          #ifndef UNITTEST
-            String ssid = doc["ssid"];
-          #else
-            String ssid = "";
-            if(doc["ssid"].is_string())
-              ssid = doc["ssid"];
-          #endif
-          settings_set_param("wifi_ssid",ssid);
+          String payload = "{\"apn\":\""+apn+"\",\"user\":\""+user+"\",\"pwd\":\""+pwd+"\",\"band\":"+band+",\"cops\":"+cops+",\"tech\":"+tech+"}";
+          core_send_mqtt_message(clientID,topic_get,payload,2,false);
         }
-
-        if(doc.containsKey("pwd")){
-          #ifndef UNITTEST
-            String pwd = doc["pwd"];
-          #else
-            String pwd = "";
-            if(doc["pwd"].is_string())
-              pwd = doc["pwd"];
-          #endif
-          settings_set_param("wifi_pwd",pwd);
-        }
-      }
         break;
-      case fw_modem_get_:
-      {
-        String apn = String(settings.modem.apn);
-        String user = String(settings.modem.user);
-        String pwd = String(settings.modem.pwd);
-        String band = String(settings.modem.band);
-        String cops = String(settings.modem.cops);
-        String tech = String(settings.modem.tech);
+      case settings_modem_:
+        {
+          DeserializationError error = deserializeJson(doc, payload);
+          if(error){
+            Serial.println("Not Json");
+            return;
+          }
+          store = true;
+          if(doc.containsKey("apn")){
+            #ifndef UNITTEST
+              String apn = doc["apn"];
+            #else
+              String apn = "";
+              if(doc["apn"].is_string())
+                apn = doc["apn"];
+            #endif
+            settings_set_param("modem_apn",apn);
+          }
 
-        String payload = "{\"apn\":\""+apn+"\",\"user\":\""+user+"\",\"pwd\":\""+pwd+"\",\"band\":"+band+",\"cops\":"+cops+",\"tech\":"+tech+"}";
-        core_send_mqtt_message(clientID,topic_get,payload,2,false);
-      }
-      case fw_modem_:
-      {
-        DeserializationError error = deserializeJson(doc, payload);
-        if(error){
-          Serial.println("Not Json");
-          return;
-        }
-        store = true;
-        if(doc.containsKey("apn")){
-          #ifndef UNITTEST
-            String apn = doc["apn"];
-          #else
-            String apn = "";
-            if(doc["apn"].is_string())
-              apn = doc["apn"];
-          #endif
-          settings_set_param("modem_apn",apn);
-        }
+          if(doc.containsKey("pwd")){
+            #ifndef UNITTEST
+              String pwd = doc["pwd"];
+            #else
+              String pwd = "";
+              if(doc["pwd"].is_string())
+                pwd = doc["pwd"];
+            #endif
+            settings_set_param("modem_pwd",pwd);
+          }
 
-        if(doc.containsKey("pwd")){
-          #ifndef UNITTEST
-            String pwd = doc["pwd"];
-          #else
-            String pwd = "";
-            if(doc["pwd"].is_string())
-              pwd = doc["pwd"];
-          #endif
-          settings_set_param("modem_pwd",pwd);
-        }
+          if(doc.containsKey("user")){
+            #ifndef UNITTEST
+              String user = doc["user"];
+            #else
+              String user = "";
+              if(doc["user"].is_string())
+                user = doc["user"];
+            #endif
+            settings_set_param("modem_user",user);
+          }
 
-        if(doc.containsKey("user")){
-          #ifndef UNITTEST
-            String user = doc["user"];
-          #else
-            String user = "";
-            if(doc["user"].is_string())
-              user = doc["user"];
-          #endif
-          settings_set_param("modem_user",user);
-        }
+          if(doc.containsKey("band")){
+            #ifndef UNITTEST
+            String band = doc["band"];
+            #else
+            String band = "";
+            if(doc["band"].is_number())
+              band = std::to_string((long)doc["band"]);
+            #endif
+            settings_set_param("modem_band",band);
+          }
 
-        if(doc.containsKey("band")){
-          #ifndef UNITTEST
-          String band = doc["band"];
-          #else
-          String band = "";
-          if(doc["band"].is_number())
-            band = std::to_string((long)doc["band"]);
-          #endif
-          settings_set_param("modem_band",band);
-        }
+          if(doc.containsKey("cops")){
+            #ifndef UNITTEST
+            String cops = doc["cops"];
+            #else
+            String cops = "";
+            if(doc["cops"].is_number())
+              cops = std::to_string((long)doc["cops"]);
+            #endif
+            settings_set_param("modem_cops",cops);
+          }
 
-        if(doc.containsKey("cops")){
-          #ifndef UNITTEST
-          String cops = doc["cops"];
-          #else
-          String cops = "";
-          if(doc["cops"].is_number())
-            cops = std::to_string((long)doc["cops"]);
-          #endif
-          settings_set_param("modem_cops",cops);
+          if(doc.containsKey("tech")){
+            #ifndef UNITTEST
+            String tech = doc["tech"];
+            #else
+            String tech = "";
+            if(doc["tech"].is_number())
+              tech = std::to_string((long)doc["tech"]);
+            #endif
+            settings_set_param("modem_tech",tech);
+          }
         }
-
-        if(doc.containsKey("tech")){
-          #ifndef UNITTEST
-          String tech = doc["tech"];
-          #else
-          String tech = "";
-          if(doc["tech"].is_number())
-            tech = std::to_string((long)doc["tech"]);
-          #endif
-          settings_set_param("modem_tech",tech);
-        }
-
-      }
         break;
-      case fw_mqtt_get_:
-      {
-        String host = String(settings.mqtt2.host);
-        String user = String(settings.mqtt2.user);
-        String pass = String(settings.mqtt2.pass);
-        String port = String(settings.mqtt2.port);
-        String active = String(settings.mqtt2.active);
-        String payload = "{\"host\":\""+host+"\",\"user\":\""+user+"\",\"pass\":\""+pass+"\",\"port\":"+port+",\"active\":"+active+"}";
-        core_send_mqtt_message(clientID,topic_get,payload,2,false);
-      }
-      case fw_mqtt_:
-      {
-        Serial.println("updating mqtt");
-
-        DeserializationError error = deserializeJson(doc, payload);
-        if(error){
-          Serial.println("Not Json");
-          return;
+      case settings_mqtt_get_:
+        {
+          String host = String(settings.mqtt2.host);
+          String user = String(settings.mqtt2.user);
+          String pass = String(settings.mqtt2.pass);
+          String port = String(settings.mqtt2.port);
+          String active = String(settings.mqtt2.active);
+          String payload = "{\"host\":\""+host+"\",\"user\":\""+user+"\",\"pass\":\""+pass+"\",\"port\":"+port+",\"active\":"+active+"}";
+          core_send_mqtt_message(clientID,topic_get,payload,2,false);
         }
-
-        //serializeJson(doc,Serial);
-        store = true;
-        // checked
-        if(doc.containsKey("host")){
-          #ifndef UNITTEST
-            String host = doc["host"];
-          #else
-            String host = "";
-            if(doc["host"].is_string())
-              host = doc["host"];
-          #endif
-          settings_set_param("mqtt_host",host);
-        }
-
-        if(doc.containsKey("user")){
-          #ifndef UNITTEST
-            String user = doc["user"];
-          #else
-            String user = "";
-            if(doc["user"].is_string())
-              user = doc["user"];
-          #endif
-          settings_set_param("mqtt_user",user);
-        }
-
-        if(doc.containsKey("pass")){
-          #ifndef UNITTEST
-            String pass = doc["pass"];
-          #else
-            String pass = "";
-            if(doc["pass"].is_string())
-              pass = doc["pass"];
-          #endif
-          settings_set_param("mqtt_pass",pass);
-        }
-
-        if(doc.containsKey("prefix")){
-          #ifndef UNITTEST
-            String prefix = doc["prefix"];
-          #else
-            String prefix = "";
-            if(doc["prefix"].is_string())
-              prefix = doc["prefix"];
-          #endif
-          settings_set_param("mqtt_prefix",prefix);
-        }
-
-        if(doc.containsKey("port")){
-          #ifndef UNITTEST
-          String port = doc["port"];
-          #else
-          String port = "";
-          if(doc["port"].is_number())
-            port = std::to_string((long)doc["port"]);
-          #endif
-          settings_set_param("mqtt_port",port);
-        }
-
-        if(doc.containsKey("active")){
-          #ifndef UNITTEST
-          String active = doc["active"];
-          #else
-          String active = "";
-          if(doc["active"].is_number())
-            active = std::to_string((long)doc["active"]);
-          #endif
-          settings_set_param("mqtt_active",active);
-        }
-      }
         break;
-      case fw_log_get_:
-      {
-        String level = String(settings.log.level);
-        String payload = "{\"level\":"+level+"}";
-        core_send_mqtt_message(clientID,topic_get,payload,2,false);
-        break;
-      }
-      case fw_log_:
-      {
-        DeserializationError error = deserializeJson(doc, payload);
-        if(error){
-          Serial.println("Not Json");
-          return;
-        }
-        store = true;
-        if(doc.containsKey("active")){
-          #ifndef UNITTEST
-          String active = doc["active"];
-          #else
-          String active = "";
-          if(doc["active"].is_number())
-            active = std::to_string((long)doc["active"]);
-          #endif
-          settings_set_param("log_active",active);
-        }
+      case settings_mqtt_:
+        {
+          Serial.println("updating mqtt");
 
-        if(doc.containsKey("level")){
-          #ifndef UNITTEST
-          String level = doc["level"];
-          #else
-          String level = "";
-          if(doc["level"].is_number())
-            level = std::to_string((long)doc["level"]);
-          #endif
-          settings_set_param("log_level",level);
+          DeserializationError error = deserializeJson(doc, payload);
+          if(error){
+            Serial.println("Not Json");
+            return;
+          }
+
+          //serializeJson(doc,Serial);
+          store = true;
+          // checked
+          if(doc.containsKey("host")){
+            #ifndef UNITTEST
+              String host = doc["host"];
+            #else
+              String host = "";
+              if(doc["host"].is_string())
+                host = doc["host"];
+            #endif
+            settings_set_param("mqtt_host",host);
+          }
+
+          if(doc.containsKey("user")){
+            #ifndef UNITTEST
+              String user = doc["user"];
+            #else
+              String user = "";
+              if(doc["user"].is_string())
+                user = doc["user"];
+            #endif
+            settings_set_param("mqtt_user",user);
+          }
+
+          if(doc.containsKey("pass")){
+            #ifndef UNITTEST
+              String pass = doc["pass"];
+            #else
+              String pass = "";
+              if(doc["pass"].is_string())
+                pass = doc["pass"];
+            #endif
+            settings_set_param("mqtt_pass",pass);
+          }
+
+          if(doc.containsKey("prefix")){
+            #ifndef UNITTEST
+              String prefix = doc["prefix"];
+            #else
+              String prefix = "";
+              if(doc["prefix"].is_string())
+                prefix = doc["prefix"];
+            #endif
+            settings_set_param("mqtt_prefix",prefix);
+          }
+
+          if(doc.containsKey("port")){
+            #ifndef UNITTEST
+            String port = doc["port"];
+            #else
+            String port = "";
+            if(doc["port"].is_number())
+              port = std::to_string((long)doc["port"]);
+            #endif
+            settings_set_param("mqtt_port",port);
+          }
+
+          if(doc.containsKey("active")){
+            #ifndef UNITTEST
+            String active = doc["active"];
+            #else
+            String active = "";
+            if(doc["active"].is_number())
+              active = std::to_string((long)doc["active"]);
+            #endif
+            settings_set_param("mqtt_active",active);
+          }
         }
-      }
         break;
-      case fw_keepalive_get_:
+      case settings_log_get_:
+        {
+          String level = String(settings.log.level);
+          String payload = "{\"level\":"+level+"}";
+          core_send_mqtt_message(clientID,topic_get,payload,2,false);
+        }
+        break;
+      case settings_log_:
+        {
+          DeserializationError error = deserializeJson(doc, payload);
+          if(error){
+            Serial.println("Not Json");
+            return;
+          }
+          store = true;
+          if(doc.containsKey("active")){
+            #ifndef UNITTEST
+            String active = doc["active"];
+            #else
+            String active = "";
+            if(doc["active"].is_number())
+              active = std::to_string((long)doc["active"]);
+            #endif
+            settings_set_param("log_active",active);
+          }
+
+          if(doc.containsKey("level")){
+            #ifndef UNITTEST
+            String level = doc["level"];
+            #else
+            String level = "";
+            if(doc["level"].is_number())
+              level = std::to_string((long)doc["level"]);
+            #endif
+            settings_set_param("log_level",level);
+          }
+        }
+        break;
+      case settings_keepalive_get_:
         {
           String period = String(settings.keepalive.period);
           String payload = "{\"period\":"+period+"}";
           core_send_mqtt_message(clientID,topic_get,payload,2,false);
           break;
         }
-      case fw_keepalive_:
+      case settings_keepalive_:
         {
           DeserializationError error = deserializeJson(doc, payload);
           if(error){
@@ -777,7 +757,7 @@ void core_parse_mqtt_messages(){
           }
         }
         break;
-      case fw_serial_get_:
+      case settings_serial_get_:
         {
           String active = String(settings.uart2.active);
           String baudrate = String(settings.uart2.baudrate);
@@ -787,7 +767,7 @@ void core_parse_mqtt_messages(){
           core_send_mqtt_message(clientID,topic_get,payload,2,false);
           break;
         }
-      case fw_serial_:
+      case settings_serial_:
         {
           DeserializationError error = deserializeJson(doc, payload);
           if(error){
@@ -854,6 +834,28 @@ void core_parse_mqtt_messages(){
       case fw_alarm_:
         if(!call.write_file(FW_ALARM_FILENAME,payload.c_str(),payload.length()))
           Serial.println("Error storing Alarms file");
+        break;
+      case fw_js_program_get_:
+        {
+        #ifdef ENABLE_JS
+          String md5 = call.get_file_md5(FW_JS_FILENAME);
+          String payload = "{\"md5\":\""+md5+"\"}";
+          core_send_mqtt_message(clientID,topic_get,payload,2,false);
+        #endif
+        }
+        break;
+      case fw_js_program_:
+        {
+          #ifdef ENABLE_JS
+          Serial.println(payload);
+          const char* res = JS.exec(payload.c_str());
+          Serial.printf("%s\n", res);
+          if(!call.write_file(FW_JS_FILENAME,payload.c_str(),payload.length()))
+            Serial.println("Error storing js script");
+          #else
+          Serial.println("JS not enabled");
+          #endif
+        }
         break;
 #ifdef ENABLE_RS485
       case fw_serial_read_get_:
