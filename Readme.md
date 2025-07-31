@@ -214,10 +214,9 @@ sends the following topic with keepalive period:
 
 ### Available Topics
 
-- [/fw/get] (#fw_)
+- [/fw/get] (#fw_get_)
 - [/fw/reboot/set] (#fw_reboot_)
 - [/fw/reset/set] (#fw_reset_)
-- [/fw/info/get] (#fw_info_)
 - [/fw/clean/records/set] (#fw_info_)
 - [/fw/fota/update/set] (#fw_fota_update_)
 - [/settings/wifi/set] (#settings_wifi_)

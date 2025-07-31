@@ -769,10 +769,18 @@ void core_parse_mqtt_messages(){
 
     //Serial.println("topic: "+topic);
     switch(resolveOption(fwTopics,topic)){
-      case fw_:
-        Serial.println("getting fw info..");
-        //mRTOS.mqtt_pushMessage(clientID,topic,"{\"version\":\""+String(PACKAGE_VERSION)+"\",\"model\":"+String(PACKAGE_MODEL)+",\"hash\":\""+String(settings.fw.hash)+"\""+",\"uptime\":"+String(millis())+"}",1,true);
-        core_send_mqtt_message(clientID,topic_get,String(FW_VERSION),0,true);
+      case fw_get_:
+        {
+          Serial.println("getting fw info..");
+          //core_send_mqtt_message(clientID,/version,String(FW_VERSION),0,true);
+
+          String sHeapFree = String(ESP.getFreeHeap() / 1024);
+          String sUptime = String(millis()/1000);
+          String sRssi = String(mRTOS.get_rssi());
+          
+          String payload = "{\"heapFree\":"+sHeapFree+",\"uptime\":"+sUptime+",\"rssi\":"+sRssi+"}";
+          core_send_mqtt_message(clientID,topic_get,payload,0,false);
+        }
         break;
       case fw_reboot_:
 
@@ -794,10 +802,6 @@ void core_parse_mqtt_messages(){
         //mqtt_pushMessage(clientID,topic+"/set","",1,true);
         call.fw_reset();
         call.fw_reboot();
-        break;
-      case fw_info_:
-        Serial.println("getting fw info..");
-        //mqtt_pushMessage(clientID,topic,"{\"gps\":\"\",\"rssi\":0,\"timestamp\":"+String(getTimestamp())+",\"uptime\":"+String(millis())+"}",1,true);
         break;
       case fw_clean_records_:
         if(payload != "1")
