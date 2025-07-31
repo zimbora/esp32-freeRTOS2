@@ -355,8 +355,7 @@ void core_parse_mqtt_messages(){
   if(topic == "/status"){
       Serial.println("update clock..");
       mRTOS.update_clock_sys();
-  }else if(topic.startsWith("/fw")){
-
+  }else if(topic.startsWith("/settings")){
     if(topic.endsWith("/set")){
       set = true;
       index = topic.lastIndexOf("/");
@@ -371,71 +370,9 @@ void core_parse_mqtt_messages(){
       topic_get = topic.substring(0,index); // get filtered
     }
 
+
     //Serial.println("topic: "+topic);
     switch(resolveOption(fwTopics,topic)){
-      case fw_:
-        Serial.println("getting fw info..");
-        //mRTOS.mqtt_pushMessage(clientID,topic,"{\"version\":\""+String(PACKAGE_VERSION)+"\",\"model\":"+String(PACKAGE_MODEL)+",\"hash\":\""+String(settings.fw.hash)+"\""+",\"uptime\":"+String(millis())+"}",1,true);
-        core_send_mqtt_message(clientID,topic_get,String(FW_VERSION),0,true);
-        break;
-      case fw_reboot_:
-
-        if(payload != "1") return;
-
-        Serial.println("reboot..");
-        // !! unpublish topic
-        //mqtt_pushMessage(clientID,topic+"/set","",1,true);
-        //flag_restart = true;
-        call.fw_reboot();
-        break;
-      case fw_reset_:
-
-        if(payload != "1")
-          return;
-
-        Serial.println("reset..");
-        // !! unpublish topic
-        //mqtt_pushMessage(clientID,topic+"/set","",1,true);
-        call.fw_reset();
-        call.fw_reboot();
-        break;
-      case fw_info_:
-        Serial.println("getting fw info..");
-        //mqtt_pushMessage(clientID,topic,"{\"gps\":\"\",\"rssi\":0,\"timestamp\":"+String(getTimestamp())+",\"uptime\":"+String(millis())+"}",1,true);
-        break;
-      case fw_clean_records_:
-        if(payload != "1")
-          return;
-        call.remove_dir(APP_PATH_RECORDS);
-        break;
-      case fw_fota_update_:
-        {
-          DeserializationError error = deserializeJson(doc, payload);
-          if(error){
-            Serial.println("Not Json");
-            return;
-          }
-
-          if(doc.containsKey("url")){
-            String url = doc["url"];
-            if(doc.containsKey("token")){
-              String token = doc["token"];
-            }else{
-              Serial.println("fota from "+url);
-              String error = "";
-              #ifndef ENABLE_LTE
-                error = core_fota(url);
-              #else
-                error = call.fw_fota(url);
-              #endif
-              if(error != ""){
-                core_send_mqtt_message(clientID,topic_set+"/status",error,2,false);
-              }
-            }
-          }
-
-        }
-        break;
       case settings_update_:
         {
           DeserializationError error = deserializeJson(doc, payload);
@@ -813,6 +750,88 @@ void core_parse_mqtt_messages(){
 
           break;
         }
+    }
+  }else if(topic.startsWith("/fw")){
+
+    if(topic.endsWith("/set")){
+      set = true;
+      index = topic.lastIndexOf("/");
+      topic_set = topic.substring(0,index); // set filtered
+      if(payload == "")
+        return;
+    }
+
+    if(topic.endsWith("/get")){
+      get = true;
+      index = topic.lastIndexOf("/");
+      topic_get = topic.substring(0,index); // get filtered
+    }
+
+    //Serial.println("topic: "+topic);
+    switch(resolveOption(fwTopics,topic)){
+      case fw_:
+        Serial.println("getting fw info..");
+        //mRTOS.mqtt_pushMessage(clientID,topic,"{\"version\":\""+String(PACKAGE_VERSION)+"\",\"model\":"+String(PACKAGE_MODEL)+",\"hash\":\""+String(settings.fw.hash)+"\""+",\"uptime\":"+String(millis())+"}",1,true);
+        core_send_mqtt_message(clientID,topic_get,String(FW_VERSION),0,true);
+        break;
+      case fw_reboot_:
+
+        if(payload != "1") return;
+
+        Serial.println("reboot..");
+        // !! unpublish topic
+        //mqtt_pushMessage(clientID,topic+"/set","",1,true);
+        //flag_restart = true;
+        call.fw_reboot();
+        break;
+      case fw_reset_:
+
+        if(payload != "1")
+          return;
+
+        Serial.println("reset..");
+        // !! unpublish topic
+        //mqtt_pushMessage(clientID,topic+"/set","",1,true);
+        call.fw_reset();
+        call.fw_reboot();
+        break;
+      case fw_info_:
+        Serial.println("getting fw info..");
+        //mqtt_pushMessage(clientID,topic,"{\"gps\":\"\",\"rssi\":0,\"timestamp\":"+String(getTimestamp())+",\"uptime\":"+String(millis())+"}",1,true);
+        break;
+      case fw_clean_records_:
+        if(payload != "1")
+          return;
+        call.remove_dir(APP_PATH_RECORDS);
+        break;
+      case fw_fota_update_:
+        {
+          DeserializationError error = deserializeJson(doc, payload);
+          if(error){
+            Serial.println("Not Json");
+            return;
+          }
+
+          if(doc.containsKey("url")){
+            String url = doc["url"];
+            if(doc.containsKey("token")){
+              String token = doc["token"];
+            }else{
+              Serial.println("fota from "+url);
+              String error = "";
+              #ifndef ENABLE_LTE
+                error = core_fota(url);
+              #else
+                error = call.fw_fota(url);
+              #endif
+              if(error != ""){
+                core_send_mqtt_message(clientID,topic_set+"/status",error,2,false);
+              }
+            }
+          }
+
+        }
+        break;
       case fw_ar_get_:
         {
         String md5 = call.get_file_md5(FW_AR_FILENAME);

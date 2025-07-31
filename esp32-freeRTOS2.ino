@@ -32,6 +32,7 @@ extern APP app;
 String mqtt_subscribe_topics[] = {
   "/status",
   "/fw/#",
+  "/settings/#",
   "/app/#"
 };
 
