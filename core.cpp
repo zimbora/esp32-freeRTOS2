@@ -751,6 +751,17 @@ void core_parse_mqtt_messages(){
           break;
         }
     }
+
+    // store settings
+    if(store){
+      settings_log();
+      if(!call.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings)))
+        Serial.println("failing writing file: "+String(FW_SETTINGS_FILENAME));
+    }
+
+    if(set)
+      core_send_mqtt_message(clientID,topic,"",1,true); // msg is delivered at least once
+
   }else if(topic.startsWith("/fw")){
 
     if(topic.endsWith("/set")){
@@ -967,12 +978,6 @@ void core_parse_mqtt_messages(){
         //Serial.println("topic not known by fw topics");
         //Serial.println(payload);
         break;
-    }
-    // store settings
-    if(store){
-      settings_log();
-      if(!call.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings)))
-        Serial.println("failing writing file: "+String(FW_SETTINGS_FILENAME));
     }
 
     if(set)
