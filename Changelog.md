@@ -13,9 +13,10 @@ After being tested with some devices, version can be changed to stable a version
   - Add uid to the header of fota request
   - Fota md5 is being well calculated but the comparison is not being well done
 
-### 1.1.9 - In dev
+### 1.1.9
 	MQTT
 		- changes fw/settings topic to /settings
+
 ### 1.1.8
 	MQTT
 		- Rollback tech topic
