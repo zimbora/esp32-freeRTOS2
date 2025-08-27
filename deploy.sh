@@ -90,29 +90,24 @@ done
 # Check if arduino-cli is installed
 if command -v arduino-cli >/dev/null 2>&1; then
     echo "arduino-cli is installed."
-
-    current_dir=$(pwd)
-
-    # add to PATH
-    export PATH="$PATH:$current_dir/bin"
 else
-    # Install arduino-cli
-	curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+    # Install arduino-cli - use older version compatible with GLIBC < 2.35
+    curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR="$PWD/bin" sh -s -- --version v0.33.0
 
   current_dir=$(pwd)
 
   # add to PATH
   export PATH="$PATH:$current_dir/bin"
-
-	# Initialize arduino-cli (this will create default directories and config file)
-	arduino-cli config init
-
-	# Update the core index (required before installing cores or libraries)
-	arduino-cli core update-index
-
-	# Install ESP32 core
-	arduino-cli core install esp32:esp32
 fi
+
+# Initialize arduino-cli (this will create default directories and config file)
+arduino-cli config init
+
+# Update the core index (required before installing cores or libraries)
+arduino-cli core update-index
+
+# Install ESP32 core
+arduino-cli core install esp32:esp32
 
 arduino_config_file="${home_dir}/.arduino15/arduino-cli.yaml"
 arduino_lib_path="${home_dir}/Arduino/libraries/"
