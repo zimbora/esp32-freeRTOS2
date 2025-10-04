@@ -87,6 +87,22 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
+# Modify MQTT_HOST_1 based on build type
+echo "Build type: ${build}"
+CREDENTIALS_FILE="./src/app/user/credentials.h"
+
+if [ "$build" == "stage" ]; then
+    echo "Setting MQTT_HOST_1 for stage environment..."
+    sed -i.bak 's/#define MQTT_HOST_1 "[^"]*"/#define MQTT_HOST_1 "devices.stage.inloc.cloud"/' "$CREDENTIALS_FILE"
+    echo "MQTT_HOST_1 set to devices.stage.inloc.cloud"
+elif [ "$build" == "prod" ]; then
+    echo "Setting MQTT_HOST_1 for production environment..."
+    sed -i.bak 's/#define MQTT_HOST_1 "[^"]*"/#define MQTT_HOST_1 "devices.inloc.cloud"/' "$CREDENTIALS_FILE"
+    echo "MQTT_HOST_1 set to devices.inloc.cloud"
+else
+    echo "Using default MQTT_HOST_1 for dev environment"
+fi
+
 # Check if arduino-cli is installed
 if command -v arduino-cli >/dev/null 2>&1; then
     echo "arduino-cli is installed."

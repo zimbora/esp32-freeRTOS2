@@ -4,6 +4,8 @@ on:
   push:          # Triggers on push events (to any branch)
     branches:
       - '**'     # Matches all branches (you can also use '*' for all branches)
+    tags:
+      - '**'     # Triggers on tag creation
   release:
     types: [created]
 
@@ -21,6 +23,13 @@ jobs:
     steps:
     - name: Set Project
       run: echo "Using project $PROJECT"
+
+    - name: Set BUILD for tag creation
+      run: |
+        echo "Creating stage release from tag"
+        echo "Setting BUILD to stage"
+        echo "BUILD=stage" >> $GITHUB_ENV  # Set BUILD environment variable for subsequent steps
+      if: github.ref_type == 'tag'  # Run only on tag creation events
 
     - name: Check release tag format
       run: |
