@@ -37,7 +37,7 @@
 #define LOG_LEVEL 5
 
 #define KEEPALIVE_ACTIVE true
-#define KEEPALIVE_PERIOD 15
+#define KEEPALIVE_PERIOD 3600
 
 // also used for RS485
 #define UART2_ACTIVE true
