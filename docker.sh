@@ -6,6 +6,8 @@ container="deploy-freertos"
 tag="freertos"
 # Project name
 project="esp32-freeRTOS2-c5"
+# Sketch name (must match .ino filename)
+sketch="esp32-freeRTOS2"
 # dir name
 app="demo"
 # folder to store generated images
@@ -27,7 +29,7 @@ docker run --name $container ${tag}:latest
 #debug
 #docker run -it --name $container ${tag}:latest
 
-docker cp ${container}:${project}/${folder}/ ./${folder}/
+docker cp ${container}:${sketch}/${folder}/ ./${folder}/
 sha256sum ${folder}/${project}.ino.merged.bin
 
 docker stop $container
