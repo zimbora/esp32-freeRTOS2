@@ -204,7 +204,7 @@ fi
 mkdir -p "images"
 
 filenames=$( find build/${app}/${project}* )
-cp compiles_logs.txt images/
+cp compile_logs.txt images/
 cp ${filenames} images/
 mv images/esp32-freeRTOS2.ino.bin images/${project}-${app}-${fw_version}-${app_version}-${build}.bin
 cp build/${app}/build.options.json images/
