@@ -12,8 +12,8 @@ FILE="package.h"
 FILEAPP="./src/app/user/app_package.h"
 
 # Use grep to find the line, then sed to extract the version number
-fw_version=$(grep "#define FW_VERSION" "$FILE" | sed -E 's/#define FW_VERSION\s+"([^"]+)"/\1/')
-app_version=$(grep "#define APP_VERSION" "$FILEAPP" | sed -E 's/#define APP_VERSION\s+"([^"]+)"/\1/')
+fw_version=$(grep "#define FW_VERSION" "$FILE" | sed -E 's/.*#define FW_VERSION[[:space:]]+"([^"]+)".*/\1/')
+app_version=$(grep "#define APP_VERSION" "$FILEAPP" | sed -E 's/.*#define APP_VERSION[[:space:]]+"([^"]+)".*/\1/')
 echo "fw version: $fw_version"
 echo "app version: $app_version"
 
