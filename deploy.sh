@@ -185,7 +185,7 @@ arduino-cli cache clean
 output=$(arduino-cli compile -b esp32:esp32:esp32c5 \
 --build-property build.partitions=min_spiffs \
 --build-property upload.maximum_size=1966080 \
---build-path ./build/${app} . 2>&1)
+--build-path ./build/${app} ${sketch}.ino 2>&1)
 
 # Check if the compilation was successful
 if [ $? -eq 0 ]; then
