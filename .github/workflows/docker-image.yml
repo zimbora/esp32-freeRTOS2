@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BASE_DIR: /root
-      PROJECT: esp32-freeRTOS2
+      PROJECT: esp32-freeRTOS2-c5
       APP: demo
       BUILD: dev
       CONTAINER: deploy-freertos

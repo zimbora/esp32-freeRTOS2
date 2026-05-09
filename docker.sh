@@ -5,7 +5,7 @@ container="deploy-freertos"
 # Tag Docker Image
 tag="freertos"
 # Project name
-project="esp32-freeRTOS2"
+project="esp32-freeRTOS2-c5"
 # dir name
 app="demo"
 # folder to store generated images

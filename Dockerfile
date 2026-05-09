@@ -1,7 +1,7 @@
 FROM zimbora/arduino-deploy-amd:latest
 
 ENV BASE_DIR=/root
-ARG PROJECT="esp32-freeRTOS2"
+ARG PROJECT="esp32-freeRTOS2-c5"
 ARG APP="demo"
 ARG BUILD="dev"
 

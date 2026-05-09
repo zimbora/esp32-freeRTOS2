@@ -2,7 +2,7 @@
 
 home_dir="~"
 build="dev"
-project="esp32-freeRTOS2"
+project="esp32-freeRTOS2-c5"
 app="demo"
 fw_version="1.0.0"
 app_version="1.0.0"
@@ -174,7 +174,9 @@ if [ "$docker" == "true" ]; then
 fi
 
 echo "Installation complete!"
+sketch="esp32-freeRTOS2"
 echo "project: ${project}"
+echo "sketch: ${sketch}"
 echo "app: ${app}"
 
 arduino-cli cache clean
@@ -203,8 +205,11 @@ fi
 
 mkdir -p "images"
 
-filenames=$( find build/${app}/${project}* )
 cp compile_logs.txt images/
-cp ${filenames} images/
-mv images/esp32-freeRTOS2.ino.bin images/${project}-${app}-${fw_version}-${app_version}-${build}.bin
+# Rename output files from sketch name to project name
+for f in build/${app}/${sketch}.ino.*; do
+  newname="images/${project}${f#build/${app}/${sketch}}"
+  cp "$f" "$newname"
+done
+mv images/${project}.ino.bin images/${project}-${app}-${fw_version}-${app_version}-${build}.bin
 cp build/${app}/build.options.json images/
