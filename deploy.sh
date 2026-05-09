@@ -180,7 +180,7 @@ echo "app: ${app}"
 arduino-cli cache clean
 
 # Compile the project and capture output
-output=$(arduino-cli compile -b esp32:esp32:esp32 \
+output=$(arduino-cli compile -b esp32:esp32:esp32c5 \
 --build-property build.partitions=min_spiffs \
 --build-property upload.maximum_size=1966080 \
 --build-path ./build/${app} . 2>&1)
