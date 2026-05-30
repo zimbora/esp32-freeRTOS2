@@ -974,6 +974,23 @@ void core_parse_mqtt_messages(){
         }
         break;
 #endif
+      case fw_wifi_get_:
+        {
+          String ssid    = WiFi.SSID();
+          int32_t rssi   = WiFi.RSSI();
+          int32_t channel = WiFi.channel();
+          String bssid   = WiFi.BSSIDstr();
+          bssid.toLowerCase();
+          bssid.replace(":","");
+
+          String wifi_json = "{\"ssid\":\"" + ssid +
+                             "\",\"channel\":" + String(channel) +
+                             ",\"rssi\":" + String(rssi) +
+                             ",\"bssid\":\"" + bssid + "\"}"
+          ;
+          core_send_mqtt_message(clientID, topic_get, wifi_json, 2, false);
+        }
+        break;
       default:
         //Serial.println("topic not known by fw topics");
         //Serial.println(payload);
