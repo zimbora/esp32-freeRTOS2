@@ -14,7 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BASE_DIR: /root
-      PROJECT: esp32-freeRTOS2
+      PROJECT: esp32-freeRTOS2-c5
+      SKETCH: esp32-freeRTOS2
       APP: demo
       BUILD: dev
       CONTAINER: deploy-freertos
@@ -54,7 +55,7 @@ jobs:
     - name: Run script inside Docker container
       run: |
         docker run --name $CONTAINER $CONTAINERTAG
-        docker cp ${CONTAINER}:${PROJECT}/images/ ./images/
+        docker cp ${CONTAINER}:${SKETCH}/images/ ./images/
 
     - uses: actions/upload-artifact@v4
       with:

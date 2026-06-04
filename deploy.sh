@@ -119,12 +119,12 @@ echo "Build type: ${build}"
 CREDENTIALS_FILE="./src/app/user/credentials.h"
 
 if [ "$build" == "staging" ]; then
-    echo "Setting MQTT_HOST_1 for stage environment..."
+    echo "Setting MQTT_HOST_1 for staging environment..."
     sed -i.bak 's/#define MQTT_HOST_1 "[^"]*"/#define MQTT_HOST_1 "devices.staging.inloc.cloud"/' "$CREDENTIALS_FILE"
     sed -i.bak 's/#define WIFI_SSID "[^"]*"/#define WIFI_SSID "Inloc"/' "$CREDENTIALS_FILE"
     sed -i.bak 's/#define WIFI_PASSWORD "[^"]*"/#define WIFI_PASSWORD "inlocAPpwd"/' "$CREDENTIALS_FILE"
     echo "MQTT_HOST_1 set to devices.staging.inloc.cloud"
-    echo "WIFI_SSID set to inlocAP"
+    echo "WIFI_SSID set to Inloc"
     echo "WIFI_PASSWORD set to inlocAPpwd"
 elif [ "$build" == "prod" ]; then
     echo "Setting MQTT_HOST_1 for production environment..."
@@ -273,7 +273,9 @@ if [ "$docker" == "true" ]; then
 fi
 
 echo "Installation complete!"
+sketch="esp32-freeRTOS2"
 echo "project: ${project}"
+echo "sketch: ${sketch}"
 echo "app: ${app}"
 
 arduino-cli cache clean
@@ -283,7 +285,7 @@ echo "Compiling with board: ${board} (${board_fqbn})"
 output=$(arduino-cli compile -b "${board_fqbn}" \
 --build-property build.partitions=min_spiffs \
 --build-property upload.maximum_size=1966080 \
---build-path ./build/${app} . 2>&1)
+--build-path ./build/${app} ${sketch}.ino 2>&1)
 
 # Check if the compilation was successful
 if [ $? -eq 0 ]; then
@@ -303,9 +305,12 @@ fi
 
 mkdir -p "images"
 
-filenames=$( find build/${app}/${project}* )
 cp compile_logs.txt images/
-cp ${filenames} images/
-mv images/esp32-freeRTOS2.ino.bin images/${project}-${app}-${fw_version}-${app_version}-${build}-${board}.bin
-mv images/esp32-freeRTOS2.ino.merged.bin images/${project}-${app}-${fw_version}-${app_version}-${build}-${board}.merged.bin
+# Rename output files from sketch name to project name
+for f in build/${app}/${sketch}.ino.*; do
+  newname="images/${project}${f#build/${app}/${sketch}}"
+  cp "$f" "$newname"
+done
+mv images/${project}.ino.bin images/${project}-${app}-${fw_version}-${app_version}-${build}-${board}.bin
+mv images/${project}.ino.merged.bin images/${project}-${app}-${fw_version}-${app_version}-${build}-${board}.merged.bin
 cp build/${app}/build.options.json images/
