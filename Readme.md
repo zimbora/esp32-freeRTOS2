@@ -12,12 +12,29 @@
 Note: all changes are made outside src/app folder
 
 ## Build
+
+Before build, set the target board. Available boards:
+- esp32
+- esp32c5
   
 ### Linux and MacOs
-  >> ./deploy.sh
+  >> ./deploy.sh -B esp32
+
+  Accepted commands:
+  - -B, --board <esp32|esp32c5>
+  - -b, --build <dev|staging|prod>
+  - -f, --force (force library install only on version mismatch)
+  - -d, --directory <home_dir>
+  - -p, --project <project_name>
+  - -a, --app <app_name>
+  - -v, --fw_version <version>
+  - -va, --app_version <version>
 
 ### Using docker
   >> ./docker.sh
+
+  Accepted commands:
+  - no arguments
 
 ### Arduino
   - Update your esp32 board manager version
@@ -84,7 +101,7 @@ Note: all changes are made outside src/app folder
   #define APP_ACCUM_FILENAME "/home/app/accum.txt"
   #define APP_ACCUM_TP_FILENAME "/home/app/accumtp.txt"
 
-  #define WIFI_SSID "inlocAP"
+  #define WIFI_SSID "Inloc"
   #define WIFI_PASSWORD "inlocAPpwd"
 
   #define MQTT_HOST_1 "devices.dev.inloc.cloud" // mac OS broker

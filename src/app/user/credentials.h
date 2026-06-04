@@ -12,10 +12,10 @@
 #define APP_ACCUM_FILENAME "/home/app/accum.txt"
 #define APP_ACCUM_TP_FILENAME "/home/app/accumtp.txt"
 
-#define WIFI_SSID "inlocAP"
+#define WIFI_SSID "Inloc"
 #define WIFI_PASSWORD "inlocAPpwd"
 
-#define MQTT_HOST_1 "devices.dev.inloc.cloud" // mac OS broker
+#define MQTT_HOST_1 "devices.staging.inloc.cloud" // mac OS broker
 #define MQTT_PORT_1 1883
 #define MQTT_USER_1 "device"
 #define MQTT_PASSWORD_1 "device"
