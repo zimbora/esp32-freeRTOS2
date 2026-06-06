@@ -10,39 +10,47 @@ on:
     types: [created]
 
 jobs:
+  set-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.set-build.outputs.build }}
+    steps:
+      - name: Determine build environments
+        id: set-build
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            # On release publication, build all three environments
+            echo 'build=["dev","staging","prod"]' >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref_type }}" == "tag" ]]; then
+            # Tag pushes produce a staging build for pre-release validation
+            echo 'build=["staging"]' >> $GITHUB_OUTPUT
+          else
+            # Regular branch pushes produce a dev build for development testing
+            echo 'build=["dev"]' >> $GITHUB_OUTPUT
+          fi
+
   docker:
+    needs: set-matrix
     runs-on: ubuntu-latest
     strategy:
       matrix:
         board: [esp32, esp32c5]
+        build: ${{ fromJson(needs.set-matrix.outputs.build) }}
     env:
       BASE_DIR: /root
       PROJECT: esp32-freeRTOS2
       SKETCH: esp32-freeRTOS2
       APP: demo
-      BUILD: dev
-      CONTAINER: deploy-freertos-${{ matrix.board }}
-      CONTAINERTAG: freertos-${{ matrix.board }}
+      BUILD: ${{ matrix.build }}
+      CONTAINER: deploy-freertos-${{ matrix.board }}-${{ matrix.build }}
+      CONTAINERTAG: freertos-${{ matrix.board }}-${{ matrix.build }}
 
     steps:
     - name: Set Project
       run: |
         echo "Using project $PROJECT"
         echo "Using board ${{ matrix.board }}"
-
-    - name: Set BUILD for tag creation
-      run: |
-        echo "Creating stage release from tag"
-        echo "Setting BUILD to stage"
-        echo "BUILD=staging" >> $GITHUB_ENV  # Set BUILD environment variable for subsequent steps
-      if: github.ref_type == 'tag'  # Run only on tag creation events
-
-    - name: Check release tag format
-      run: |
-        echo "Creating prod release"
-        echo "Setting BUILD to prod"
-        echo "BUILD=prod" >> $GITHUB_ENV  # Set BUILD environment variable for subsequent steps
-      if: github.event_name == 'release'  # Run only on release events
+        echo "Using build $BUILD"
 
     - name: Checkout repository
       uses: actions/checkout@v3
@@ -65,7 +73,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: upload images-${{ matrix.board }}
+        name: images-${{ matrix.board }}-${{ matrix.build }}
         path: ./images
         
     - name: Update Release
@@ -74,7 +82,7 @@ jobs:
         files: |
           ./images/*
         token: ${{ secrets.GITHUB_TOKEN }}
-      if: github.event_name == 'release'  # Run only on release events
+      if: github.event_name == 'release'
 
     - name: Clean up
       run: |
