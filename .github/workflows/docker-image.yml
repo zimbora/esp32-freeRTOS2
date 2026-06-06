@@ -12,23 +12,29 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        board: [esp32, esp32c5]
     env:
       BASE_DIR: /root
       PROJECT: esp32-freeRTOS2
+      SKETCH: esp32-freeRTOS2
       APP: demo
       BUILD: dev
-      CONTAINER: deploy-freertos
-      CONTAINERTAG: freertos
+      CONTAINER: deploy-freertos-${{ matrix.board }}
+      CONTAINERTAG: freertos-${{ matrix.board }}
 
     steps:
     - name: Set Project
-      run: echo "Using project $PROJECT"
+      run: |
+        echo "Using project $PROJECT"
+        echo "Using board ${{ matrix.board }}"
 
     - name: Set BUILD for tag creation
       run: |
         echo "Creating stage release from tag"
         echo "Setting BUILD to stage"
-        echo "BUILD=stage" >> $GITHUB_ENV  # Set BUILD environment variable for subsequent steps
+        echo "BUILD=staging" >> $GITHUB_ENV  # Set BUILD environment variable for subsequent steps
       if: github.ref_type == 'tag'  # Run only on tag creation events
 
     - name: Check release tag format
@@ -49,16 +55,17 @@ jobs:
         --build-arg PROJECT=${PROJECT} \
         --build-arg APP=${APP} \
         --build-arg BUILD=${BUILD} \
+        --build-arg BOARD=${{ matrix.board }} \
         -t $CONTAINERTAG .
 
     - name: Run script inside Docker container
       run: |
         docker run --name $CONTAINER $CONTAINERTAG
-        docker cp ${CONTAINER}:${PROJECT}/images/ ./images/
+        docker cp ${CONTAINER}:${SKETCH}/images/ ./images/
 
     - uses: actions/upload-artifact@v4
       with:
-        name: upload images
+        name: upload images-${{ matrix.board }}
         path: ./images
         
     - name: Update Release

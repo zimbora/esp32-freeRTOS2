@@ -31,5 +31,5 @@ while [ "$#" -gt 0 ]; do
 done
 
 #sudo esptool.py --port ${port} read_mac
-sudo esptool.py --port ${port} erase_flash 
-sudo esptool.py --port ${port} --baud 460800 write_flash 0x0 ${filename}
+sudo esptool --port ${port} erase_flash 
+sudo esptool --port ${port} --baud 460800 write-flash 0x0 ${filename}

@@ -4,14 +4,16 @@ ENV BASE_DIR=/root
 ARG PROJECT="esp32-freeRTOS2"
 ARG APP="demo"
 ARG BUILD="dev"
+ARG BOARD="esp32"
+ARG SKETCH="esp32-freeRTOS2"
 
-# Copy the script into the container
-COPY . /${PROJECT}
+# Copy the source into a directory matching the sketch name (arduino-cli requirement)
+COPY . /${SKETCH}
 
 # Make the script executable
-RUN chmod +x /${PROJECT}/deploy.sh
+RUN chmod +x /${SKETCH}/deploy.sh
 
-# Set the working directory to your project directory
-WORKDIR /${PROJECT}
+# Set the working directory to the sketch directory
+WORKDIR /${SKETCH}
 
-RUN ./deploy.sh -d $BASE_DIR -p $PROJECT -a $APP -b $BUILD
+RUN ./deploy.sh -d $BASE_DIR -p $PROJECT -a $APP -b $BUILD -B $BOARD

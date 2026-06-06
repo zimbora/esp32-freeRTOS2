@@ -4,10 +4,16 @@
 #define ARDUINO_RUNNING_CORE 1
 #endif
 
-// HARDWARE
-#define PWKEY 4
+// HARDWARE - PWKEY is defined in board.h
+#ifndef PWKEY
+  #define PWKEY 4
+#endif
 
+#if defined(ARDUINO_ESP32C5_DEV)
+#include <esp_system.h>
+#else
 #include <rom/rtc.h>
+#endif
 
 #include "./package.h"
 #include "core.h"
@@ -56,9 +62,12 @@ void mqttOnConnect(uint8_t clientID){ // Used on LTE comms
   mRTOS.mqtt_pushMessage(clientID,"/version",String(FW_VERSION),2,true);
   mRTOS.mqtt_pushMessage(clientID,"/app_version",String(APP_VERSION),2,true);
   mRTOS.mqtt_pushMessage(clientID,"/tech",mRTOS.get_technology(),2,true);
-  mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu0",get_reset_reason(rtc_get_reset_reason(0)),2,true);
-  mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu1",get_reset_reason(rtc_get_reset_reason(1)),2,true);
-
+  #if defined(ARDUINO_ESP32C5_DEV)
+    mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu0",get_reset_reason((int)esp_reset_reason()),2,true);
+  #else
+    mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu0",get_reset_reason(rtc_get_reset_reason(0)),2,true);
+    mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu1",get_reset_reason(rtc_get_reset_reason(1)),2,true);
+  #endif
   mRTOS.mqtt_subscribeTopics(clientID);
   return;
 }
@@ -73,8 +82,7 @@ void onConnectionEstablished(){ // Used on wifi comms
   mRTOS.mqtt_pushMessage(CLIENTID,"/version",String(FW_VERSION),2,true);
   mRTOS.mqtt_pushMessage(CLIENTID,"/app_version",String(APP_VERSION),2,true);
   mRTOS.mqtt_pushMessage(CLIENTID,"/tech",mRTOS.get_technology(),2,true);
-  mRTOS.mqtt_pushMessage(CLIENTID,"/reboot_cause_cpu0",get_reset_reason(rtc_get_reset_reason(0)),2,true);
-  mRTOS.mqtt_pushMessage(CLIENTID,"/reboot_cause_cpu1",get_reset_reason(rtc_get_reset_reason(1)),2,true);
+  mRTOS.mqtt_pushMessage(CLIENTID,"/reboot_cause_cpu0",get_reset_reason((int)esp_reset_reason()),2,true);
 
   mRTOS.mqtt_subscribeTopics(0);
 }
@@ -256,7 +264,7 @@ void mRTOS_task(void *pvParameters){
 
 void setup() {
 
-  Serial.begin(115200);
+  Serial.begin(SERIAL_LOG_BAUD);
 
   DBGINI(&Serial,ESP32Timestamp::TimestampNone);
   DBGSTA
@@ -279,47 +287,78 @@ void setup() {
   DBGLOG(Info,"wait 2s for system to init..");
   delay(500);
 
-  
+#if defined(ARDUINO_ESP32C5_DEV)  
+  xTaskCreate(
+#else  
   xTaskCreatePinnedToCore(
+#endif
     core_task
     ,  "core_task"   // A name just for humans
     ,  NETWORK_CORE_TASK_SIZE  // This stack size can be checked & adjusted by reading the Stack Highwater
     ,  NULL
     ,  NETWORK_CORE_TASK_PRIORITY // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.  !! do not edit priority
-    ,  &MRTOS
-    ,  1);
+    #if defined(ARDUINO_ESP32C5_DEV)  
+        ,  &MRTOS);
+        #else
+        ,  &MRTOS
+        ,  1);
+        #endif
   
   #ifndef ENABLE_LTE
+  #if defined(ARDUINO_ESP32C5_DEV)  
+    xTaskCreate(
+  #else  
     xTaskCreatePinnedToCore(
+  #endif
       mRTOS_task
       ,  "mRTOS_task"   // A name just for humans
       ,  MRTOS_TASK_SIZE  // This stack size can be checked & adjusted by reading the Stack Highwater
       ,  NULL
       ,  MRTOS_TASK_PRIORITY // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.  !! do not edit priority
-      ,  NULL
-      ,  1);
+      #if defined(ARDUINO_ESP32C5_DEV)  
+        ,  NULL);
+        #else
+        ,  NULL
+        ,  1);
+        #endif
   #endif
 
   #ifdef ENABLE_LTE
-    xTaskCreatePinnedToCore(
+    #if defined(ARDUINO_ESP32C5_DEV)  
+      xTaskCreate(
+    #else  
+      xTaskCreatePinnedToCore(
+    #endif
         network_lte_task
         ,  "network_lte_task"   // A name just for humans
         ,  NETWORK_LTE_TASK_SIZE  // This stack size can be checked & adjusted by reading the Stack Highwater
         ,  NULL
         ,  NETWORK_LTE_TASK_PRIORITY // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest. !! do not edit priority
+        #if defined(ARDUINO_ESP32C5_DEV)  
+        ,  NULL);
+        #else
         ,  NULL
         ,  1);
+        #endif
   #endif
 
   #ifdef THREAD_APP
-    xTaskCreatePinnedToCore(
+    #if defined(ARDUINO_ESP32C5_DEV)  
+      xTaskCreate(
+    #else  
+      xTaskCreatePinnedToCore(
+    #endif
         app_task
         ,  "app_task"   // A name just for humans
         ,  NETWORK_APP_TASK_SIZE  // This stack size can be checked & adjusted by reading the Stack Highwater
         ,  NULL
         ,  NETWORK_APP_TASK_PRIORITY // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest. !! do not edit priority
+        #if defined(ARDUINO_ESP32C5_DEV)  
+        ,  NULL);
+        #else
         ,  NULL
         ,  1);
+        #endif
   #endif
 
   #ifdef ENABLE_BLE
@@ -345,23 +384,39 @@ void loop() {
 }
 
 String get_reset_reason(int reason){
-  switch ( reason)
-  {
-    case 1  : return "Vbat power on reset"; break;
-    case 3  : return "Software reset digital core"; break;
-    case 4  : return "Legacy watch dog reset digital core"; break;
-    case 5  : return "Deep Sleep reset digital core"; break;
-    case 6  : return "Reset by SLC module, reset digital core"; break;
-    case 7  : return "Timer Group0 Watch dog reset digital core"; break;
-    case 8  : return "Timer Group1 Watch dog reset digital core"; break;
-    case 9  : return "RTC Watch dog Reset digital core"; break;
-    case 10 : return "Instrusion tested to reset CPU"; break;
-    case 11 : return "Time Group reset CPU"; break;
-    case 12 : return "Software reset CPU"; break;
-    case 13 : return "RTC Watch dog Reset CPU"; break;
-    case 14 : return "for APP CPU, reseted by PRO CPU"; break;
-    case 15 : return "Reset when the vdd voltage is not stable"; break;
-    case 16 : return "RTC Watch dog reset digital core and rtc module"; break;
-    default : return "NO_MEAN";
-  }
+  #ifdef ARDUINO_ESP32C5_DEV
+    switch ((esp_reset_reason_t)reason)
+    {
+      case ESP_RST_POWERON  : return "Power on reset"; break;
+      case ESP_RST_SW       : return "Software reset"; break;
+      case ESP_RST_PANIC    : return "Exception/panic reset"; break;
+      case ESP_RST_INT_WDT  : return "Interrupt watchdog reset"; break;
+      case ESP_RST_TASK_WDT : return "Task watchdog reset"; break;
+      case ESP_RST_WDT      : return "Other watchdog reset"; break;
+      case ESP_RST_DEEPSLEEP: return "Deep sleep reset"; break;
+      case ESP_RST_BROWNOUT : return "Brownout reset"; break;
+      case ESP_RST_SDIO     : return "SDIO reset"; break;
+      default               : return "Unknown reset reason";
+    }
+  #else
+    switch( reason )
+    {
+      case 1  : return "POWERON_RESET"; break;   /*!<1, Vbat power on reset*/
+      case 3  : return "SW_RESET"; break;        /*!<3, Software reset digital core*/
+      case 4  : return "OWDT_RESET"; break;      /*!<4, Legacy watch dog reset digital core*/
+      case 5  : return "DEEPSLEEP_RESET"; break; /*!<5, Deep Sleep reset digital core*/
+      case 6  : return "SDIO_RESET"; break;      /*!<6, Reset by SLC module, reset digital core*/
+      case 7  : return "TG0WDT_SYS_RESET"; break; /*!<7, Timer Group0 Watch dog reset digital core*/
+      case 8  : return "TG1WDT_SYS_RESET"; break; /*!<8, Timer Group1 Watch dog reset digital core*/
+      case 9  : return "RTCWDT_SYS_RESET"; break; /*!<9, RTC Watch dog Reset digital core*/
+      case 10 : return "INTRUSION_RESET"; break; /*!<10, Instrusion tested to reset CPU*/
+      case 11 : return "TGWDT_CPU_RESET"; break; /*!<11, Time Group reset CPU*/
+      case 12 : return "SW_CPU_RESET"; break;     /*!<12, Software reset CPU*/
+      case 13 : return "RTCWDT_CPU_RESET"; break; /*!<13, RTC Watch dog Reset CPU*/
+      case 14 : return "EXT_CPU_RESET"; break;     /*!<14, for APP CPU, reseted by PRO CPU*/
+      case 15 : return "RTCWDT_BROWN_OUT_RESET"; break; /*!<15, Reset when the vdd voltage is not stable*/
+      case 16 : return "RTCWDT_RTC_RESET"; break; /*!<16, RTC Watch dog reset digital core and rtc module*/
+      default : return "NO_MEAN";
+    }
+  #endif
 }
