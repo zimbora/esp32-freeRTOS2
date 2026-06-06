@@ -79,6 +79,7 @@ jobs:
     - name: Update Release
       uses: softprops/action-gh-release@v1
       with:
+        # Match versioned binaries: <project>-<app>-<fw_version>-<app_version>-<build>-<board>[.merged].bin
         files: |
           ./images/${{ env.PROJECT }}-${{ env.APP }}-*-${{ matrix.build }}-${{ matrix.board }}.bin
           ./images/${{ env.PROJECT }}-${{ env.APP }}-*-${{ matrix.build }}-${{ matrix.board }}.merged.bin
