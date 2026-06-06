@@ -7,7 +7,7 @@ on:
     tags:
       - '**'     # Triggers on tag creation
   release:
-    types: [published]  # Only triggers for published (non-draft) releases
+    types: [created]
 
 jobs:
   set-matrix:
