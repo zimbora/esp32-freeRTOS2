@@ -8,8 +8,14 @@
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
-// Uncomment the board you are using
-#define BOARD_ESP32C5_WIFI6_KIT_N16R8
+// Auto-select board by target chip:
+//  - esp32      -> BOARD_ESP32_WROOM_32D
+//  - esp32c5    -> BOARD_ESP32C5_WIFI6_KIT_N16R8
+#if defined(CONFIG_IDF_TARGET_ESP32C5)
+  #define BOARD_ESP32C5_WIFI6_KIT_N16R8
+#elif defined(CONFIG_IDF_TARGET_ESP32)
+  #define BOARD_ESP32_WROOM_32D
+#endif
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
@@ -48,5 +54,42 @@
   #define SERIAL_LOG_BAUD 115200
 
 #endif // BOARD_ESP32C5_WIFI6_KIT_N16R8
+
+/////////////////////////////////////////////////////////////////////
+//                                                                 //
+//        ESP32-WROOM-32D (DevKitC or equivalent)                 //
+//                                                                 //
+//  UART0 (Serial / logs): TX=GPIO1, RX=GPIO3                    //
+//    -> routed to USB-to-UART bridge (CP2102 / CH340)            //
+//    -> Just use Serial.begin(115200) — no pin override needed.  //
+//                                                                 //
+//  UART2 (Serial1 / external): TX=GPIO17, RX=GPIO16             //
+//                                                                 //
+//  Built-in LED: GPIO2                                            //
+//  Available headers: GPIO 4,5,12,13,14,15,18,19,21,22,23,      //
+//                     25,26,27,32,33,34,35,36,39                 //
+//                                                                 //
+/////////////////////////////////////////////////////////////////////
+
+#ifdef BOARD_ESP32_WROOM_32D
+
+  // Modem power key (adjust if modem is connected)
+  #define PWKEY 4
+
+  // Serial1 - external UART (UART2 remapped to these pins)
+  #define SERIAL1_GPIO_RX  16
+  #define SERIAL1_GPIO_TX  17
+  #define SERIAL1_GPIO_RTS 18
+
+  // Built-in LED
+  #define LED_PIN 2
+
+  // Serial (UART0) for logs is the default:
+  //   TX = GPIO1, RX = GPIO3
+  //   Connected to USB-to-UART bridge on the dev kit.
+  //   Just use Serial.begin(115200) — no pin override needed.
+  #define SERIAL_LOG_BAUD 115200
+
+#endif // BOARD_ESP32_WROOM_32D
 
 #endif // BOARD_H
