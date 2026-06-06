@@ -1,9 +1,10 @@
 FROM zimbora/arduino-deploy-amd:latest
 
 ENV BASE_DIR=/root
-ARG PROJECT="esp32-freeRTOS2-c5"
+ARG PROJECT="esp32-freeRTOS2"
 ARG APP="demo"
 ARG BUILD="dev"
+ARG BOARD="esp32"
 ARG SKETCH="esp32-freeRTOS2"
 
 # Copy the source into a directory matching the sketch name (arduino-cli requirement)
@@ -15,4 +16,4 @@ RUN chmod +x /${SKETCH}/deploy.sh
 # Set the working directory to the sketch directory
 WORKDIR /${SKETCH}
 
-RUN ./deploy.sh -d $BASE_DIR -p $PROJECT -a $APP -b $BUILD
+RUN ./deploy.sh -d $BASE_DIR -p $PROJECT -a $APP -b $BUILD -B $BOARD
