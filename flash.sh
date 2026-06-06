@@ -1,8 +1,8 @@
 # Script to flash esp32 sniffer
 # Command: 
-# >> sudo ./flash.sh -p /dev/ttyUSB0 -f esp32-freeRTOS2-c5.ino.merged.bin
+# >> sudo ./flash.sh -p /dev/ttyUSB0 -f esp32-freeRTOS2.ino.merged.bin
 
-filename=esp32-freeRTOS2-c5.ino.merged.bin
+filename=esp32-freeRTOS2.ino.merged.bin
 port=/dev/ttyUSB0
 
 while [ "$#" -gt 0 ]; do
@@ -30,6 +30,6 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-#sudo esptool --port ${port} read_mac
+#sudo esptool.py --port ${port} read_mac
 sudo esptool --port ${port} erase_flash 
-sudo esptool --port ${port} --baud 921600 write_flash 0x0 ${filename}
+sudo esptool --port ${port} --baud 460800 write_flash 0x0 ${filename}
