@@ -13,6 +13,30 @@ After being tested with some devices, version can be changed to stable a version
   - Add uid to the header of fota request
   - Fota md5 is being well calculated but the comparison is not being well done
 
+### 1.1.12
+	refactor: deploy
+		check for installed libraries on arduino libraries folder
+		add flag -f to force library update
+		update modem-freeRTOS to v1.0.10
+		Allow board identification using flag -B (esp32/esp32c5)
+		add board to output binary file
+		set default ssid as Inloc
+		Changes env stage to staging
+		Change merged.bin filename
+		updates doc
+	fix: credentials: set devices.dev.. as default mqtt host
+	fix: flash: sets default baudrate to 460800
+	Merge c5 (#12)
+		* Merge c5 to main - supports esp32c5
+		* fix: flash: replace deprecated command write-flash
+		* feat: workflow: create matrix to compile for esp32 and esp32c5
+	change: set KEEPALIVE_PERIOD to 1h
+	feat: deploy: set LOG_LEVEL to 3 in staging and to 2 in prod
+	
+### 1.1.11
+	fix: build macos
+	feat: adds fw_wifi_get_
+
 ### 1.1.10
 	Add stage release and improve prod release with environment-specific MQTT configuration (#8)
 	commit generates 1 dev build: devices.dev.inloc.cloud host
