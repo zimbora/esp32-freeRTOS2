@@ -80,7 +80,8 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          ./images/*
+          ./images/${{ env.PROJECT }}-${{ env.APP }}-*-${{ matrix.build }}-${{ matrix.board }}.bin
+          ./images/${{ env.PROJECT }}-${{ env.APP }}-*-${{ matrix.build }}-${{ matrix.board }}.merged.bin
         token: ${{ secrets.GITHUB_TOKEN }}
       if: github.event_name == 'release'
 
