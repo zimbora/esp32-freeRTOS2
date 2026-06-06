@@ -13,6 +13,23 @@ After being tested with some devices, version can be changed to stable a version
   - Add uid to the header of fota request
   - Fota md5 is being well calculated but the comparison is not being well done
 
+### 1.1.13
+feat: compile dev/staging/prod images on release creation (#14)
+* feat: compile dev/staging/prod images on release publication
+	- Add a `set-matrix` pre-job that dynamically outputs which build
+	environments to use based on the event type:
+	- branch push  → dev only
+	- tag push     → staging only
+	- release published → dev, staging, and prod (all three)
+	- Replace the old static BUILD env var + conditional steps with a
+	`build` matrix dimension driven by the pre-job output
+	- Update CONTAINER, CONTAINERTAG, and artifact names to include the
+	build type, preventing name collisions across parallel jobs
+	- Change release trigger from `created` to `published` so the workflow
+	only fires for fully published (non-draft) releases
+	- Add inline comments explaining the business logic
+* revert: restore release trigger to 'created'
+
 ### 1.1.12
 	refactor: deploy
 		check for installed libraries on arduino libraries folder
@@ -32,7 +49,7 @@ After being tested with some devices, version can be changed to stable a version
 		* feat: workflow: create matrix to compile for esp32 and esp32c5
 	change: set KEEPALIVE_PERIOD to 1h
 	feat: deploy: set LOG_LEVEL to 3 in staging and to 2 in prod
-	
+
 ### 1.1.11
 	fix: build macos
 	feat: adds fw_wifi_get_
