@@ -32,4 +32,4 @@ done
 
 #sudo esptool.py --port ${port} read_mac
 sudo esptool.py --port ${port} erase_flash 
-sudo esptool.py --port ${port} --baud 921600 write_flash 0x0 ${filename}
+sudo esptool.py --port ${port} --baud 460800 write_flash 0x0 ${filename}
