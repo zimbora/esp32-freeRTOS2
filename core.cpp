@@ -1140,6 +1140,10 @@ uuidTopics_ resolveOptionUUID(std::map<long, uuidTopics_> map, String param) {
 }
 #endif
 
+String get_uid() {
+  return String(MQTT_UID_PREFIX) + mRTOS.macAddress();
+}
+
 String date() {
   return String(year()) + "-" + pad2(month()) + "-" + pad2(day()) + " " + pad2(hour()) + ":" + pad2(minute()) + ":" + pad2(second());
 }
