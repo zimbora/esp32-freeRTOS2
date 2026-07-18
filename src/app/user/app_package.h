@@ -19,10 +19,19 @@
 /////////////////////////////////////////////////////////////////////
 
 /* supported Models by our cloud
-* - devices.inloc.cloud
-* If you chose a different model you have to develop your own web
-* interface or request support. Contact developer in that case:
+* - devices.dev.inloc.cloud
+* Don't change model name if you want to test our cloud services. 
+* If you want to build a product with this code set a custom model name
+* A good practice is to use your MPN (Manufacturer Part Number) as model name,
+* preceded by your company name or brand. For example: "mycompany-myproduct-001"
+* If you want to use our cloud services contact us for support.
+* Contacts:
 * - lucas.ua.eet@gmail.com
+* I hope you appreciate our work and services.
+* 
+* Note: Fota services are available for all models, but our cloud services 
+* are only available for supported models. Each model has a unique identifier
+* and can only be updated with firmware that matches its model name. 
 */
 #define FW_MODEL                  "DEMO"
 
@@ -32,6 +41,12 @@
 // Enabled modules																						 		 //
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
+/*
+* ENABLE LTE is not tested for several releases and not recommended 
+* without further testing. It is recommended to use the WiFi module for now.
+* You are invited to collaborate with us to test and improve the LTE module.
+* https://github.com/zimbora/esp32-modem-freeRTOS
+*/
 //#define ENABLE_LTE // Use LTE modem radio
 //#define ENABLE_BLE // BLE for device configuration
 //#define ENABLE_AP // Access Point for wifi configuration
@@ -93,7 +108,6 @@
 //                         DEBUG                             	   //
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
-#define DEBUG_SNIFFER
 //#define DEBUG_MQTT_TOPIC
 //#define DEBUG_MQTT_PAYLOAD
 
@@ -104,6 +118,5 @@
 /////////////////////////////////////////////////////////////////////
 #define MQTT_TX_QUEUE_SIZE 10
 //#define DEBUG_HTTP
-//#DEBUG_MQTT_PAYLOAD
 
 #endif
