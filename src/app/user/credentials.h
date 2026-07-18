@@ -15,6 +15,8 @@
 #define WIFI_SSID "Inloc"
 #define WIFI_PASSWORD "inlocAPpwd"
 
+#define AP_PASSWORD "inlocAPpwd"
+
 #define MQTT_HOST_1 "devices.dev.inloc.cloud" // mac OS broker
 #define MQTT_PORT_1 1883
 #define MQTT_USER_1 "device"
