@@ -189,6 +189,8 @@ void mRTOS_task(void *pvParameters){
 
   Serial.println("ssid: "+String(settings.wifi.ssid));
   mRTOS.init(settings.wifi.ssid,settings.wifi.pwd);
+  DBGLOG(Debug,"Wifi connecting with SSID: "+String(settings.wifi.ssid));
+
   String uid = MQTT_UID_PREFIX+mRTOS.macAddress();
 
   String preTopic = String(MQTT_PROJECT);
@@ -223,41 +225,51 @@ void mRTOS_task(void *pvParameters){
     Serial.println("modem is registered");
   #endif
 
-  bool wifiDefault = false;
   uint32_t wifiTimeout = 0;
-  for(;;){
+  
+  #ifndef ENABLE_LTE
+    DBGLOG(Debug,"Wifi attempting with stored SSID: "+String(WIFI_SSID));
+    wifiTimeout = now() + 15;
+    while(!mRTOS.isWifiConnected() && wifiTimeout > now()){
+      delay(1); // !! do not remove - switching between tasks
+    }
     
-    mRTOS.loop();
-
-#ifndef ENABLE_LTE
-    if(!mRTOS.isWifiConnected() && wifiTimeout < millis()){
-      #ifndef ENABLE_AP
-        if(wifiDefault){
-          mRTOS.wifiReconnect(WIFI_SSID,WIFI_PASSWORD);
-          wifiDefault = false;
-        }else{
-          mRTOS.wifiReconnect(settings.wifi.ssid,settings.wifi.pwd);
-          wifiDefault = true;
-        }
-        wifiTimeout = millis() + 30*1000;
-      #else ENABLE_AP
-        ap.setup();
-        DBGLOG(Debug,now());
-        uint32_t timeout = now() + 300;
+    if(!mRTOS.isWifiConnected()){
+      DBGLOG(Debug,"Wifi attempting with default SSID: "+String(WIFI_SSID));
+      mRTOS.wifiReconnect(WIFI_SSID,WIFI_PASSWORD);
+      wifiTimeout = now() + 15;
+      while(!mRTOS.isWifiConnected() && wifiTimeout > now()){
+        delay(1); // !! do not remove - switching between tasks
+      }
+    }
+    
+    #ifdef ENABLE_AP
+      if(!mRTOS.isWifiConnected()){
+        ap.setup(mRTOS.macAddress());
+        DBGLOG(Debug,"Access Point started");
+        uint32_t timeout = now() + 5*60; // 5 minutes timeout
         for(;;){
           ap.loop();
-
           if(timeout < now()){
             DBGLOG(Info,"Timeout for Access Point, try WiFi client once again");
             break;
           }
+          delay(1); // !! do not remove - switching between tasks
         }
-        mRTOS.wifiReconnect(settings.wifi.ssid,settings.wifi.pwd);
-        wifiTimeout = millis() + 30*1000;
-      #endif
-    }
+        ap.stop();
+        DBGLOG(Debug,"Access Point stopped");
+      }
+    #endif
+  #endif
+
+  if(!mRTOS.isWifiConnected()){
+    mRTOS.wifiReconnect(settings.wifi.ssid,settings.wifi.pwd);
+    DBGLOG(Debug,"Wifi attempting with stored SSID: "+String(settings.wifi.ssid));
+  }
+  
+  for(;;){
+    mRTOS.loop();
     delay(1); // !! do not remove - switching between tasks
-#endif
   }
 }
 #endif
