@@ -13,6 +13,19 @@ After being tested with some devices, version can be changed to stable a version
   - Add uid to the header of fota request
   - Fota md5 is being well calculated but the comparison is not being well done
 
+### 1.1.14-1.0.0
+	perf: improve Wi-Fi startup and connectivity flow
+		- optimize `mRTOS_task` reconnect logic with timed waits on stored credentials, fallback to default credentials, and a final retry after AP provisioning
+		- improve AP provisioning portal layout and document the current Wi-Fi connection logic
+		- add `AP_PASSWORD` pre-processor support for AP credentials
+	fix: BLE and core integration
+		- fix `ENABLE_BLE` build issues
+		- add missing `get_uid` call in core flow
+	perf: deploy
+		- update modem-freeRTOS dependency to v1.0.11
+	doc: app package
+		- expand `app_package.h` inline guidance and metadata notes
+
 ### 1.1.13
 feat: compile dev/staging/prod images on release creation (#14)
 * feat: compile dev/staging/prod images on release publication
