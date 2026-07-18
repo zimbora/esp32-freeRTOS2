@@ -27,7 +27,6 @@ extern DynamicJsonDocument doc; // json
 #endif
 
 #ifdef ENABLE_BLE
-  BLE_SERVER ble;
   void bleCallback(String uuid, String value){
 
     String param = "";
