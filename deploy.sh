@@ -22,7 +22,7 @@ docker=false
 force_lib_install=false
 libs="ESP32httpUpdate@2.1.145 ArduinoJson@6.19.4 
       ESP32Logger2@1.0.3 EspMQTTClientFork@1.13.4
-			Time@1.6.1 esp32-BG95@1.0.6 modem-freeRTOS@1.0.10
+			Time@1.6.1 esp32-BG95@1.0.6 modem-freeRTOS@1.0.11
 			sysfile@1.0.3 autorequest@1.0.1 alarm@1.0.1 modbusrtu@1.0.1
 			"
 
