@@ -362,7 +362,7 @@ void setup() {
   #endif
 
   #ifdef ENABLE_BLE
-    ble.init(uid);
+    ble.init(get_uid());
     ble.setCallback(&bleCallback);
     ble.enable();
   #endif
