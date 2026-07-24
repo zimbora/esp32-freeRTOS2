@@ -10,7 +10,6 @@ After being tested with some devices, version can be changed to stable a version
 
 
 ## TODO
-  - Add uid to the header of fota request
   - Fota md5 is being well calculated but the comparison is not being well done
 
 ### 1.1.14-1.0.0

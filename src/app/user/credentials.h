@@ -35,6 +35,10 @@
 #define MQTT_WILL_PAYLOAD "offline"
 #define MQTT_PATH_RECORDS "/records"
 
+#ifndef FW_VARIANT
+#define FW_VARIANT "dev"
+#endif
+
 #define LOG_ACTIVE true
 #define LOG_LEVEL 5
 

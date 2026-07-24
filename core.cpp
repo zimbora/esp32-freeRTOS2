@@ -1210,7 +1210,13 @@ String core_fota(String url){
   NetworkClientSecure client;
   client.setInsecure();
   //client.setCACert(rootCACertificate); // not working
-  t_httpUpdate_return ret = httpUpdate.update(client, url);
+
+  String uid = get_uid();
+  t_httpUpdate_return ret = httpUpdate.update(client, url, "", [&uid](HTTPClient* http) {
+    http->addHeader("x-uid", uid);
+    http->addHeader("x-fw-model", FW_MODEL);
+    http->addHeader("x-fw-variant", FW_VARIANT);
+  });
 
   String error = "";
   switch (ret) {
