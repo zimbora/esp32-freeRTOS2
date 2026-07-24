@@ -11,9 +11,10 @@ After being tested with some devices, version can be changed to stable a version
 
 ## TODO
   - Add uid to the header of fota request
-  - Fota md5 is being well calculated but the comparison is not being well done
 
 ### 1.1.14-1.0.0
+	fix: fota md5 comparison
+		- use case-insensitive comparison and trim whitespace when comparing the received Content-MD5 header against the locally calculated MD5 in `do_fota()`
 	perf: improve Wi-Fi startup and connectivity flow
 		- optimize `mRTOS_task` reconnect logic with timed waits on stored credentials, fallback to default credentials, and a final retry after AP provisioning
 		- improve AP provisioning portal layout and document the current Wi-Fi connection logic

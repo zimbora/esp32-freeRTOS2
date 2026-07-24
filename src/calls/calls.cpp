@@ -407,7 +407,9 @@ String CALLS::do_fota(String protocol, String host, String path, String method, 
         String md5_calculated = md5_.toString();
         Serial.println("md5 calculated: "+md5_calculated);
         Serial.println("md5 header: "+msg_header->md5);
-        if(msg_header->md5 == md5_calculated){
+        String md5_header = msg_header->md5;
+        md5_header.trim();
+        if(md5_header.equalsIgnoreCase(md5_calculated)){
           Serial.println("md5 checked");
         }else{
           Serial.println("md5 check has failed");
