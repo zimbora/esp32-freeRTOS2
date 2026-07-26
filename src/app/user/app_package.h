@@ -46,10 +46,13 @@
 * without further testing. It is recommended to use the WiFi module for now.
 * You are invited to collaborate with us to test and improve the LTE module.
 * https://github.com/zimbora/esp32-modem-freeRTOS
+*
+* Access Point has been our primary choice for reconfiguration or setup.
+* BLE is an alternative but requires additional testing on your side.
 */
 //#define ENABLE_LTE // Use LTE modem radio
 //#define ENABLE_BLE // BLE for device configuration
-//#define ENABLE_AP // Access Point for wifi configuration
+#define ENABLE_AP // Access Point for wifi configuration
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
