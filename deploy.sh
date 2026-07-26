@@ -3,6 +3,7 @@
 home_dir="$HOME"
 build="dev"
 board="esp32"
+variant="esp32-wroom-32d"
 project="esp32-freeRTOS2"
 app="demo"
 fw_version="1.0.0"
@@ -103,11 +104,11 @@ done
 home_dir="${home_dir/#\~/$HOME}"
 
 case "$board" in
-  esp32|esp32c5)
+  esp32|esp32c5|esp32c5n4|esp32c5n8r8)
     ;;
   *)
     echo "Unsupported board: $board"
-    echo "Available boards: esp32, esp32c5"
+    echo "Available boards: esp32, esp32c5, esp32c5n4, esp32c5n8r8"
     exit 1
     ;;
 esac
@@ -118,28 +119,44 @@ board_fqbn="esp32:esp32:${board}"
 echo "Build type: ${build}"
 CREDENTIALS_FILE="./src/app/user/credentials.h"
 
+if [ "$board" == "esp32" ]; then
+  variant="esp32-wroom-32d"
+elif [ "$board" == "esp32c5" ]; then
+  variant="esp32c5"
+elif [ "$board" == "esp32c5n4" ]; then
+  variant="esp32c5n4"
+elif [ "$board" == "esp32c5n8r8" ]; then
+  variant="esp32c5n8r8"
+else
+  # add more boards here if needed
+  # increase logic for FW_VARIANT definition based on board type
+  # check memory size and other parameters if needed
+  echo "Unsupported board: $board"
+  echo "Available boards: esp32, esp32c5, esp32c5n4, esp32c5n8r8"
+  exit 1
+fi
+
+sed -i.bak "s/#define FW_VARIANT \"[^\"]*\"/#define FW_VARIANT \"$variant\"/" "$CREDENTIALS_FILE"
+echo "FW_VARIANT set to $variant"
+
 if [ "$build" == "staging" ]; then
     echo "Setting MQTT_HOST_1 for staging environment..."
     sed -i.bak 's/#define MQTT_HOST_1 "[^"]*"/#define MQTT_HOST_1 "devices.staging.inloc.cloud"/' "$CREDENTIALS_FILE"
     sed -i.bak 's/#define WIFI_SSID "[^"]*"/#define WIFI_SSID "Inloc"/' "$CREDENTIALS_FILE"
     sed -i.bak 's/#define WIFI_PASSWORD "[^"]*"/#define WIFI_PASSWORD "inlocAPpwd"/' "$CREDENTIALS_FILE"
     sed -i.bak 's/#define LOG_LEVEL [0-9]/#define LOG_LEVEL 3/' "$CREDENTIALS_FILE"
-    sed -i.bak 's/#define FW_VARIANT "[^"]*"/#define FW_VARIANT "staging"/' "$CREDENTIALS_FILE"
     echo "MQTT_HOST_1 set to devices.staging.inloc.cloud"
     echo "WIFI_SSID set to Inloc"
     echo "WIFI_PASSWORD set to inlocAPpwd"
     echo "LOG_LEVEL set to 3"
-    echo "FW_VARIANT set to staging"
 elif [ "$build" == "prod" ]; then
     echo "Setting MQTT_HOST_1 for production environment..."
     sed -i.bak 's/#define MQTT_HOST_1 "[^"]*"/#define MQTT_HOST_1 "devices.inloc.cloud"/' "$CREDENTIALS_FILE"
     sed -i.bak 's/#define LOG_LEVEL [0-9]/#define LOG_LEVEL 2/' "$CREDENTIALS_FILE"
-    sed -i.bak 's/#define FW_VARIANT "[^"]*"/#define FW_VARIANT "prod"/' "$CREDENTIALS_FILE"
     echo "WIFI_SSID set to Inloc"
     echo "WIFI_PASSWORD set to inlocAPpwd"
     echo "MQTT_HOST_1 set to devices.inloc.cloud"
     echo "LOG_LEVEL set to 2"
-    echo "FW_VARIANT set to prod"
 else
     echo "Using default MQTT_HOST_1 for dev environment"
 fi
@@ -319,6 +336,6 @@ for f in build/${app}/${sketch}.ino.*; do
   newname="images/${project}${f#build/${app}/${sketch}}"
   cp "$f" "$newname"
 done
-mv images/${project}.ino.bin images/${project}-${app}-${fw_version}-${app_version}-${build}-${board}.bin
-mv images/${project}.ino.merged.bin images/${project}-${app}-${fw_version}-${app_version}-${build}-${board}.merged.bin
+mv images/${project}.ino.bin images/${project}-${app}-${fw_version}-${app_version}-${build}-${variant}.bin
+mv images/${project}.ino.merged.bin images/${project}-${app}-${fw_version}-${app_version}-${build}-${variant}.merged.bin
 cp build/${app}/build.options.json images/
