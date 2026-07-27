@@ -35,6 +35,17 @@
 #define MQTT_WILL_PAYLOAD "offline"
 #define MQTT_PATH_RECORDS "/records"
 
+// CANNOT be changed after being set
+// FW_VARIANT is used to identify the firmware variant and should be set 
+// based on the specific ESP32 board being used. It is important to set 
+// this correctly to ensure compatibility with the hardware and any associated 
+// cloud services.
+// FOTA will only work if the FW_VARIANT matches the variant of the firmware 
+// being updated.
+#ifndef FW_VARIANT
+#define FW_VARIANT "esp32-wroom-32d"
+#endif
+
 #define LOG_ACTIVE true
 #define LOG_LEVEL 5
 

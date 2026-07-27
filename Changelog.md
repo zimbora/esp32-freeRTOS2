@@ -8,14 +8,13 @@ Only after a version is finished FW_VERSION macro in package.h file is changed t
 Then, compiled file is uploaded to mgmt-iot-devices platform as a nightmare version.
 After being tested with some devices, version can be changed to stable a version
 
-
 ## TODO
-  - Add uid to the header of fota request
 
 ### 1.1.15-1.0.0
 	fix: fota md5 comparison
 		- use case-insensitive comparison and trim whitespace when comparing the received Content-MD5 header against the locally calculated MD5 in `do_fota()`
-		
+	feat: add headers to fota request (uid,model and variant)
+
 ### 1.1.14-1.0.0
 	perf: improve Wi-Fi startup and connectivity flow
 		- optimize `mRTOS_task` reconnect logic with timed waits on stored credentials, fallback to default credentials, and a final retry after AP provisioning

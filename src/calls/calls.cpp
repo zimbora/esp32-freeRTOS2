@@ -1,5 +1,8 @@
 
 #include "calls.h"
+#include "../../package.h"
+#include "../app/user/app_package.h"
+#include "../app/user/credentials.h"
 
 /*
 * !! All calls to sysfile must be done here
@@ -33,8 +36,12 @@ String CALLS::fw_fota(String url){
   String host = url.substring(0,index);
   String path = url.substring(index);
   String method = "GET";
-  String header_key = "";
-  String header_value = "";
+  String uid = String(MQTT_UID_PREFIX) + mRTOS.macAddress();
+  String header_key = "x-uid";
+  // The BG95 modem library appends the header_key:header_value token directly
+  // into the raw HTTP request string. CRLF sequences within header_value are
+  // treated as additional header lines, allowing multiple headers to be sent.
+  String header_value = uid + "\r\nx-fw-model: " + String(FW_MODEL) + "\r\nx-fw-variant: " + String(FW_VARIANT);
   String body = "";
   bool json = false;
 
