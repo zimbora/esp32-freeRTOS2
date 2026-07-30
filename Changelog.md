@@ -14,6 +14,7 @@ After being tested with some devices, version can be changed to stable a version
 	fix: fota md5 comparison
 		- use case-insensitive comparison and trim whitespace when comparing the received Content-MD5 header against the locally calculated MD5 in `do_fota()`
 	feat: add headers to fota request (uid,model and variant)
+	feat: mqtt send variant
 
 ### 1.1.14-1.0.0
 	perf: improve Wi-Fi startup and connectivity flow
