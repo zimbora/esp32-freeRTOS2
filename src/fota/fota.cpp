@@ -13,7 +13,7 @@ void FOTA::in_progress(bool state){
 
 bool FOTA::start(uint32_t size){
   if (!Update.begin(size)){
-    LOG_ERROR("fota: cannot begin, not enough space");
+    LOG_ERROR("fota: cannot begin, not enough space\n");
     Update.printError(Serial);
     return false;
   }
@@ -36,7 +36,7 @@ bool FOTA::has_finished(){
 
   
   if (!Update.end(true)) {
-  	LOG_ERROR("fota: cannot end");
+  	LOG_ERROR("fota: cannot end\n");
   	Update.printError(Serial);
     in_progress(false);
 
@@ -44,7 +44,7 @@ bool FOTA::has_finished(){
   }
 
   if (!Update.isFinished()) {
-  	LOG_ERROR("fota: did not finish");
+  	LOG_ERROR("fota: did not finish\n");
   	Update.printError(Serial);
   	in_progress(false);
 
