@@ -217,41 +217,41 @@ void settings_log(){
   if(!settings.log.active)
     return;
 
-  Serial.println("wifi.mode: "+String(settings.wifi.mode));
-  Serial.println("wifi.ssid: "+String(settings.wifi.ssid));
-  Serial.println("wifi.pwd: "+String(settings.wifi.pwd));
+  LOG_INFO("wifi.mode: %s\n", settings.wifi.mode);
+  LOG_INFO("wifi.ssid: %s\n", settings.wifi.ssid);
+  LOG_INFO("wifi.pwd: %s\n", settings.wifi.pwd);
 
 #ifdef ENABLE_LTE
-  Serial.println("modem.apn: "+String(settings.modem.apn));
-  Serial.println("modem.user: "+String(settings.modem.user));
-  Serial.println("modem.pwd: "+String(settings.modem.pwd));
-  Serial.println("modem.band: "+String(settings.modem.band));
-  Serial.println("modem.cops: "+String(settings.modem.cops));
+  LOG_INFO("modem.apn: %s\n", settings.modem.apn);
+  LOG_INFO("modem.user: %s\n", settings.modem.user);
+  LOG_INFO("modem.pwd: %s\n", settings.modem.pwd);
+  LOG_INFO("modem.band: %u\n", settings.modem.band);
+  LOG_INFO("modem.cops: %u\n", settings.modem.cops);
 #endif
 
-  Serial.println("MQTT Client1 Connection");
-  Serial.println("mqtt.host: "+String(settings.mqtt.host));
-  Serial.println("mqtt.user: "+String(settings.mqtt.user));
-  Serial.println("mqtt.pass: "+String(settings.mqtt.pass));
-  Serial.println("mqtt.port: "+String(settings.mqtt.port));
-  Serial.println("mqtt.active: "+String(settings.mqtt.active));
+  LOG_INFO("MQTT Client1 Connection\n");
+  LOG_INFO("mqtt.host: %s\n", settings.mqtt.host);
+  LOG_INFO("mqtt.user: %s\n", settings.mqtt.user);
+  LOG_INFO("mqtt.pass: %s\n", settings.mqtt.pass);
+  LOG_INFO("mqtt.port: %u\n", settings.mqtt.port);
+  LOG_INFO("mqtt.active: %d\n", settings.mqtt.active);
 
-  Serial.println("MQTT Client2 Connection");
-  Serial.println("mqtt.host: "+String(settings.mqtt2.host));
-  Serial.println("mqtt.user: "+String(settings.mqtt2.user));
-  Serial.println("mqtt.pass: "+String(settings.mqtt2.pass));
-  Serial.println("mqtt.port: "+String(settings.mqtt2.port));
-  Serial.println("mqtt.active: "+String(settings.mqtt2.active));
+  LOG_INFO("MQTT Client2 Connection\n");
+  LOG_INFO("mqtt.host: %s\n", settings.mqtt2.host);
+  LOG_INFO("mqtt.user: %s\n", settings.mqtt2.user);
+  LOG_INFO("mqtt.pass: %s\n", settings.mqtt2.pass);
+  LOG_INFO("mqtt.port: %u\n", settings.mqtt2.port);
+  LOG_INFO("mqtt.active: %d\n", settings.mqtt2.active);
 
-  Serial.println("log.active: "+String(settings.log.active));
-  Serial.println("log.level: "+String(settings.log.level));
+  LOG_INFO("log.active: %d\n", settings.log.active);
+  LOG_INFO("log.level: %u\n", settings.log.level);
 
-  Serial.println("keepalive.active: "+String(settings.keepalive.active));
-  Serial.println("keepalive.period: "+String(settings.keepalive.period));
+  LOG_INFO("keepalive.active: %d\n", settings.keepalive.active);
+  LOG_INFO("keepalive.period: %u\n", settings.keepalive.period);
 
-  Serial.println("uart2.active: "+String(settings.uart2.active));
-  Serial.println("uart2.baudrate: "+String(settings.uart2.baudrate));
-  Serial.println("uart2.config: "+String(settings.uart2.config));
+  LOG_INFO("uart2.active: %d\n", settings.uart2.active);
+  LOG_INFO("uart2.baudrate: %u\n", settings.uart2.baudrate);
+  LOG_INFO("uart2.config: %u\n", settings.uart2.config);
 }
 
 bool has_only_digits(String value_str){
@@ -265,7 +265,7 @@ bool has_only_digits(String value_str){
   for(unsigned int i = 0; i < stringLength; ++i) {
     if (isDigit(value_str.charAt(i)))
       continue;
-    Serial.println("is not digit: "+value_str.charAt(i));
+    LOG_WARN("is not digit: %c\n", value_str.charAt(i));
     return false;
   }
   #else
