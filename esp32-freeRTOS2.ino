@@ -79,7 +79,7 @@ void onConnectionEstablished(){ // Used on wifi comms
   DBGLOG(Debug,"mqtt client 1 is connected - sending first message");
 
   mRTOS.mqtt_pushMessage(CLIENTID,"/status","online",2,true);
-  mRTOS.mqtt_pushMessage(clientID,"/variant",String(FW_VARIANT),2,true);
+  mRTOS.mqtt_pushMessage(CLIENTID,"/variant",String(FW_VARIANT),2,true);
   mRTOS.mqtt_pushMessage(CLIENTID,"/model",String(FW_MODEL),2,true);
   mRTOS.mqtt_pushMessage(CLIENTID,"/version",String(FW_VERSION),2,true);
   mRTOS.mqtt_pushMessage(CLIENTID,"/app_version",String(APP_VERSION),2,true);

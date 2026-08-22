@@ -43,7 +43,7 @@
 // FOTA will only work if the FW_VARIANT matches the variant of the firmware 
 // being updated.
 #ifndef FW_VARIANT
-#define FW_VARIANT "esp32-wroom-32d"
+#define FW_VARIANT "esp32c5"
 #endif
 
 #define LOG_ACTIVE true
