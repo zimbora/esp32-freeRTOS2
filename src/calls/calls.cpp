@@ -3,6 +3,7 @@
 #include "../../package.h"
 #include "../app/user/app_package.h"
 #include "../app/user/credentials.h"
+#include "../settings/settings.h"
 
 /*
 * !! All calls to sysfile must be done here
@@ -28,7 +29,7 @@ String CALLS::fw_fota(String url){
     protocol = "HTTP";
     url = url.substring(7);
   }else{
-    Serial.println("Invalid URL");
+    LOG_ERROR("Invalid URL\n");
     return "Invalid URL";
   }
 
@@ -61,7 +62,7 @@ bool CALLS::fw_settings_update(String url, String filename){
     protocol = "HTTP";
     url = url.substring(7);
   }else{
-    Serial.println("Invalid URL");
+    LOG_ERROR("Invalid URL\n");
     return false;
   }
 
@@ -75,7 +76,7 @@ bool CALLS::fw_settings_update(String url, String filename){
   bool json = false;
   String json_str = do_request(protocol,host,path,method,header_key,header_value,body,json);
 
-  Serial.println(json_str);
+  LOG_DEBUG("%s\n", json_str.c_str());
 
   if(!xSemaphoreTake( spiffsMutex, 5000)){
     //xSemaphoreGive(spiffsMutex);
@@ -165,7 +166,7 @@ bool CALLS::init_filesystem(String directory[], uint8_t len){
 
   // check filesystem
   uint8_t i = 0;
-  Serial.printf("dir size: %d \n",len);
+  LOG_DEBUG("dir size: %d \n",len);
   for(uint8_t i=0; i < len; i++){
     if(!sysfile.create_dir(directory[i].c_str()))
       DBGLOG(Error,"-- create dir: "+ directory[i] +" has FAILED --");
@@ -207,7 +208,7 @@ bool CALLS::check_filesystem_records(String dir, uint32_t timeout, bool (*callba
 
   if(!xSemaphoreTake( spiffsMutex, 100)){
     //xSemaphoreGive(spiffsMutex);
-    Serial.println("couldn't get semaphore");
+    LOG_WARN("couldn't get semaphore\n");
     return false;
   }
 
@@ -311,9 +312,9 @@ String CALLS::do_request(String protocol, String host, String path, String metho
 
     msg_header = mRTOS.http_header_getNextMessage(msg_header);
     if(msg_header != NULL){
-      Serial.printf("client [%d] %s \n",msg_header->clientID,msg_header->http_response.c_str());
+      LOG_DEBUG("client [%d] %s \n",msg_header->clientID,msg_header->http_response.c_str());
       if(msg_header->http_response.indexOf("200") > 0){
-        Serial.printf("http body len %d \n",msg_header->body_len);
+        LOG_DEBUG("http body len %d \n",msg_header->body_len);
         uint32_t len = 0;
         char* data = (char*)malloc(msg_header->body_len);
         while(msg_header->body_len != len  && timeout > millis()){
@@ -329,12 +330,12 @@ String CALLS::do_request(String protocol, String host, String path, String metho
             }
 
             len += msg_body->data_len;
-            Serial.printf("http total bytes read of body data: %d \n",len);
+            LOG_DEBUG("http total bytes read of body data: %d \n",len);
 
           }
           delay(1); // use delay to moderate concurrency access to queues
         }
-        Serial.println("http all data was read");
+        LOG_DEBUG("http all data was read\n");
 
         String body = "";
         for(uint16_t i=0;i<len;i++){
@@ -368,9 +369,9 @@ String CALLS::do_fota(String protocol, String host, String path, String method, 
 
     msg_header = mRTOS.http_header_getNextMessage(msg_header);
     if(msg_header != NULL){
-      Serial.printf("client [%d] %s \n",msg_header->clientID,msg_header->http_response.c_str());
+      LOG_DEBUG("client [%d] %s \n",msg_header->clientID,msg_header->http_response.c_str());
       if(msg_header->http_response.indexOf("200") >= 0){
-        Serial.printf("http body len %lu \n",msg_header->body_len);
+        LOG_DEBUG("http body len %lu \n",msg_header->body_len);
         fota_size = msg_header->body_len;
         fota.start(fota_size);
         md5_.begin();
@@ -392,11 +393,10 @@ String CALLS::do_fota(String protocol, String host, String path, String method, 
               tries--;
             }
             
-            //Serial.println("heap free: " + String(ESP.getFreeHeap() / 1024) + " KiB");
             len += msg_body->data_len;
             uint32_t progress = len*100/fota_size;
             if( progressTimeout < millis()){
-              Serial.printf("Progress: %d% \n",progress);
+              LOG_DEBUG("Progress: %d%% \n",progress);
               progressTimeout = 2000 + millis();
             }
           }
@@ -408,31 +408,31 @@ String CALLS::do_fota(String protocol, String host, String path, String method, 
         if(fota_size != len)
           return "fota size failed";
 
-        Serial.println("http all data was read");
+        LOG_DEBUG("http all data was read\n");
 
         md5_.calculate();
         String md5_calculated = md5_.toString();
-        Serial.println("md5 calculated: "+md5_calculated);
-        Serial.println("md5 header: "+msg_header->md5);
+        LOG_INFO("md5 calculated: %s\n", md5_calculated.c_str());
+        LOG_INFO("md5 header: %s\n", msg_header->md5.c_str());
         String md5_header = msg_header->md5;
         md5_header.trim();
         if(md5_header.equalsIgnoreCase(md5_calculated)){
-          Serial.println("md5 checked");
+          LOG_INFO("md5 checked\n");
         }else{
-          Serial.println("md5 check has failed");
+          LOG_ERROR("md5 check has failed\n");
           return "md5 not matched";
         } 
 
         if(fota.has_finished()){
-          Serial.println("new fw uploaded");
-          Serial.println("rebooting");
+          LOG_INFO("new fw uploaded\n");
+          LOG_INFO("rebooting\n");
           fw_reboot();
         }
 
         return "fota done"; // unrecheable
 
       }else{
-        Serial.println("fota request has failed");
+        LOG_ERROR("fota request has failed\n");
         error = "http error: "+msg_header->http_response;
         return error;
       } 

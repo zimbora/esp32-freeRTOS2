@@ -5,6 +5,7 @@
 */
 
 #include "ble_server.h"
+#include "../settings/settings.h"
 
 // See the following for generating UUIDs:
 // https://www.uuidgenerator.net/
@@ -75,7 +76,7 @@ void BLE_SERVER::init(String uid) {
   pAdvertising->setMinPreferred(0x12);
 
   //BLEDevice::startAdvertising();
-  Serial.println("Characteristic defined! Now you can read it in your phone!");
+  LOG_INFO("Characteristic defined! Now you can read it in your phone!\n");
 
   pCharacteristic1WiFi->setCallbacks(new MyCallbacks());
   pCharacteristic2WiFi->setCallbacks(new MyCallbacks());
@@ -88,11 +89,11 @@ void BLE_SERVER::init(String uid) {
 void BLE_SERVER::enable(){
 
   BLEDevice::startAdvertising();
-  Serial.println("[BLE] Advertising..");
+  LOG_INFO("[BLE] Advertising..\n");
 }
 
 void BLE_SERVER::disable(){
 
   BLEDevice::deinit();
-  Serial.println("[BLE] Switched off..");
+  LOG_INFO("[BLE] Switched off..\n");
 }

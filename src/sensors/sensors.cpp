@@ -82,7 +82,6 @@ bool SENSORS::init_ar(String data){
     JsonArray array = doc["autorequests"]["rs485"].as<JsonArray>();
 
     for(JsonVariant v : array) {
-      //Serial.println(v.as<char*>());
       JsonObject sensor = v.as<JsonObject>();
 
       if(sensor.containsKey("ref") && sensor.containsKey("type") && sensor.containsKey("modbus") && sensor.containsKey("period")){
@@ -141,7 +140,6 @@ bool SENSORS::init_ar(String data){
     JsonArray array = doc["autorequests"]["app"].as<JsonArray>();
 
     for(JsonVariant v : array) {
-      //Serial.println(v.as<char*>());
       JsonObject sensor = v.as<JsonObject>();
 
       if(sensor.containsKey("ref") && sensor.containsKey("type") && sensor.containsKey("period")){
@@ -162,8 +160,11 @@ bool SENSORS::init_ar(String data){
 bool SENSORS::init_alarm(String data){
 
   DeserializationError error = deserializeJson(doc, data);
-  serializeJson(doc,Serial);
-  Serial.println();
+  {
+    String jsonStr;
+    serializeJson(doc, jsonStr);
+    LOG_DEBUG("%s\n", jsonStr.c_str());
+  }
 
   if(error){
     DBGLOG(Error,"Alarm Error parsing JSON");
@@ -178,13 +179,12 @@ bool SENSORS::init_alarm(String data){
       #ifndef UNITTEST
       JsonArray array = doc["alarms"].as<JsonArray>();
       for(JsonVariant v : array) {
-        //Serial.println(v.as<char*>());
         JsonObject alarm_obj = v.as<JsonObject>();
 
         if(alarm_obj.containsKey("ref")){
           if(!Alarm.add(alarm_obj)){
             //String ref = String(alarm_obj["ref"]);
-            Serial.println("alarm not added: ");
+            LOG_WARN("alarm not added: \n");
           }
         }
       }
@@ -199,7 +199,7 @@ bool SENSORS::init_alarm(String data){
       #endif
 
       Alarm.list();
-      Serial.println();
+      LOG_DEBUG("\n");
     }
 
   return true;
@@ -216,21 +216,21 @@ void SENSORS::loop(){
   for(uint8_t i=0; i<rs485_map_len; i++){
     String ref = String(rs485_map[i].ref);
     if(Ar.check(ref,&calledInRS485Autorequest)){
-      Serial.println("rs485 ar: \""+ref+ "\" executed");
+      LOG_DEBUG("rs485 ar: \"%s\" executed\n", ref.c_str());
       // store it if you want
       String value = table[ref];
       pSensorCallbacks->onReadSensor(ref,value);
     }
 
     if(Alarm.timedOut(ref)){
-      Serial.println("check alarm: \""+ref+"\"");
+      LOG_DEBUG("check alarm: \"%s\"\n", ref.c_str());
       // read sensor
       calledInRS485Autorequest(ref);
       // update table
       JsonObject data = table.as<JsonObject>();
       if(Alarm.check(ref,rs485_map[i].type,data,calledInAlarm)){
       //if(Alarm.check(ref,rs485_map[i].type,data)){
-        Serial.println("\""+ref+"\" is in alarm\n");
+        LOG_WARN("\"%s\" is in alarm\n", ref.c_str());
         String value = table[ref];
         pSensorCallbacks->onAlarmSensor(ref,value);
       }
@@ -242,7 +242,7 @@ void SENSORS::loop(){
   for(uint8_t i=0; i<MAX_APP_SENSORS; i++){
     String ref = String(app_map[i].ref);
     if(Ar.check(ref)){
-      Serial.println("app ar: \""+ref+ "\" executed");
+      LOG_DEBUG("app ar: \"%s\" executed\n", ref.c_str());
       table[ref] = 0.0;
       JsonObject data = table.as<JsonObject>();
       pSensorCallbacks->getAppValue(data,ref);
@@ -252,12 +252,12 @@ void SENSORS::loop(){
     }
 
     if(Alarm.timedOut(ref)){
-      Serial.println("check alarm: \""+ref+"\"");
+      LOG_DEBUG("check alarm: \"%s\"\n", ref.c_str());
       table[ref] = 0.0;
       JsonObject data = table.as<JsonObject>();
       pSensorCallbacks->getAppValue(data,ref);
       if(Alarm.check(ref,app_map[i].type,data,calledInAlarm)){
-        Serial.println("\""+ref+"\" is in alarm\n");
+        LOG_WARN("\"%s\" is in alarm\n", ref.c_str());
         String value = table[ref];
         pSensorCallbacks->onAlarmSensor(ref,value);
       }
@@ -341,7 +341,7 @@ void SENSORS::loop(){
     char content[255];
     memset(content,0,255);
     serializeJson(table, content);
-    Serial.println(content);
+    LOG_DEBUG("%s\n", content);
     String data = String(content);
     pSensorCallbacks->onRS485ReadAll(data);
 
@@ -409,7 +409,7 @@ void SENSORS::loop(){
       for(uint8_t j=0; j<len; j++){
         rs485_map[i].value[MAX_VALUE_LEN-j-1] = data[len-j-1];
       }
-      Serial.println();
+      LOG_DEBUG("\n");
     }else{
       for(uint8_t j=0; j<MAX_VALUE_LEN; j++)
         rs485_map[i].value[MAX_VALUE_LEN-j-1] = 0;
@@ -424,10 +424,10 @@ void SENSORS::loop(){
     uint8_t error = modbus.rs485_read(unit_id,fc,address,len,data,size);
 
     if(error != 0){
-      Serial.printf("error: 0x%x \n",error);
+      LOG_ERROR("error: 0x%x \n",error);
       String error_msg = modbus.getLastError();
       if(error_msg != "")
-        Serial.println("error msg: "+error_msg);
+        LOG_ERROR("error msg: %s\n", error_msg.c_str());
     }
 
     return error;
@@ -435,15 +435,15 @@ void SENSORS::loop(){
 
   uint8_t SENSORS::rs485_write(uint8_t unit_id, uint8_t fc, uint16_t address, uint16_t len, uint8_t* data, uint16_t* size){
 
-    Serial.println("Writing rs485..");
+    LOG_DEBUG("Writing rs485..\n");
     uint8_t error = modbus.rs485_write(unit_id,fc,address,len,data,size);
     if(error == 0){
-      Serial.println("packet written successfully");
+      LOG_DEBUG("packet written successfully\n");
     }else{
-      Serial.printf("error: 0x%x \n",error);
+      LOG_ERROR("error: 0x%x \n",error);
       String error_msg = modbus.getLastError();
       if(error_msg != "")
-        Serial.println("error msg: "+error_msg);
+        LOG_ERROR("error msg: %s\n", error_msg.c_str());
     }
 
     return error;

@@ -1,5 +1,6 @@
 
 #include "wifiAP.h"
+#include "../settings/settings.h"
 
 /*
   Creates a WiFi access point and provides a web server on it.
@@ -41,8 +42,8 @@ static String getFormValue(const String& payload, const String& key) {
 
 void WIFIAP::setup(String mac) {
 
-  Serial.println();
-  Serial.println("Configuring access point...");
+  LOG_INFO("\n");
+  LOG_INFO("Configuring access point...\n");
 
   String apSsid = String(ssid);
   mac.replace(":", "");
@@ -55,19 +56,18 @@ void WIFIAP::setup(String mac) {
   // You can remove the password parameter if you want the AP to be open.
   //WiFi.softAP(apSsid.c_str(), password);
   WiFi.softAP(apSsid.c_str());
-  Serial.println("AP SSID: " + apSsid);
+  LOG_INFO("AP SSID: %s\n", apSsid.c_str());
   IPAddress myIP = WiFi.softAPIP();
-  Serial.print("AP IP address: ");
-  Serial.println(myIP);
+  LOG_INFO("AP IP address: %s\n", myIP.toString().c_str());
 
   server.begin();
-  Serial.println("Server started");
+  LOG_INFO("Server started\n");
 }
 
 void WIFIAP::stop() {
   server.stop();
   WiFi.softAPdisconnect(true);
-  Serial.println("SoftAP stopped");
+  LOG_INFO("SoftAP stopped\n");
 }
 
 void WIFIAP::loop() {
@@ -75,7 +75,7 @@ void WIFIAP::loop() {
   WiFiClient client = server.available();   // listen for incoming clients
 
   if (client) {                             // if you get a client,
-    Serial.println("New Client.");           // print a message out the serial port
+    LOG_INFO("New Client.\n");           // print a message out the serial port
     String currentLine = "";                // make a String to hold incoming data from the client
     while (client.connected()) {            // loop while the client's connected
       if (client.available()) {             // if there's bytes to read from the client,
@@ -275,14 +275,14 @@ void WIFIAP::loop() {
               break;
             else request += r;
           }
-          Serial.println();
-          Serial.println("request: "+request);
+          LOG_DEBUG("\n");
+          LOG_DEBUG("request: %s\n", request.c_str());
 
           String ssid = getFormValue(request, "ssid");
           String pass = getFormValue(request, "pass");
 
-          Serial.println("ssid: "+ssid);
-          Serial.println("pass: "+pass);
+          LOG_DEBUG("ssid: %s\n", ssid.c_str());
+          LOG_DEBUG("pass: %s\n", pass.c_str());
           if(ssid != "" && pass != ""){
             client.stop();
             pWiFiCallbacks->onWiFiSet(ssid,pass);
@@ -302,17 +302,17 @@ void WIFIAP::loop() {
                   break;
               }
             }else if(r == '\n'){
-              Serial.println(currentLine);
+              LOG_DEBUG("%s\n", currentLine.c_str());
               currentLine = "";
             }else currentLine += r;
           }
-          Serial.println();
-          Serial.println("body: "+body);
+          LOG_DEBUG("\n");
+          LOG_DEBUG("body: %s\n", body.c_str());
 
           String ssid = getFormValue(body, "ssid");
           String pass = getFormValue(body, "pass");
-          Serial.println("ssid: "+ssid);
-          Serial.println("pass: "+pass);
+          LOG_DEBUG("ssid: %s\n", ssid.c_str());
+          LOG_DEBUG("pass: %s\n", pass.c_str());
           if(ssid != "" && pass != ""){
             client.stop();
             pWiFiCallbacks->onWiFiSet(ssid,pass);
@@ -323,7 +323,7 @@ void WIFIAP::loop() {
     }
     // close the connection:
     client.stop();
-    Serial.println("Client Disconnected.");
+    LOG_INFO("Client Disconnected.\n");
   }
 
 }

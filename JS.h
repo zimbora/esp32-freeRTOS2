@@ -244,7 +244,6 @@ static jsval_t js_write_rs485(struct js *js, jsval_t *args, int nargs){
   char charBuf[64];
   uint8_t data[32];
   */
-  Serial.println();
   data_str.toCharArray(charBuf, data_str.length());
   if(data != nullptr && charBuf != nullptr){
     uint8_t j = 0;
@@ -375,7 +374,6 @@ class JS {
       jsval_t v = js_eval(s_js, code, ~0U);
       String log = js_str(s_js, v);
       if(log != "undefined"){
-        Serial.println("res:"+log);
         MG_INFO(("%s", (char *)log.c_str()));
       }
       return mg_mprintf("%Q", js_str(s_js, v));
@@ -389,7 +387,6 @@ class JS {
       jsval_t v = js_eval(s_js, code, ~0U);
       String log = js_str(s_js, v);
       if(log != "undefined"){
-        Serial.println("res:"+log);;
         MG_INFO(("%s", (char *)log.c_str()));
       }
       return mg_mprintf("%Q", js_str(s_js, v));

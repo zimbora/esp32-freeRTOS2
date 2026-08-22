@@ -1,5 +1,6 @@
 
 #include "fota.h"
+#include "../settings/settings.h"
 
 bool FOTA::running(){
 
@@ -12,7 +13,7 @@ void FOTA::in_progress(bool state){
 
 bool FOTA::start(uint32_t size){
   if (!Update.begin(size)){
-    Serial.print("fota: cannot begin, not enough space");
+    LOG_ERROR("fota: cannot begin, not enough space\n");
     Update.printError(Serial);
     return false;
   }
@@ -24,7 +25,7 @@ bool FOTA::start(uint32_t size){
 
 bool FOTA::write_block(uint8_t* frame, uint16_t length){
   if (Update.write(frame, length) != length) {
-    Serial.println("fota: write has failed");
+    LOG_ERROR("fota: write has failed\n");
     Update.printError(Serial);
     return false;
   }
@@ -35,7 +36,7 @@ bool FOTA::has_finished(){
 
   
   if (!Update.end(true)) {
-  	Serial.print("fota: cannot end");
+  	LOG_ERROR("fota: cannot end\n");
   	Update.printError(Serial);
     in_progress(false);
 
@@ -43,7 +44,7 @@ bool FOTA::has_finished(){
   }
 
   if (!Update.isFinished()) {
-  	Serial.print("fota: did not finish");
+  	LOG_ERROR("fota: did not finish\n");
   	Update.printError(Serial);
   	in_progress(false);
 
