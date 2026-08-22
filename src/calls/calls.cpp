@@ -393,7 +393,6 @@ String CALLS::do_fota(String protocol, String host, String path, String method, 
               tries--;
             }
             
-            //Serial.println("heap free: " + String(ESP.getFreeHeap() / 1024) + " KiB");
             len += msg_body->data_len;
             uint32_t progress = len*100/fota_size;
             if( progressTimeout < millis()){

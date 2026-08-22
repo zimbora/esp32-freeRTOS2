@@ -82,7 +82,6 @@ bool SENSORS::init_ar(String data){
     JsonArray array = doc["autorequests"]["rs485"].as<JsonArray>();
 
     for(JsonVariant v : array) {
-      //Serial.println(v.as<char*>());
       JsonObject sensor = v.as<JsonObject>();
 
       if(sensor.containsKey("ref") && sensor.containsKey("type") && sensor.containsKey("modbus") && sensor.containsKey("period")){
@@ -141,7 +140,6 @@ bool SENSORS::init_ar(String data){
     JsonArray array = doc["autorequests"]["app"].as<JsonArray>();
 
     for(JsonVariant v : array) {
-      //Serial.println(v.as<char*>());
       JsonObject sensor = v.as<JsonObject>();
 
       if(sensor.containsKey("ref") && sensor.containsKey("type") && sensor.containsKey("period")){
@@ -181,7 +179,6 @@ bool SENSORS::init_alarm(String data){
       #ifndef UNITTEST
       JsonArray array = doc["alarms"].as<JsonArray>();
       for(JsonVariant v : array) {
-        //Serial.println(v.as<char*>());
         JsonObject alarm_obj = v.as<JsonObject>();
 
         if(alarm_obj.containsKey("ref")){

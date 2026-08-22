@@ -367,8 +367,6 @@ void core_parse_mqtt_messages(){
       topic_get = topic.substring(0,index); // get filtered
     }
 
-
-    //Serial.println("topic: "+topic);
     switch(resolveOption(fwTopics,topic)){
       case settings_update_:
         {
@@ -775,7 +773,6 @@ void core_parse_mqtt_messages(){
       topic_get = topic.substring(0,index); // get filtered
     }
 
-    //Serial.println("topic: "+topic);
     switch(resolveOption(fwTopics,topic)){
       case fw_get_:
         {
@@ -989,8 +986,6 @@ void core_parse_mqtt_messages(){
         }
         break;
       default:
-        //Serial.println("topic not known by fw topics");
-        //Serial.println(payload);
         break;
     }
 
@@ -1031,11 +1026,9 @@ void core_check_records(){
   if(settings.mqtt.active)
     clientID = CLIENTIDEXTERNAL;
 
-  //Serial.println("check records");
   if(!mRTOS.mqtt_isConnected(clientID))
     return;
 
-  //Serial.println("check filesystem for new records");
   uint32_t timeout = millis() + 5000;
   bool (*send_ar)(String);
   send_ar = &core_send_record;
