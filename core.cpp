@@ -187,6 +187,7 @@ void core_load_settings(){
   uint16_t len = sizeof(settings);
   char* data = (char*)malloc(len);
   if(data != nullptr){
+    memset(data,0,len);
     call.read_file(FW_SETTINGS_FILENAME,data,&len);
     memcpy(settings.fw.version,data,sizeof(settings.fw.version));
     String version = String(settings.fw.version);

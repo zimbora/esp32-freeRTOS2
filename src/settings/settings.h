@@ -69,6 +69,9 @@ struct user_settings {
   struct fw {
     char         version[8];
     char         md5[16];
+    char         mqtt_model[16];
+    char         mqtt_version[8];
+    char         mqtt_app_version[8];
   }fw;
 
   struct wifi { // on settings load

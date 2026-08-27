@@ -54,21 +54,45 @@ extern MODEMfreeRTOS mRTOS;
 extern SemaphoreHandle_t spiffsMutex;
 extern SYSFILE sysfile;
 
+static bool rebootCauseSent = false;
+
 void (*callback)(uint8_t);
 void mqttOnConnect(uint8_t clientID){ // Used on LTE comms
+  bool settingsChanged = false;
   DBGLOG(Debug,"mqtt with clientID: "+String(clientID)+" is connected - sending first message");
   mRTOS.mqtt_pushMessage(clientID,"/status","online",2,true);
-  mRTOS.mqtt_pushMessage(clientID,"/model",String(FW_MODEL),2,true);
+  if(String(FW_MODEL) != String(settings.fw.mqtt_model)){
+    mRTOS.mqtt_pushMessage(clientID,"/model",String(FW_MODEL),2,true);
+    memset(settings.fw.mqtt_model,0,sizeof(settings.fw.mqtt_model));
+    memcpy(settings.fw.mqtt_model,FW_MODEL,sizeof(FW_MODEL));
+    settingsChanged = true;
+  }
   mRTOS.mqtt_pushMessage(clientID,"/variant",String(FW_VARIANT),2,true);
-  mRTOS.mqtt_pushMessage(clientID,"/version",String(FW_VERSION),2,true);
-  mRTOS.mqtt_pushMessage(clientID,"/app_version",String(APP_VERSION),2,true);
+  if(String(FW_VERSION) != String(settings.fw.mqtt_version)){
+    mRTOS.mqtt_pushMessage(clientID,"/version",String(FW_VERSION),2,true);
+    memset(settings.fw.mqtt_version,0,sizeof(settings.fw.mqtt_version));
+    memcpy(settings.fw.mqtt_version,FW_VERSION,sizeof(FW_VERSION));
+    settingsChanged = true;
+  }
+  if(String(APP_VERSION) != String(settings.fw.mqtt_app_version)){
+    mRTOS.mqtt_pushMessage(clientID,"/app_version",String(APP_VERSION),2,true);
+    memset(settings.fw.mqtt_app_version,0,sizeof(settings.fw.mqtt_app_version));
+    memcpy(settings.fw.mqtt_app_version,APP_VERSION,sizeof(APP_VERSION));
+    settingsChanged = true;
+  }
   mRTOS.mqtt_pushMessage(clientID,"/tech",mRTOS.get_technology(),2,true);
-  #if defined(ARDUINO_ESP32C5_DEV)
-    mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu0",get_reset_reason((int)esp_reset_reason()),2,true);
-  #else
-    mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu0",get_reset_reason(rtc_get_reset_reason(0)),2,true);
-    mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu1",get_reset_reason(rtc_get_reset_reason(1)),2,true);
-  #endif
+  if(!rebootCauseSent){
+    #if defined(ARDUINO_ESP32C5_DEV)
+      mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu0",get_reset_reason((int)esp_reset_reason()),2,true);
+    #else
+      mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu0",get_reset_reason(rtc_get_reset_reason(0)),2,true);
+      mRTOS.mqtt_pushMessage(clientID,"/reboot_cause_cpu1",get_reset_reason(rtc_get_reset_reason(1)),2,true);
+    #endif
+    rebootCauseSent = true;
+  }
+  if(settingsChanged){
+    sysfile.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings));
+  }
   mRTOS.mqtt_subscribeTopics(clientID);
   return;
 }
@@ -76,16 +100,37 @@ void mqttOnConnect(uint8_t clientID){ // Used on LTE comms
 // WARNING : YOU MUST IMPLEMENT IT IF YOU USE EspMQTTClient
 // This function is called once client 1 is connected (MQTT-WIFI)
 void onConnectionEstablished(){ // Used on wifi comms
+  bool settingsChanged = false;
   DBGLOG(Debug,"mqtt client 1 is connected - sending first message");
 
   mRTOS.mqtt_pushMessage(CLIENTID,"/status","online",2,true);
   mRTOS.mqtt_pushMessage(CLIENTID,"/variant",String(FW_VARIANT),2,true);
-  mRTOS.mqtt_pushMessage(CLIENTID,"/model",String(FW_MODEL),2,true);
-  mRTOS.mqtt_pushMessage(CLIENTID,"/version",String(FW_VERSION),2,true);
-  mRTOS.mqtt_pushMessage(CLIENTID,"/app_version",String(APP_VERSION),2,true);
+  if(String(FW_MODEL) != String(settings.fw.mqtt_model)){
+    mRTOS.mqtt_pushMessage(CLIENTID,"/model",String(FW_MODEL),2,true);
+    memset(settings.fw.mqtt_model,0,sizeof(settings.fw.mqtt_model));
+    memcpy(settings.fw.mqtt_model,FW_MODEL,sizeof(FW_MODEL));
+    settingsChanged = true;
+  }
+  if(String(FW_VERSION) != String(settings.fw.mqtt_version)){
+    mRTOS.mqtt_pushMessage(CLIENTID,"/version",String(FW_VERSION),2,true);
+    memset(settings.fw.mqtt_version,0,sizeof(settings.fw.mqtt_version));
+    memcpy(settings.fw.mqtt_version,FW_VERSION,sizeof(FW_VERSION));
+    settingsChanged = true;
+  }
+  if(String(APP_VERSION) != String(settings.fw.mqtt_app_version)){
+    mRTOS.mqtt_pushMessage(CLIENTID,"/app_version",String(APP_VERSION),2,true);
+    memset(settings.fw.mqtt_app_version,0,sizeof(settings.fw.mqtt_app_version));
+    memcpy(settings.fw.mqtt_app_version,APP_VERSION,sizeof(APP_VERSION));
+    settingsChanged = true;
+  }
   mRTOS.mqtt_pushMessage(CLIENTID,"/tech",mRTOS.get_technology(),2,true);
-  mRTOS.mqtt_pushMessage(CLIENTID,"/reboot_cause_cpu0",get_reset_reason((int)esp_reset_reason()),2,true);
-
+  if(!rebootCauseSent){
+    mRTOS.mqtt_pushMessage(CLIENTID,"/reboot_cause_cpu0",get_reset_reason((int)esp_reset_reason()),2,true);
+    rebootCauseSent = true;
+  }
+  if(settingsChanged){
+    sysfile.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings));
+  }
   mRTOS.mqtt_subscribeTopics(0);
 }
 
