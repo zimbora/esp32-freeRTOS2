@@ -98,6 +98,10 @@ bool APP::load_settings(){
   String currentVersion = String(APP_VERSION);
   LOG_INFO("prev app.version: %s\n", oldVersion.c_str());
   LOG_INFO("current app.version: %s\n", currentVersion.c_str());
+  if(oldVersion != currentVersion){
+    LOG_INFO("app version changed\n");
+    versionChanged = true;
+  }
   if(currentVersion.startsWith("0.") || currentVersion.startsWith("1.") || currentVersion.startsWith("2.")){
     memcpy(app_s.fw.version,data,sizeof(app_s));
     memset(app_s.fw.version,0,sizeof(app_s.fw.version));

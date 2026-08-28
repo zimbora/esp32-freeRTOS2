@@ -168,19 +168,39 @@ class CALLBACKS_SENSORS : public SensorCallbacks
     bool getAppValue(JsonObject& obj, String ref); // called if a sensor value from app class is required
 };
 
-void      core_init();
-void      core_loop();
-void      core_load_settings();
+class Core
+{ 
+  public:
+    Core(){};
+    void init();
+    void loop();
+    void load_settings();
+    void parse_mqtt_messages();
 
-void      core_parse_mqtt_messages();
+    bool version_changed(){
+      return versionChanged;
+    }
+    bool model_changed(){
+      return modelChanged;
+    }
+    bool variant_changed(){
+      return variantChanged;
+    }
+
+    bool store_record(String filename, const char* data, uint16_t len);
+
+  private:
+    bool versionChanged = false;
+    bool modelChanged = false;
+    bool variantChanged = false;
+
+    void check_records();
+    static bool send_record(String filename);
+    String fota(String url);
+};
+
+// functions
 bool      core_send_mqtt_message(uint8_t clientID, String topic, String data, uint8_t qos, bool retain);
-
-// private
-void      core_check_records();
-bool      core_send_record(String filename);
-bool      core_store_record(String filename, const char* data, uint16_t len);
-
-String    core_fota(String url);
 
 uint8_t   parse_float_array(float* arr, uint8_t len, String payload);
 fwTopics_ resolveOption(std::map<long, fwTopics_> map, String topic);
@@ -199,7 +219,5 @@ void      t1Callback();
 #ifdef ENABLE_BLE
 void       bleCallback(String param, String value);
 #endif
-
-
 
 #endif

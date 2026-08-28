@@ -69,9 +69,6 @@ struct user_settings {
   struct fw {
     char         version[8];
     char         md5[16];
-    char         mqtt_model[16];
-    char         mqtt_version[8];
-    char         mqtt_app_version[8];
   }fw;
 
   struct wifi { // on settings load
@@ -120,6 +117,11 @@ struct user_settings {
     uint32_t     baudrate;
     uint32_t     config;
   } uart2;
+
+  struct fw_build { // last values reported to mqtt, on settings load
+    char         model[16];
+    char         variant[16];
+  } fw_build;
 };
 
 extern user_settings settings;
