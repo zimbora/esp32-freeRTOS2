@@ -55,6 +55,11 @@ user_settings settings = {
     /* active */    UART2_ACTIVE,
     /* baudrate */  UART2_BAUDRATE,
     /* config */    UART2_CONFIG
+  },
+
+  .fw_build = {
+    /* model */       "",
+    /* variant */     ""
   }
 };
 

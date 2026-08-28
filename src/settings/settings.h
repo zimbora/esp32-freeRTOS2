@@ -117,6 +117,11 @@ struct user_settings {
     uint32_t     baudrate;
     uint32_t     config;
   } uart2;
+
+  struct fw_build { // last values reported to mqtt, on settings load
+    char         model[16];
+    char         variant[16];
+  } fw_build;
 };
 
 extern user_settings settings;

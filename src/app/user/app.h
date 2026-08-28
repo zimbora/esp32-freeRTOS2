@@ -42,6 +42,7 @@ class APP{
     void loop();
     void parse_mqtt_messages(uint8_t clientID, String topic, String payload);
     bool getValue(JsonObject& obj, String ref){return false;};
+    bool version_changed(){return versionChanged;};
 
   private:
     // do not delete the following function
@@ -52,6 +53,7 @@ class APP{
     void log_settings();
 
     uint32_t timeoutInfo;
+    bool versionChanged = false;
 };
 
 #endif

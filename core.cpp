@@ -6,6 +6,7 @@ CALLS call;
 SYSFILE sysfile;
 extern SENSORS sensors;
 APP app;
+Core core;
 
 MODEMfreeRTOS mRTOS; // freeRTOS modem
 MQTT_MSG_RX* msg; // mqtt
@@ -169,7 +170,7 @@ void CALLBACKS_SENSORS::onRS485ReadAll(String data_json){
   LOG_DEBUG("onRS485ReadAll callback called\n");
   LOG_DEBUG("core: %s\n", data_json.c_str());
   String filename = ".txt";
-  core_store_record(filename,data_json.c_str(),data_json.length());
+  core.store_record(filename,data_json.c_str(),data_json.length());
 };
 
 
@@ -182,21 +183,31 @@ bool CALLBACKS_SENSORS::getAppValue(JsonObject& obj, String ref){
 /*
 * load settings
 */
-void core_load_settings(){
+void Core::load_settings(){
 
   uint16_t len = sizeof(settings);
   char* data = (char*)malloc(len);
   if(data != nullptr){
+    memset(data,0,len);
     call.read_file(FW_SETTINGS_FILENAME,data,&len);
     memcpy(settings.fw.version,data,sizeof(settings.fw.version));
-    String version = String(settings.fw.version);
     LOG_INFO("current fw version: %s\n", FW_VERSION);
-    LOG_INFO("previous fw version: %s\n", version.c_str());
+    LOG_INFO("previous fw version: %s\n", settings.fw.version);
+    if(memcmp(FW_VERSION,settings.fw.version,sizeof(FW_VERSION)) != 0){
+      LOG_INFO("fw version changed, raise flag..\n");
+      versionChanged = true;
+    }
+    
+    String version = String(settings.fw.version);
     if( ((version.startsWith("0.") || version.startsWith("1.") || version.startsWith("2."))) ){
       memcpy(settings.fw.version,data,sizeof(settings));
       memset(settings.fw.version,0,sizeof(settings.fw.version));
       memcpy(settings.fw.version,FW_VERSION,sizeof(FW_VERSION));
       call.write_file(FW_SETTINGS_FILENAME,settings.fw.version,sizeof(settings));
+      if( memcmp(settings.fw_build.model,FW_MODEL,sizeof(FW_MODEL)) != 0 ){
+        LOG_INFO("fw model changed, raise flag..\n");
+        modelChanged = true;
+      }
     }
     else{
       LOG_INFO("resetting settings..\n");
@@ -205,6 +216,9 @@ void core_load_settings(){
 
       memset(settings.fw.version,0,sizeof(settings.fw.version));
       memcpy(settings.fw.version,FW_VERSION,sizeof(FW_VERSION));
+      versionChanged = true;
+      modelChanged = true;
+      variantChanged = true;
       // modem
   #ifdef ENABLE_LTE
       memcpy(settings.modem.apn,SETTINGS_MODEM_APN,sizeof(settings.modem.apn));
@@ -221,7 +235,7 @@ void core_load_settings(){
   }
 }
 
-void core_init(){
+void Core::init(){
   
   
   sensors.init();
@@ -277,7 +291,7 @@ void core_init(){
 
 uint32_t keepaliveTimeout = 0;
 uint32_t logTimeout = 0;
-void core_loop(){
+void Core::loop(){
 
   if(settings.keepalive.active && keepaliveTimeout < millis()){
 
@@ -293,7 +307,7 @@ void core_loop(){
     keepaliveTimeout = millis()+(settings.keepalive.period*1000);
 
     sensors.loop();
-    core_check_records();
+    check_records();
     String directory = APP_PATH_RECORDS;
     call.clean_dir(directory);
   }
@@ -308,7 +322,7 @@ void core_loop(){
     logTimeout = millis()+5000;
   }
 
-  core_parse_mqtt_messages();
+  core.parse_mqtt_messages();
 
   #ifdef ENABLE_JS
     JS.loop();
@@ -322,7 +336,7 @@ void core_loop(){
 /*
 * Do not edit it
 */
-void core_parse_mqtt_messages(){
+void Core::parse_mqtt_messages(){
   msg = mRTOS.mqtt_getNextMessage(msg);
 
   int16_t index = -1;
@@ -829,7 +843,7 @@ void core_parse_mqtt_messages(){
               LOG_INFO("fota from %s\n", url.c_str());
               String error = "";
               #ifndef ENABLE_LTE
-                error = core_fota(url);
+                error = fota(url);
               #else
                 error = call.fw_fota(url);
               #endif
@@ -1008,7 +1022,7 @@ bool core_send_mqtt_message(uint8_t clientID, String topic, String data, uint8_t
   return call.mqtt_send(clientID,topic,data,qos,retain);
 }
 
-bool core_store_record(String filename, const char* data, uint16_t len){
+bool Core::store_record(String filename, const char* data, uint16_t len){
   String root = APP_PATH_RECORDS;
   //String path = root + "/"+ String(millis()/1000);
   String path = root + "/"+ String(now());
@@ -1020,7 +1034,7 @@ bool core_store_record(String filename, const char* data, uint16_t len){
   return true;
 }
 
-void core_check_records(){
+void Core::check_records(){
 
   uint8_t clientID = CLIENTID;
   if(settings.mqtt.active)
@@ -1031,14 +1045,14 @@ void core_check_records(){
 
   uint32_t timeout = millis() + 5000;
   bool (*send_ar)(String);
-  send_ar = &core_send_record;
+  send_ar = &Core::send_record;
   String path = APP_PATH_RECORDS;
   call.check_filesystem_records(path.c_str(),timeout,send_ar); // iterate through all subdirectories
 
 }
 
 // !! callback - sysfile safe
-bool core_send_record(String filename){
+bool Core::send_record(String filename){
 
   // This is a safe function
   // Inside it you can call sysfile class
@@ -1189,7 +1203,7 @@ const char* rootCACertificate = \
 "-----END CERTIFICATE-----\n" \
 "";
 
-String core_fota(String url){
+String Core::fota(String url){
 
   // Add x-MD5 to header 
   httpUpdate.onStart(update_started);
