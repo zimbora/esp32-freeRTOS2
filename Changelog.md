@@ -9,6 +9,13 @@ Then, compiled file is uploaded to mgmt-iot-devices platform as a nightmare vers
 After being tested with some devices, version can be changed to stable a version
 
 ## TODO
+ - Implement MQTTS
+
+### 1.1.16-1.0.0
+	fix(esp32-freeRTOS): clientID syntax
+	ci(credentials): set FW_VARIANT default as esp32c5
+	perf: Replace direct Serial logging with level-aware LOG_* macros (#22)
+	mqtt: conditionally send model/variant/tech/version/app_version and reboot cause topics (#24)
 
 ### 1.1.15-1.0.0
 	fix: fota md5 comparison
