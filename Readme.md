@@ -215,12 +215,14 @@ Before build, set the target board. Available boards:
 ### On Connection
 
 sends the following topics:
-  - /status - online
-  - /model - FW_MODEL
-  - /version - FW_VERSION
-  - /tech - radio technology
-  - /reboot_cause_cpu0
-  - /reboot_cause_cpu1
+  - /status - online (always)
+  - /model - FW_MODEL (on change)
+  - /tech - radio technology (on model change)
+  - /variant - FW_VARIANT (on change)
+  - /version - FW_VERSION (on change)
+  - /app_version - APP_VERSION (on change)
+  - /reboot_cause_cpu0 (on reboot)
+  - /reboot_cause_cpu1 (on reboot)
 
 ### Running
 
