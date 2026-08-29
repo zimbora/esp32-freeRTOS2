@@ -358,6 +358,18 @@ void Core::parse_mqtt_messages(){
   topic.replace("\"","");
   String payload = String(msg->data);
 
+  // Some MQTT backends (e.g. modem/AT-based publishers) deliver the payload
+  // double JSON-encoded, wrapped as a quoted string with escaped inner quotes
+  // (e.g. "{\"period\":360}" instead of {"period":360}). deserializeJson()
+  // would otherwise happily parse that as a plain JSON string (no error),
+  // and doc.containsKey(...) would silently be false, so the message looks
+  // unprocessed with no warning at all. Unwrap it here, same as topic above.
+  if(payload.length() >= 2 && payload.startsWith("\"") && payload.endsWith("\"")){
+    payload = payload.substring(1, payload.length() - 1);
+    payload.replace("\\\"", "\"");
+    LOG_DEBUG("unwrapped double-encoded payload: %s\n", payload.c_str());
+  }
+
   String uid = MQTT_UID_PREFIX+mRTOS.macAddress();
   index = topic.indexOf(uid);
   if(index > -1)
